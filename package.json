@@ -2,12 +2,14 @@
   "name": "ghpascohub",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.4.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
+    "typecheck": "tsc --noEmit",
     "prepare": "node .husky/install.mjs"
   },
   "dependencies": {
