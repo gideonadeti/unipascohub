@@ -14,11 +14,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  role Role @default(STUDENT)
+  role Role @default(NORMAL_USER)
 }
 
 enum Role {
-  STUDENT
+  NORMAL_USER
   CONTRIBUTOR // can upload
   MODERATOR
   ADMIN
