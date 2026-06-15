@@ -11,10 +11,20 @@ model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique
   name      String
+  school    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  role Role @default(NORMAL_USER)
+  role           Role            @default(NORMAL_USER)
+  educationLevel EducationLevel?
+}
+
+enum EducationLevel {
+  JHS
+  SHS
+  UNDERGRADUATE
+  POSTGRADUATE
+  OTHER
 }
 
 enum Role {
