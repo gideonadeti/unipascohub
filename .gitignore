@@ -44,3 +44,6 @@ next-env.d.ts
 /.clerk/
 
 /app/generated/prisma
+
+# secrets
+/secrets
