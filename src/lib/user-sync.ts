@@ -7,23 +7,23 @@ export function displayName(firstName: string | null, lastName: string | null) {
 }
 
 export async function upsertUserFromClerk({
-  clerkId,
+  id,
   firstName,
   lastName,
 }: {
-  clerkId: string;
+  id: string;
   firstName: string | null;
   lastName: string | null;
 }) {
   const name = displayName(firstName, lastName);
 
   return prisma.user.upsert({
-    where: { clerkId },
-    create: { clerkId, name },
+    where: { id },
+    create: { id, name },
     update: { name },
   });
 }
 
-export async function deleteUserByClerkId(clerkId: string) {
-  return prisma.user.deleteMany({ where: { clerkId } });
+export async function deleteUserById(id: string) {
+  return prisma.user.deleteMany({ where: { id } });
 }

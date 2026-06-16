@@ -1,7 +1,7 @@
 import { verifyWebhook, type WebhookEvent } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 
-import { deleteUserByClerkId, upsertUserFromClerk } from "@/lib/user-sync";
+import { deleteUserById, upsertUserFromClerk } from "@/lib/user-sync";
 
 export const runtime = "nodejs";
 
@@ -21,14 +21,14 @@ export async function POST(req: NextRequest) {
       const { id, first_name, last_name } = evt.data;
 
       await upsertUserFromClerk({
-        clerkId: id,
+        id,
         firstName: first_name,
         lastName: last_name,
       });
     }
 
     if (evt.type === "user.deleted" && evt.data.id) {
-      await deleteUserByClerkId(evt.data.id);
+      await deleteUserById(evt.data.id);
     }
   } catch (err) {
     console.error("Webhook handler failed:", err);

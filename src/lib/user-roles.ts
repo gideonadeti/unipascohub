@@ -13,11 +13,11 @@ type PromoteError =
   | "invalid_target_role";
 
 export async function upgradeUserToContributor(
-  clerkId: string,
+  userId: string,
 ): Promise<
   { success: true; user: User } | { success: false; error: UpgradeError }
 > {
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
     return { success: false, error: "not_found" };
@@ -32,7 +32,7 @@ export async function upgradeUserToContributor(
   }
 
   const updated = await prisma.user.update({
-    where: { clerkId },
+    where: { id: userId },
     data: { role: UserRole.CONTRIBUTOR },
   });
 
@@ -40,12 +40,12 @@ export async function upgradeUserToContributor(
 }
 
 export async function promoteUserToModerator(
-  actorClerkId: string,
+  actorUserId: string,
   targetUserId: string,
 ): Promise<
   { success: true; user: User } | { success: false; error: PromoteError }
 > {
-  const actorResult = await requireAdmin(actorClerkId);
+  const actorResult = await requireAdmin(actorUserId);
 
   if (!actorResult.success) {
     return {

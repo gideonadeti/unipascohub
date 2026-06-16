@@ -59,11 +59,11 @@ export function serializeProfileUser(user: User) {
 }
 
 export async function getUserProfile(
-  clerkId: string,
+  userId: string,
 ): Promise<
   { success: true; user: User } | { success: false; error: ProfileError }
 > {
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
     return { success: false, error: "not_found" };
@@ -73,19 +73,19 @@ export async function getUserProfile(
 }
 
 export async function updateUserProfile(
-  clerkId: string,
+  userId: string,
   input: ProfileUpdateInput,
 ): Promise<
   { success: true; user: User } | { success: false; error: ProfileError }
 > {
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
     return { success: false, error: "not_found" };
   }
 
   const updated = await prisma.user.update({
-    where: { clerkId },
+    where: { id: userId },
     data: {
       ...(input.school !== undefined && { school: input.school }),
     },

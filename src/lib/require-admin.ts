@@ -5,11 +5,11 @@ import { UserRole } from "../../generated/prisma/enums";
 type RequireAdminError = "not_found" | "forbidden";
 
 export async function requireAdmin(
-  clerkId: string,
+  userId: string,
 ): Promise<
   { success: true; user: User } | { success: false; error: RequireAdminError }
 > {
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
     return { success: false, error: "not_found" };

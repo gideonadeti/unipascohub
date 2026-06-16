@@ -15,7 +15,7 @@ export async function EnsureUserSynced() {
   }
 
   await upsertUserFromClerk({
-    clerkId: user.id,
+    id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
   });
