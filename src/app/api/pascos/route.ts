@@ -113,12 +113,27 @@ export async function POST(req: Request) {
         return Response.json(
           {
             error:
-              "Request must include courseId, publicId, fileName, fileSize, fileExtension, fileUrl, academicYear, educationLevel, semesterType, type, and contentType",
+              "Request must include courseId, files, academicYear, educationLevel, semesterType, type, and contentType",
           },
           { status: 400 },
         );
       case "invalid_course_id":
         return Response.json({ error: "Invalid courseId" }, { status: 400 });
+      case "invalid_files":
+        return Response.json(
+          { error: "Invalid files (expected a non-empty array)" },
+          { status: 400 },
+        );
+      case "invalid_file_order":
+        return Response.json(
+          { error: "Invalid file order (expected a positive integer)" },
+          { status: 400 },
+        );
+      case "duplicate_order_in_files":
+        return Response.json(
+          { error: "Duplicate order values in files" },
+          { status: 400 },
+        );
       case "invalid_public_id":
         return Response.json({ error: "Invalid publicId" }, { status: 400 });
       case "invalid_file_name":
@@ -132,6 +147,8 @@ export async function POST(req: Request) {
         );
       case "invalid_file_url":
         return Response.json({ error: "Invalid fileUrl" }, { status: 400 });
+      case "invalid_mime_type":
+        return Response.json({ error: "Invalid mimeType" }, { status: 400 });
       case "invalid_academic_year":
         return Response.json(
           { error: "Invalid academicYear (expected format YYYY/YYYY)" },
@@ -180,7 +197,7 @@ export async function POST(req: Request) {
           return Response.json({ error: "Course not found" }, { status: 404 });
         case "duplicate_public_id":
           return Response.json(
-            { error: "Pasco with this publicId already exists" },
+            { error: "A pasco file with this publicId already exists" },
             { status: 409 },
           );
       }

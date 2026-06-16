@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import type { Pasco } from "../../generated/prisma/client";
+import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import {
   EducationLevel,
@@ -19,6 +19,7 @@ const MAX_FILE_NAME_LENGTH = 255;
 const MAX_FILE_EXTENSION_LENGTH = 20;
 const MAX_PUBLIC_ID_LENGTH = 500;
 const MAX_FILE_URL_LENGTH = 2000;
+const MAX_MIME_TYPE_LENGTH = 127;
 
 const EDUCATION_LEVELS = new Set<string>(Object.values(EducationLevel));
 const SEMESTER_TYPES = new Set<string>(Object.values(SemesterType));
@@ -28,13 +29,21 @@ const SOLUTION_COMPLETENESS_VALUES = new Set<string>(
   Object.values(SolutionCompleteness),
 );
 
-export type PascoCreateInput = {
-  courseId: string;
+const MIME_TYPE_PATTERN = /^[a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+$/;
+
+export type PascoFileCreateInput = {
+  order: number;
   publicId: string;
   fileName: string;
   fileSize: number;
   fileExtension: string;
   fileUrl: string;
+  mimeType: string;
+};
+
+export type PascoCreateInput = {
+  courseId: string;
+  files: PascoFileCreateInput[];
   academicYear: string;
   description?: string;
   educationLevel: EducationLevelType;
@@ -56,16 +65,21 @@ export type PascoUpdateInput = {
   isComplete?: boolean;
 };
 
+export type PascoWithFiles = Pasco & { files: PascoFile[] };
+
 type PascoError = "not_found" | "course_not_found" | "duplicate_public_id";
 
 type PascoCreateParseError =
   | "invalid_body"
   | "invalid_course_id"
+  | "invalid_files"
+  | "invalid_file_order"
   | "invalid_public_id"
   | "invalid_file_name"
   | "invalid_file_size"
   | "invalid_file_extension"
   | "invalid_file_url"
+  | "invalid_mime_type"
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
@@ -74,7 +88,8 @@ type PascoCreateParseError =
   | "invalid_content_type"
   | "invalid_is_complete"
   | "invalid_solution_completeness"
-  | "invalid_solution_completeness_for_content_type";
+  | "invalid_solution_completeness_for_content_type"
+  | "duplicate_order_in_files";
 
 type PascoUpdateParseError =
   | "invalid_body"
@@ -86,6 +101,10 @@ type PascoUpdateParseError =
   | "invalid_content_type"
   | "invalid_is_complete"
   | "invalid_solution_completeness";
+
+const pascoInclude = {
+  files: { orderBy: { order: "asc" as const } },
+} satisfies Prisma.PascoInclude;
 
 function parseCourseId(value: unknown): string | null {
   if (typeof value !== "string") {
@@ -121,6 +140,154 @@ function parseFileSize(value: unknown): number | null {
   }
 
   return value;
+}
+
+function parseOrder(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    return null;
+  }
+
+  return value;
+}
+
+function parseMimeType(value: unknown): string | null {
+  const mimeType = parseNonEmptyString(value, MAX_MIME_TYPE_LENGTH);
+
+  if (mimeType === null) {
+    return null;
+  }
+
+  if (!MIME_TYPE_PATTERN.test(mimeType)) {
+    return null;
+  }
+
+  return mimeType;
+}
+
+function parsePascoFileCreate(value: unknown):
+  | { success: true; data: PascoFileCreateInput }
+  | {
+      success: false;
+      error:
+        | "invalid_file_order"
+        | "invalid_public_id"
+        | "invalid_file_name"
+        | "invalid_file_size"
+        | "invalid_file_extension"
+        | "invalid_file_url"
+        | "invalid_mime_type";
+    } {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "invalid_public_id" };
+  }
+
+  const record = value as Record<string, unknown>;
+
+  const requiredFields = [
+    "order",
+    "publicId",
+    "fileName",
+    "fileSize",
+    "fileExtension",
+    "fileUrl",
+    "mimeType",
+  ] as const;
+
+  if (!requiredFields.every((field) => field in record)) {
+    return { success: false, error: "invalid_public_id" };
+  }
+
+  const order = parseOrder(record.order);
+  const publicId = parseNonEmptyString(record.publicId, MAX_PUBLIC_ID_LENGTH);
+  const fileName = parseNonEmptyString(record.fileName, MAX_FILE_NAME_LENGTH);
+  const fileSize = parseFileSize(record.fileSize);
+  const fileExtension = parseNonEmptyString(
+    record.fileExtension,
+    MAX_FILE_EXTENSION_LENGTH,
+  );
+  const fileUrl = parseNonEmptyString(record.fileUrl, MAX_FILE_URL_LENGTH);
+  const mimeType = parseMimeType(record.mimeType);
+
+  if (order === null) {
+    return { success: false, error: "invalid_file_order" };
+  }
+
+  if (publicId === null) {
+    return { success: false, error: "invalid_public_id" };
+  }
+
+  if (fileName === null) {
+    return { success: false, error: "invalid_file_name" };
+  }
+
+  if (fileSize === null) {
+    return { success: false, error: "invalid_file_size" };
+  }
+
+  if (fileExtension === null) {
+    return { success: false, error: "invalid_file_extension" };
+  }
+
+  if (fileUrl === null) {
+    return { success: false, error: "invalid_file_url" };
+  }
+
+  if (mimeType === null) {
+    return { success: false, error: "invalid_mime_type" };
+  }
+
+  return {
+    success: true,
+    data: {
+      order,
+      publicId,
+      fileName,
+      fileSize,
+      fileExtension,
+      fileUrl,
+      mimeType,
+    },
+  };
+}
+
+function parsePascoFiles(value: unknown):
+  | { success: true; data: PascoFileCreateInput[] }
+  | {
+      success: false;
+      error:
+        | "invalid_files"
+        | "invalid_file_order"
+        | "invalid_public_id"
+        | "invalid_file_name"
+        | "invalid_file_size"
+        | "invalid_file_extension"
+        | "invalid_file_url"
+        | "invalid_mime_type"
+        | "duplicate_order_in_files";
+    } {
+  if (!Array.isArray(value) || value.length === 0) {
+    return { success: false, error: "invalid_files" };
+  }
+
+  const files: PascoFileCreateInput[] = [];
+  const seenOrders = new Set<number>();
+
+  for (const file of value) {
+    const parsed = parsePascoFileCreate(file);
+
+    if (!parsed.success) {
+      return parsed;
+    }
+
+    if (seenOrders.has(parsed.data.order)) {
+      return { success: false, error: "duplicate_order_in_files" };
+    }
+
+    seenOrders.add(parsed.data.order);
+    files.push(parsed.data);
+  }
+
+  return { success: true, data: files };
 }
 
 function parseAcademicYear(value: unknown): string | null {
@@ -243,11 +410,7 @@ export function parsePascoCreate(
 
   const requiredFields = [
     "courseId",
-    "publicId",
-    "fileName",
-    "fileSize",
-    "fileExtension",
-    "fileUrl",
+    "files",
     "academicYear",
     "educationLevel",
     "semesterType",
@@ -260,38 +423,15 @@ export function parsePascoCreate(
   }
 
   const courseId = parseCourseId(record.courseId);
-  const publicId = parseNonEmptyString(record.publicId, MAX_PUBLIC_ID_LENGTH);
-  const fileName = parseNonEmptyString(record.fileName, MAX_FILE_NAME_LENGTH);
-  const fileSize = parseFileSize(record.fileSize);
-  const fileExtension = parseNonEmptyString(
-    record.fileExtension,
-    MAX_FILE_EXTENSION_LENGTH,
-  );
-  const fileUrl = parseNonEmptyString(record.fileUrl, MAX_FILE_URL_LENGTH);
+  const filesResult = parsePascoFiles(record.files);
   const academicYear = parseAcademicYear(record.academicYear);
 
   if (courseId === null) {
     return { success: false, error: "invalid_course_id" };
   }
 
-  if (publicId === null) {
-    return { success: false, error: "invalid_public_id" };
-  }
-
-  if (fileName === null) {
-    return { success: false, error: "invalid_file_name" };
-  }
-
-  if (fileSize === null) {
-    return { success: false, error: "invalid_file_size" };
-  }
-
-  if (fileExtension === null) {
-    return { success: false, error: "invalid_file_extension" };
-  }
-
-  if (fileUrl === null) {
-    return { success: false, error: "invalid_file_url" };
+  if (!filesResult.success) {
+    return filesResult;
   }
 
   if (academicYear === null) {
@@ -361,11 +501,7 @@ export function parsePascoCreate(
     success: true,
     data: {
       courseId,
-      publicId,
-      fileName,
-      fileSize,
-      fileExtension,
-      fileUrl,
+      files: filesResult.data,
       academicYear,
       educationLevel: record.educationLevel,
       semesterType: record.semesterType,
@@ -495,16 +631,27 @@ export function parsePascoUpdate(
   return { success: true, data };
 }
 
-export function serializePasco(pasco: Pasco) {
+function serializePascoFile(file: PascoFile) {
+  return {
+    id: file.id,
+    pascoId: file.pascoId,
+    order: file.order,
+    publicId: file.publicId,
+    fileName: file.fileName,
+    fileSize: file.fileSize,
+    fileExtension: file.fileExtension,
+    fileUrl: file.fileUrl,
+    mimeType: file.mimeType,
+    createdAt: file.createdAt.toISOString(),
+    updatedAt: file.updatedAt.toISOString(),
+  };
+}
+
+export function serializePasco(pasco: PascoWithFiles) {
   return {
     id: pasco.id,
     courseId: pasco.courseId,
     uploaderId: pasco.uploaderId,
-    publicId: pasco.publicId,
-    fileName: pasco.fileName,
-    fileSize: pasco.fileSize,
-    fileExtension: pasco.fileExtension,
-    fileUrl: pasco.fileUrl,
     academicYear: pasco.academicYear,
     description: pasco.description,
     educationLevel: pasco.educationLevel,
@@ -513,6 +660,7 @@ export function serializePasco(pasco: Pasco) {
     contentType: pasco.contentType,
     solutionCompleteness: pasco.solutionCompleteness,
     isComplete: pasco.isComplete,
+    files: pasco.files.map(serializePascoFile),
     createdAt: pasco.createdAt.toISOString(),
     updatedAt: pasco.updatedAt.toISOString(),
   };
@@ -548,7 +696,7 @@ export async function listPascos(params?: {
   semesterType?: SemesterTypeType;
   type?: PascoTypeType;
   isComplete?: boolean;
-}): Promise<{ success: true; pascos: Pasco[] } | { success: false }> {
+}): Promise<{ success: true; pascos: PascoWithFiles[] } | { success: false }> {
   const pascos = await prisma.pasco.findMany({
     where: {
       ...(params?.courseId ? { courseId: params.courseId } : {}),
@@ -562,6 +710,7 @@ export async function listPascos(params?: {
         ? { isComplete: params.isComplete }
         : {}),
     },
+    include: pascoInclude,
     orderBy: { createdAt: "desc" },
   });
 
@@ -571,9 +720,13 @@ export async function listPascos(params?: {
 export async function getPascoById(
   pascoId: string,
 ): Promise<
-  { success: true; pasco: Pasco } | { success: false; error: PascoError }
+  | { success: true; pasco: PascoWithFiles }
+  | { success: false; error: PascoError }
 > {
-  const pasco = await prisma.pasco.findUnique({ where: { id: pascoId } });
+  const pasco = await prisma.pasco.findUnique({
+    where: { id: pascoId },
+    include: pascoInclude,
+  });
 
   if (!pasco) {
     return { success: false, error: "not_found" };
@@ -586,7 +739,7 @@ export async function createPasco(
   input: PascoCreateInput,
   uploaderId: string,
 ): Promise<
-  | { success: true; pasco: Pasco }
+  | { success: true; pasco: PascoWithFiles }
   | { success: false; error: "course_not_found" | "duplicate_public_id" }
 > {
   const course = await prisma.course.findUnique({
@@ -602,11 +755,6 @@ export async function createPasco(
       data: {
         courseId: input.courseId,
         uploaderId,
-        publicId: input.publicId,
-        fileName: input.fileName,
-        fileSize: input.fileSize,
-        fileExtension: input.fileExtension,
-        fileUrl: input.fileUrl,
         academicYear: input.academicYear,
         description: input.description ?? null,
         educationLevel: input.educationLevel,
@@ -615,7 +763,19 @@ export async function createPasco(
         contentType: input.contentType,
         solutionCompleteness: input.solutionCompleteness ?? null,
         isComplete: input.isComplete ?? true,
+        files: {
+          create: input.files.map((file) => ({
+            order: file.order,
+            publicId: file.publicId,
+            fileName: file.fileName,
+            fileSize: file.fileSize,
+            fileExtension: file.fileExtension,
+            fileUrl: file.fileUrl,
+            mimeType: file.mimeType,
+          })),
+        },
       },
+      include: pascoInclude,
     });
 
     return { success: true, pasco };
@@ -632,7 +792,7 @@ export async function updatePasco(
   pascoId: string,
   input: PascoUpdateInput,
 ): Promise<
-  | { success: true; pasco: Pasco }
+  | { success: true; pasco: PascoWithFiles }
   | {
       success: false;
       error: "not_found" | "invalid_solution_completeness_for_content_type";
@@ -675,6 +835,7 @@ export async function updatePasco(
       }),
       ...(input.isComplete !== undefined && { isComplete: input.isComplete }),
     },
+    include: pascoInclude,
   });
 
   return { success: true, pasco };
