@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       case "invalid_body":
         return Response.json(
           {
-            error: "Request must include courseId and resourceType",
+            error: "Request must include courseId, resourceType, and fileName",
           },
           { status: 400 },
         );
@@ -70,6 +70,13 @@ export async function POST(req: Request) {
       case "invalid_resource_type":
         return Response.json(
           { error: "Invalid resourceType" },
+          { status: 400 },
+        );
+      case "invalid_file_name":
+        return Response.json({ error: "Invalid fileName" }, { status: 400 });
+      case "invalid_pdf_resource_type":
+        return Response.json(
+          { error: "PDFs must use resourceType IMAGE" },
           { status: 400 },
         );
     }

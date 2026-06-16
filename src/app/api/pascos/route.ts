@@ -2,75 +2,82 @@ import { auth } from "@clerk/nextjs/server";
 
 import {
   createPasco,
+  getPascoMaxFileSizeBytes,
+  getPascoMaxFilesPerPasco,
   listPascos,
+  parseListPascosQuery,
   parsePascoCreate,
   serializePasco,
 } from "@/lib/pascos";
 import { requireContributor } from "@/lib/require-contributor";
-import {
-  EducationLevel,
-  PascoType,
-  SemesterType,
-} from "../../../../generated/prisma/enums";
 
 export const runtime = "nodejs";
 
-const EDUCATION_LEVELS = new Set<string>(Object.values(EducationLevel));
-const SEMESTER_TYPES = new Set<string>(Object.values(SemesterType));
-const PASCO_TYPES = new Set<string>(Object.values(PascoType));
-
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const courseId = url.searchParams.get("courseId");
-  const educationLevel = url.searchParams.get("educationLevel");
-  const academicYear = url.searchParams.get("academicYear");
-  const semesterType = url.searchParams.get("semesterType");
-  const type = url.searchParams.get("type");
-  const isCompleteParam = url.searchParams.get("isComplete");
+  const parsed = parseListPascosQuery(url.searchParams);
 
-  if (educationLevel !== null && !EDUCATION_LEVELS.has(educationLevel)) {
-    return Response.json({ error: "Invalid educationLevel" }, { status: 400 });
-  }
-
-  if (semesterType !== null && !SEMESTER_TYPES.has(semesterType)) {
-    return Response.json({ error: "Invalid semesterType" }, { status: 400 });
-  }
-
-  if (type !== null && !PASCO_TYPES.has(type)) {
-    return Response.json({ error: "Invalid type" }, { status: 400 });
-  }
-
-  let isComplete: boolean | undefined;
-  if (isCompleteParam !== null) {
-    if (isCompleteParam === "true") {
-      isComplete = true;
-    } else if (isCompleteParam === "false") {
-      isComplete = false;
-    } else {
-      return Response.json({ error: "Invalid isComplete" }, { status: 400 });
+  if (!parsed.success) {
+    switch (parsed.error) {
+      case "invalid_education_level":
+        return Response.json(
+          { error: "Invalid educationLevel" },
+          { status: 400 },
+        );
+      case "invalid_semester_type":
+        return Response.json(
+          { error: "Invalid semesterType" },
+          { status: 400 },
+        );
+      case "invalid_type":
+        return Response.json({ error: "Invalid type" }, { status: 400 });
+      case "invalid_content_type":
+        return Response.json({ error: "Invalid contentType" }, { status: 400 });
+      case "invalid_is_complete":
+        return Response.json({ error: "Invalid isComplete" }, { status: 400 });
+      case "invalid_page":
+        return Response.json(
+          { error: "Invalid page (expected a positive integer)" },
+          { status: 400 },
+        );
+      case "invalid_limit":
+        return Response.json(
+          { error: "Invalid limit (expected an integer from 1 to 100)" },
+          { status: 400 },
+        );
+      case "invalid_sort_by":
+        return Response.json(
+          {
+            error:
+              "Invalid sortBy (allowed: createdAt, updatedAt, academicYear)",
+          },
+          { status: 400 },
+        );
+      case "invalid_sort_order":
+        return Response.json(
+          { error: "Invalid sortOrder (allowed: asc, desc)" },
+          { status: 400 },
+        );
     }
   }
 
   try {
-    const result = await listPascos({
-      courseId: courseId ?? undefined,
-      educationLevel:
-        educationLevel !== null
-          ? (educationLevel as EducationLevel)
-          : undefined,
-      academicYear: academicYear ?? undefined,
-      semesterType:
-        semesterType !== null ? (semesterType as SemesterType) : undefined,
-      type: type !== null ? (type as PascoType) : undefined,
-      isComplete,
-    });
+    const result = await listPascos(parsed.data);
 
     if (!result.success) {
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 
+    const totalPages = Math.ceil(result.total / result.limit);
+
     return Response.json({
       pascos: result.pascos.map(serializePasco),
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages,
+      },
     });
   } catch (err) {
     console.error("Pasco list failed:", err);
@@ -132,6 +139,20 @@ export async function POST(req: Request) {
       case "duplicate_order_in_files":
         return Response.json(
           { error: "Duplicate order values in files" },
+          { status: 400 },
+        );
+      case "too_many_files":
+        return Response.json(
+          {
+            error: `A pasco cannot have more than ${getPascoMaxFilesPerPasco()} files`,
+          },
+          { status: 400 },
+        );
+      case "file_size_exceeded":
+        return Response.json(
+          {
+            error: `Each file must be at most ${getPascoMaxFileSizeBytes()} bytes`,
+          },
           { status: 400 },
         );
       case "invalid_public_id":

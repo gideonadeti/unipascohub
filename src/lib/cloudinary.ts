@@ -12,12 +12,15 @@ const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
 export type SignUploadInput = {
   courseId: string;
   resourceType: CloudinaryResourceTypeType;
+  fileName: string;
 };
 
 type SignUploadParseError =
   | "invalid_body"
   | "invalid_course_id"
-  | "invalid_resource_type";
+  | "invalid_resource_type"
+  | "invalid_file_name"
+  | "invalid_pdf_resource_type";
 
 type SignUploadError = "missing_config";
 
@@ -70,6 +73,20 @@ function parseCourseId(value: unknown): string | null {
   return courseId;
 }
 
+function parseFileName(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const fileName = value.trim();
+
+  if (fileName.length === 0 || fileName.length > 255) {
+    return null;
+  }
+
+  return fileName;
+}
+
 function isCloudinaryResourceType(
   value: string,
 ): value is CloudinaryResourceTypeType {
@@ -106,14 +123,23 @@ export function parseSignUploadInput(
 
   const record = body as Record<string, unknown>;
 
-  if (!("courseId" in record) || !("resourceType" in record)) {
+  if (
+    !("courseId" in record) ||
+    !("resourceType" in record) ||
+    !("fileName" in record)
+  ) {
     return { success: false, error: "invalid_body" };
   }
 
   const courseId = parseCourseId(record.courseId);
+  const fileName = parseFileName(record.fileName);
 
   if (courseId === null) {
     return { success: false, error: "invalid_course_id" };
+  }
+
+  if (fileName === null) {
+    return { success: false, error: "invalid_file_name" };
   }
 
   if (
@@ -123,10 +149,15 @@ export function parseSignUploadInput(
     return { success: false, error: "invalid_resource_type" };
   }
 
+  if (!validatePdfResourceType(fileName, record.resourceType)) {
+    return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
   return {
     success: true,
     data: {
       courseId,
+      fileName,
       resourceType: record.resourceType,
     },
   };

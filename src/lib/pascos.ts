@@ -26,8 +26,15 @@ const MAX_DESCRIPTION_LENGTH = 1000;
 const MAX_FILE_NAME_LENGTH = 255;
 const MAX_PUBLIC_ID_LENGTH = 500;
 const MAX_FILE_URL_LENGTH = 2000;
+const DEFAULT_LIST_PAGE = 1;
+const DEFAULT_LIST_LIMIT = 20;
+const MAX_LIST_LIMIT = 100;
 
 const EXISTING_FILE_SYNC_KEYS = new Set(["id", "order"]);
+const LIST_SORT_FIELDS = ["createdAt", "updatedAt", "academicYear"] as const;
+
+type PascoListSortBy = (typeof LIST_SORT_FIELDS)[number];
+type PascoListSortOrder = "asc" | "desc";
 
 const EDUCATION_LEVELS = new Set<string>(Object.values(EducationLevel));
 const SEMESTER_TYPES = new Set<string>(Object.values(SemesterType));
@@ -85,6 +92,31 @@ export type PascoUpdateInput = {
 
 export type PascoWithFiles = Pasco & { files: PascoFile[] };
 
+export type PascoListQuery = {
+  courseId?: string;
+  educationLevel?: EducationLevelType;
+  academicYear?: string;
+  semesterType?: SemesterTypeType;
+  type?: PascoTypeType;
+  contentType?: PascoContentTypeType;
+  isComplete?: boolean;
+  page: number;
+  limit: number;
+  sortBy: PascoListSortBy;
+  sortOrder: PascoListSortOrder;
+};
+
+export type PascoListParseError =
+  | "invalid_education_level"
+  | "invalid_semester_type"
+  | "invalid_type"
+  | "invalid_content_type"
+  | "invalid_is_complete"
+  | "invalid_page"
+  | "invalid_limit"
+  | "invalid_sort_by"
+  | "invalid_sort_order";
+
 type PascoError = "not_found" | "course_not_found" | "duplicate_public_id";
 
 type PascoCreateParseError =
@@ -107,7 +139,9 @@ type PascoCreateParseError =
   | "invalid_is_complete"
   | "invalid_solution_completeness"
   | "invalid_solution_completeness_for_content_type"
-  | "duplicate_order_in_files";
+  | "duplicate_order_in_files"
+  | "too_many_files"
+  | "file_size_exceeded";
 
 type PascoUpdateParseError =
   | "invalid_body"
@@ -131,17 +165,155 @@ type PascoUpdateParseError =
   | "conflicting_file_update"
   | "invalid_file_id"
   | "duplicate_file_id_in_payload"
-  | "invalid_existing_file_payload";
+  | "invalid_existing_file_payload"
+  | "too_many_files"
+  | "file_size_exceeded";
 
 type PascoFileSyncError =
   | "unknown_file_id"
-  | "cloudinary_delete_failed"
   | VerifyFileError
-  | "duplicate_public_id";
+  | "duplicate_public_id"
+  | "too_many_files";
 
 const pascoInclude = {
   files: { orderBy: { order: "asc" as const } },
 } satisfies Prisma.PascoInclude;
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (value === undefined) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+export function getPascoMaxFilesPerPasco(): number {
+  return parsePositiveInt(process.env.PASCO_MAX_FILES_PER_PASCO, 20);
+}
+
+export function getPascoMaxFileSizeBytes(): number {
+  return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 20_971_520);
+}
+
+function isFileSizeWithinPolicy(fileSize: number): boolean {
+  return fileSize <= getPascoMaxFileSizeBytes();
+}
+
+function isPascoListSortBy(value: string): value is PascoListSortBy {
+  return (LIST_SORT_FIELDS as readonly string[]).includes(value);
+}
+
+function isPascoListSortOrder(value: string): value is PascoListSortOrder {
+  return value === "asc" || value === "desc";
+}
+
+export function parseListPascosQuery(
+  searchParams: URLSearchParams,
+):
+  | { success: true; data: PascoListQuery }
+  | { success: false; error: PascoListParseError } {
+  const courseIdParam = searchParams.get("courseId");
+  const educationLevelParam = searchParams.get("educationLevel");
+  const academicYearParam = searchParams.get("academicYear");
+  const semesterTypeParam = searchParams.get("semesterType");
+  const typeParam = searchParams.get("type");
+  const contentTypeParam = searchParams.get("contentType");
+  const isCompleteParam = searchParams.get("isComplete");
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+  const sortByParam = searchParams.get("sortBy");
+  const sortOrderParam = searchParams.get("sortOrder");
+
+  if (
+    educationLevelParam !== null &&
+    !EDUCATION_LEVELS.has(educationLevelParam)
+  ) {
+    return { success: false, error: "invalid_education_level" };
+  }
+
+  if (semesterTypeParam !== null && !SEMESTER_TYPES.has(semesterTypeParam)) {
+    return { success: false, error: "invalid_semester_type" };
+  }
+
+  if (typeParam !== null && !PASCO_TYPES.has(typeParam)) {
+    return { success: false, error: "invalid_type" };
+  }
+
+  if (contentTypeParam !== null && !PASCO_CONTENT_TYPES.has(contentTypeParam)) {
+    return { success: false, error: "invalid_content_type" };
+  }
+
+  let isComplete: boolean | undefined;
+  if (isCompleteParam !== null) {
+    if (isCompleteParam === "true") {
+      isComplete = true;
+    } else if (isCompleteParam === "false") {
+      isComplete = false;
+    } else {
+      return { success: false, error: "invalid_is_complete" };
+    }
+  }
+
+  const page =
+    pageParam === null ? DEFAULT_LIST_PAGE : Number.parseInt(pageParam, 10);
+  if (!Number.isInteger(page) || page < 1) {
+    return { success: false, error: "invalid_page" };
+  }
+
+  const limit =
+    limitParam === null ? DEFAULT_LIST_LIMIT : Number.parseInt(limitParam, 10);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIST_LIMIT) {
+    return { success: false, error: "invalid_limit" };
+  }
+
+  const sortBy =
+    sortByParam === null || sortByParam.length === 0
+      ? "createdAt"
+      : sortByParam;
+  if (!isPascoListSortBy(sortBy)) {
+    return { success: false, error: "invalid_sort_by" };
+  }
+
+  const sortOrder =
+    sortOrderParam === null || sortOrderParam.length === 0
+      ? "desc"
+      : sortOrderParam;
+  if (!isPascoListSortOrder(sortOrder)) {
+    return { success: false, error: "invalid_sort_order" };
+  }
+
+  return {
+    success: true,
+    data: {
+      courseId: courseIdParam?.trim() || undefined,
+      educationLevel:
+        educationLevelParam !== null
+          ? (educationLevelParam as EducationLevelType)
+          : undefined,
+      academicYear: academicYearParam?.trim() || undefined,
+      semesterType:
+        semesterTypeParam !== null
+          ? (semesterTypeParam as SemesterTypeType)
+          : undefined,
+      type: typeParam !== null ? (typeParam as PascoTypeType) : undefined,
+      contentType:
+        contentTypeParam !== null
+          ? (contentTypeParam as PascoContentTypeType)
+          : undefined,
+      isComplete,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    },
+  };
+}
 
 function parseCourseId(value: unknown): string | null {
   if (typeof value !== "string") {
@@ -210,7 +382,8 @@ function parsePascoFileCreate(value: unknown):
         | "invalid_file_size"
         | "invalid_file_url"
         | "invalid_resource_type"
-        | "invalid_pdf_resource_type";
+        | "invalid_pdf_resource_type"
+        | "file_size_exceeded";
     } {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return { success: false, error: "invalid_public_id" };
@@ -251,6 +424,10 @@ function parsePascoFileCreate(value: unknown):
 
   if (fileSize === null) {
     return { success: false, error: "invalid_file_size" };
+  }
+
+  if (!isFileSizeWithinPolicy(fileSize)) {
+    return { success: false, error: "file_size_exceeded" };
   }
 
   if (fileUrl === null) {
@@ -294,10 +471,16 @@ function parsePascoFiles(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
-        | "duplicate_order_in_files";
+        | "duplicate_order_in_files"
+        | "too_many_files"
+        | "file_size_exceeded";
     } {
   if (!Array.isArray(value) || value.length === 0) {
     return { success: false, error: "invalid_files" };
+  }
+
+  if (value.length > getPascoMaxFilesPerPasco()) {
+    return { success: false, error: "too_many_files" };
   }
 
   const files: PascoFileCreateInput[] = [];
@@ -348,7 +531,8 @@ function parsePascoFileSync(value: unknown):
         | "invalid_file_size"
         | "invalid_file_url"
         | "invalid_resource_type"
-        | "invalid_pdf_resource_type";
+        | "invalid_pdf_resource_type"
+        | "file_size_exceeded";
     } {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return { success: false, error: "invalid_public_id" };
@@ -403,10 +587,16 @@ function parsePascoFilesSync(value: unknown):
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
         | "duplicate_order_in_files"
-        | "duplicate_file_id_in_payload";
+        | "duplicate_file_id_in_payload"
+        | "too_many_files"
+        | "file_size_exceeded";
     } {
   if (!Array.isArray(value) || value.length === 0) {
     return { success: false, error: "invalid_files" };
+  }
+
+  if (value.length > getPascoMaxFilesPerPasco()) {
+    return { success: false, error: "too_many_files" };
   }
 
   const files: PascoFileSyncInput[] = [];
@@ -858,11 +1048,10 @@ async function syncPascoFiles(
   existing: PascoWithFiles,
   inputFiles: PascoFileSyncInput[],
 ): Promise<
-  | { success: true; pasco: PascoWithFiles }
+  | { success: true; pasco: PascoWithFiles; storageCleanupFailures?: string[] }
   | {
       success: false;
       error: PascoFileSyncError;
-      failedPublicIds?: string[];
     }
 > {
   const existingById = new Map(existing.files.map((file) => [file.id, file]));
@@ -882,8 +1071,16 @@ async function syncPascoFiles(
     toAdd.push(file);
   }
 
+  if (inputFiles.length > getPascoMaxFilesPerPasco()) {
+    return { success: false, error: "too_many_files" };
+  }
+
   const keptIds = new Set(toKeep.map((file) => file.id));
   const toDelete = existing.files.filter((file) => !keptIds.has(file.id));
+  const storageDeleteTargets = toDelete.map((file) => ({
+    publicId: file.publicId,
+    resourceType: file.resourceType,
+  }));
 
   const expectedAssetFolder = `pascos/${existing.courseId}`;
   const verificationResults = await Promise.all(
@@ -901,23 +1098,6 @@ async function syncPascoFiles(
   for (const result of verificationResults) {
     if (!result.success) {
       return { success: false, error: result.error };
-    }
-  }
-
-  if (toDelete.length > 0) {
-    const cloudinaryResult = await deleteCloudinaryAssets(
-      toDelete.map((file) => ({
-        publicId: file.publicId,
-        resourceType: file.resourceType,
-      })),
-    );
-
-    if (!cloudinaryResult.success) {
-      return {
-        success: false,
-        error: "cloudinary_delete_failed",
-        failedPublicIds: cloudinaryResult.failedPublicIds,
-      };
     }
   }
 
@@ -972,35 +1152,68 @@ async function syncPascoFiles(
     include: pascoInclude,
   });
 
+  if (storageDeleteTargets.length === 0) {
+    return { success: true, pasco };
+  }
+
+  const cloudinaryResult = await deleteCloudinaryAssets(storageDeleteTargets);
+
+  if (!cloudinaryResult.success) {
+    return {
+      success: true,
+      pasco,
+      storageCleanupFailures: cloudinaryResult.failedPublicIds,
+    };
+  }
+
   return { success: true, pasco };
 }
 
-export async function listPascos(params?: {
-  courseId?: string;
-  educationLevel?: EducationLevelType;
-  academicYear?: string;
-  semesterType?: SemesterTypeType;
-  type?: PascoTypeType;
-  isComplete?: boolean;
-}): Promise<{ success: true; pascos: PascoWithFiles[] } | { success: false }> {
-  const pascos = await prisma.pasco.findMany({
-    where: {
-      ...(params?.courseId ? { courseId: params.courseId } : {}),
-      ...(params?.educationLevel
-        ? { educationLevel: params.educationLevel }
-        : {}),
-      ...(params?.academicYear ? { academicYear: params.academicYear } : {}),
-      ...(params?.semesterType ? { semesterType: params.semesterType } : {}),
-      ...(params?.type ? { type: params.type } : {}),
-      ...(params?.isComplete !== undefined
-        ? { isComplete: params.isComplete }
-        : {}),
-    },
-    include: pascoInclude,
-    orderBy: { createdAt: "desc" },
-  });
+export async function listPascos(params: PascoListQuery): Promise<
+  | {
+      success: true;
+      pascos: PascoWithFiles[];
+      total: number;
+      page: number;
+      limit: number;
+    }
+  | { success: false }
+> {
+  const where = {
+    ...(params.courseId ? { courseId: params.courseId } : {}),
+    ...(params.educationLevel ? { educationLevel: params.educationLevel } : {}),
+    ...(params.academicYear ? { academicYear: params.academicYear } : {}),
+    ...(params.semesterType ? { semesterType: params.semesterType } : {}),
+    ...(params.type ? { type: params.type } : {}),
+    ...(params.contentType ? { contentType: params.contentType } : {}),
+    ...(params.isComplete !== undefined
+      ? { isComplete: params.isComplete }
+      : {}),
+  };
 
-  return { success: true, pascos };
+  const orderBy = {
+    [params.sortBy]: params.sortOrder,
+  } as Prisma.PascoOrderByWithRelationInput;
+  const skip = (params.page - 1) * params.limit;
+
+  const [total, pascos] = await Promise.all([
+    prisma.pasco.count({ where }),
+    prisma.pasco.findMany({
+      where,
+      include: pascoInclude,
+      orderBy,
+      skip,
+      take: params.limit,
+    }),
+  ]);
+
+  return {
+    success: true,
+    pascos,
+    total,
+    page: params.page,
+    limit: params.limit,
+  };
 }
 
 export async function getPascoById(
@@ -1099,14 +1312,13 @@ export async function updatePasco(
   pascoId: string,
   input: PascoUpdateInput,
 ): Promise<
-  | { success: true; pasco: PascoWithFiles }
+  | { success: true; pasco: PascoWithFiles; storageCleanupFailures?: string[] }
   | {
       success: false;
       error:
         | "not_found"
         | "invalid_solution_completeness_for_content_type"
         | PascoFileSyncError;
-      failedPublicIds?: string[];
     }
 > {
   const existing = await prisma.pasco.findUnique({
@@ -1167,16 +1379,16 @@ export async function updatePasco(
     const syncResult = await syncPascoFiles(pascoId, existing, input.files);
 
     if (!syncResult.success) {
-      return {
-        success: false,
-        error: syncResult.error,
-        ...(syncResult.failedPublicIds !== undefined && {
-          failedPublicIds: syncResult.failedPublicIds,
-        }),
-      };
+      return { success: false, error: syncResult.error };
     }
 
-    return { success: true, pasco: syncResult.pasco };
+    return {
+      success: true,
+      pasco: syncResult.pasco,
+      ...(syncResult.storageCleanupFailures !== undefined && {
+        storageCleanupFailures: syncResult.storageCleanupFailures,
+      }),
+    };
   }
 
   const pasco = await prisma.pasco.findUniqueOrThrow({
@@ -1187,13 +1399,11 @@ export async function updatePasco(
   return { success: true, pasco };
 }
 
-export async function deletePasco(pascoId: string): Promise<
-  | { success: true }
-  | {
-      success: false;
-      error: "not_found" | "cloudinary_delete_failed";
-      failedPublicIds?: string[];
-    }
+export async function deletePasco(
+  pascoId: string,
+): Promise<
+  | { success: true; storageCleanupFailures?: string[] }
+  | { success: false; error: "not_found" }
 > {
   const existing = await prisma.pasco.findUnique({
     where: { id: pascoId },
@@ -1204,22 +1414,25 @@ export async function deletePasco(pascoId: string): Promise<
     return { success: false, error: "not_found" };
   }
 
-  const cloudinaryResult = await deleteCloudinaryAssets(
-    existing.files.map((file) => ({
-      publicId: file.publicId,
-      resourceType: file.resourceType,
-    })),
-  );
+  const storageDeleteTargets = existing.files.map((file) => ({
+    publicId: file.publicId,
+    resourceType: file.resourceType,
+  }));
+
+  await prisma.pasco.delete({ where: { id: pascoId } });
+
+  if (storageDeleteTargets.length === 0) {
+    return { success: true };
+  }
+
+  const cloudinaryResult = await deleteCloudinaryAssets(storageDeleteTargets);
 
   if (!cloudinaryResult.success) {
     return {
-      success: false,
-      error: "cloudinary_delete_failed",
-      failedPublicIds: cloudinaryResult.failedPublicIds,
+      success: true,
+      storageCleanupFailures: cloudinaryResult.failedPublicIds,
     };
   }
-
-  await prisma.pasco.delete({ where: { id: pascoId } });
 
   return { success: true };
 }

@@ -3,6 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import {
   deletePasco,
   getPascoById,
+  getPascoMaxFileSizeBytes,
+  getPascoMaxFilesPerPasco,
   parsePascoUpdate,
   serializePasco,
   updatePasco,
@@ -161,6 +163,20 @@ export async function PATCH(
           { error: "PDFs must use resourceType IMAGE" },
           { status: 400 },
         );
+      case "too_many_files":
+        return Response.json(
+          {
+            error: `A pasco cannot have more than ${getPascoMaxFilesPerPasco()} files`,
+          },
+          { status: 400 },
+        );
+      case "file_size_exceeded":
+        return Response.json(
+          {
+            error: `Each file must be at most ${getPascoMaxFileSizeBytes()} bytes`,
+          },
+          { status: 400 },
+        );
     }
   }
 
@@ -184,13 +200,12 @@ export async function PATCH(
             { error: "File id does not belong to this pasco" },
             { status: 400 },
           );
-        case "cloudinary_delete_failed":
+        case "too_many_files":
           return Response.json(
             {
-              error: "Failed to delete file from storage",
-              failedPublicIds: result.failedPublicIds ?? [],
+              error: `A pasco cannot have more than ${getPascoMaxFilesPerPasco()} files`,
             },
-            { status: 502 },
+            { status: 400 },
           );
         case "duplicate_public_id":
           return Response.json(
@@ -232,6 +247,9 @@ export async function PATCH(
 
     return Response.json({
       pasco: serializePasco(result.pasco),
+      ...(result.storageCleanupFailures !== undefined && {
+        storageCleanupFailures: result.storageCleanupFailures,
+      }),
     });
   } catch (err) {
     console.error("Pasco update failed:", err);
@@ -273,21 +291,15 @@ export async function DELETE(
     const result = await deletePasco(pascoId);
 
     if (!result.success) {
-      switch (result.error) {
-        case "not_found":
-          return Response.json({ error: "Pasco not found" }, { status: 404 });
-        case "cloudinary_delete_failed":
-          return Response.json(
-            {
-              error: "Failed to delete file from storage",
-              failedPublicIds: result.failedPublicIds ?? [],
-            },
-            { status: 502 },
-          );
-      }
+      return Response.json({ error: "Pasco not found" }, { status: 404 });
     }
 
-    return Response.json({ success: true });
+    return Response.json({
+      success: true,
+      ...(result.storageCleanupFailures !== undefined && {
+        storageCleanupFailures: result.storageCleanupFailures,
+      }),
+    });
   } catch (err) {
     console.error("Pasco delete failed:", err);
 
