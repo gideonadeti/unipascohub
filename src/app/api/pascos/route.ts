@@ -113,7 +113,7 @@ export async function POST(req: Request) {
         return Response.json(
           {
             error:
-              "Request must include courseId, files (each with order, publicId, fileName, fileSize, fileExtension, fileUrl, mimeType, resourceType), academicYear, educationLevel, semesterType, type, and contentType",
+              "Request must include courseId, files (each with order, publicId, fileName, fileSize, fileUrl, resourceType), academicYear, educationLevel, semesterType, type, and contentType",
           },
           { status: 400 },
         );
@@ -140,15 +140,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "Invalid fileName" }, { status: 400 });
       case "invalid_file_size":
         return Response.json({ error: "Invalid fileSize" }, { status: 400 });
-      case "invalid_file_extension":
-        return Response.json(
-          { error: "Invalid fileExtension" },
-          { status: 400 },
-        );
       case "invalid_file_url":
         return Response.json({ error: "Invalid fileUrl" }, { status: 400 });
-      case "invalid_mime_type":
-        return Response.json({ error: "Invalid mimeType" }, { status: 400 });
       case "invalid_resource_type":
         return Response.json(
           { error: "Invalid resourceType" },
@@ -235,9 +228,9 @@ export async function POST(req: Request) {
             { error: "File resource type does not match the uploaded asset" },
             { status: 400 },
           );
-        case "asset_mime_mismatch":
+        case "invalid_pdf_resource_type":
           return Response.json(
-            { error: "File MIME type does not match the uploaded asset" },
+            { error: "PDFs must use resourceType IMAGE" },
             { status: 400 },
           );
       }

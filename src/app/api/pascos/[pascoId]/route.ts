@@ -128,6 +128,11 @@ export async function PATCH(
           { error: "Duplicate file id values in files" },
           { status: 400 },
         );
+      case "invalid_existing_file_payload":
+        return Response.json(
+          { error: "Existing files may only include id and order" },
+          { status: 400 },
+        );
       case "invalid_file_order":
         return Response.json(
           { error: "Invalid file order (expected a positive integer)" },
@@ -144,15 +149,8 @@ export async function PATCH(
         return Response.json({ error: "Invalid fileName" }, { status: 400 });
       case "invalid_file_size":
         return Response.json({ error: "Invalid fileSize" }, { status: 400 });
-      case "invalid_file_extension":
-        return Response.json(
-          { error: "Invalid fileExtension" },
-          { status: 400 },
-        );
       case "invalid_file_url":
         return Response.json({ error: "Invalid fileUrl" }, { status: 400 });
-      case "invalid_mime_type":
-        return Response.json({ error: "Invalid mimeType" }, { status: 400 });
       case "invalid_resource_type":
         return Response.json(
           { error: "Invalid resourceType" },
@@ -184,13 +182,6 @@ export async function PATCH(
         case "unknown_file_id":
           return Response.json(
             { error: "File id does not belong to this pasco" },
-            { status: 400 },
-          );
-        case "immutable_file_field":
-          return Response.json(
-            {
-              error: "Storage fields cannot be changed on existing files",
-            },
             { status: 400 },
           );
         case "cloudinary_delete_failed":
@@ -231,9 +222,9 @@ export async function PATCH(
             { error: "File resource type does not match the uploaded asset" },
             { status: 400 },
           );
-        case "asset_mime_mismatch":
+        case "invalid_pdf_resource_type":
           return Response.json(
-            { error: "File MIME type does not match the uploaded asset" },
+            { error: "PDFs must use resourceType IMAGE" },
             { status: 400 },
           );
       }

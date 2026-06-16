@@ -12,15 +12,12 @@ const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
 export type SignUploadInput = {
   courseId: string;
   resourceType: CloudinaryResourceTypeType;
-  mimeType: string;
 };
 
 type SignUploadParseError =
   | "invalid_body"
   | "invalid_course_id"
-  | "invalid_resource_type"
-  | "invalid_mime_type"
-  | "invalid_pdf_resource_type";
+  | "invalid_resource_type";
 
 type SignUploadError = "missing_config";
 
@@ -41,13 +38,12 @@ export type VerifyFileError =
   | "asset_size_mismatch"
   | "asset_url_mismatch"
   | "asset_resource_type_mismatch"
-  | "asset_mime_mismatch";
+  | "invalid_pdf_resource_type";
 
 export type VerifyCloudinaryFileInput = {
   publicId: string;
   fileUrl: string;
   fileSize: number;
-  mimeType: string;
   resourceType: CloudinaryResourceTypeType;
   expectedAssetFolder: string;
 };
@@ -74,39 +70,29 @@ function parseCourseId(value: unknown): string | null {
   return courseId;
 }
 
-function parseMimeType(value: unknown): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const mimeType = value.trim().toLowerCase();
-
-  if (mimeType.length === 0) {
-    return null;
-  }
-
-  return mimeType;
-}
-
 function isCloudinaryResourceType(
   value: string,
 ): value is CloudinaryResourceTypeType {
   return CLOUDINARY_RESOURCE_TYPES.has(value);
 }
 
-export function isPdfMimeType(mimeType: string): boolean {
-  return mimeType === "application/pdf";
+export function isPdfFileName(fileName: string): boolean {
+  return fileName.toLowerCase().endsWith(".pdf");
 }
 
 export function validatePdfResourceType(
-  mimeType: string,
+  fileName: string,
   resourceType: CloudinaryResourceTypeType,
 ): boolean {
-  if (isPdfMimeType(mimeType) && resourceType === CloudinaryResourceType.RAW) {
+  if (isPdfFileName(fileName) && resourceType === CloudinaryResourceType.RAW) {
     return false;
   }
 
   return true;
+}
+
+function isPdfCloudinaryFormat(format: string): boolean {
+  return format.toLowerCase() === "pdf";
 }
 
 export function parseSignUploadInput(
@@ -120,23 +106,14 @@ export function parseSignUploadInput(
 
   const record = body as Record<string, unknown>;
 
-  if (
-    !("courseId" in record) ||
-    !("resourceType" in record) ||
-    !("mimeType" in record)
-  ) {
+  if (!("courseId" in record) || !("resourceType" in record)) {
     return { success: false, error: "invalid_body" };
   }
 
   const courseId = parseCourseId(record.courseId);
-  const mimeType = parseMimeType(record.mimeType);
 
   if (courseId === null) {
     return { success: false, error: "invalid_course_id" };
-  }
-
-  if (mimeType === null) {
-    return { success: false, error: "invalid_mime_type" };
   }
 
   if (
@@ -146,15 +123,10 @@ export function parseSignUploadInput(
     return { success: false, error: "invalid_resource_type" };
   }
 
-  if (!validatePdfResourceType(mimeType, record.resourceType)) {
-    return { success: false, error: "invalid_pdf_resource_type" };
-  }
-
   return {
     success: true,
     data: {
       courseId,
-      mimeType,
       resourceType: record.resourceType,
     },
   };
@@ -178,53 +150,6 @@ function fromCloudinaryApiResourceType(
   }
 
   return null;
-}
-
-const FORMAT_TO_MIME: Record<string, string> = {
-  pdf: "application/pdf",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  gif: "image/gif",
-  webp: "image/webp",
-  bmp: "image/bmp",
-  tiff: "image/tiff",
-  svg: "image/svg+xml",
-  doc: "application/msword",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  xls: "application/vnd.ms-excel",
-  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  ppt: "application/vnd.ms-powerpoint",
-  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  txt: "text/plain",
-  zip: "application/zip",
-};
-
-function mimeMatchesCloudinaryFormat(
-  mimeType: string,
-  format: string,
-): boolean {
-  const normalizedFormat = format.toLowerCase();
-  const normalizedMime = mimeType.toLowerCase();
-
-  const expectedMime = FORMAT_TO_MIME[normalizedFormat];
-
-  if (expectedMime !== undefined) {
-    return normalizedMime === expectedMime;
-  }
-
-  if (
-    ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "svg"].includes(
-      normalizedFormat,
-    )
-  ) {
-    return normalizedMime.startsWith("image/");
-  }
-
-  return (
-    normalizedMime.includes(normalizedFormat) ||
-    normalizedMime.endsWith(`/${normalizedFormat}`)
-  );
 }
 
 function isCloudinaryNotFoundError(error: unknown): boolean {
@@ -330,14 +255,11 @@ export async function verifyCloudinaryFile(
   }
 
   if (
-    asset.format === undefined ||
-    !mimeMatchesCloudinaryFormat(input.mimeType, asset.format)
+    asset.format !== undefined &&
+    isPdfCloudinaryFormat(asset.format) &&
+    input.resourceType === CloudinaryResourceType.RAW
   ) {
-    return { success: false, error: "asset_mime_mismatch" };
-  }
-
-  if (!validatePdfResourceType(input.mimeType, input.resourceType)) {
-    return { success: false, error: "asset_mime_mismatch" };
+    return { success: false, error: "invalid_pdf_resource_type" };
   }
 
   return { success: true };
@@ -360,11 +282,9 @@ export async function deleteCloudinaryAsset(
     }
 
     console.error("Cloudinary delete failed:", { publicId, result });
-
     return { success: false, error: "cloudinary_delete_failed" };
   } catch (error) {
     console.error("Cloudinary delete error:", { publicId, error });
-
     return { success: false, error: "cloudinary_delete_failed" };
   }
 }
