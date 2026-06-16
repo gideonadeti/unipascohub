@@ -7,23 +7,58 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  name      String
-  school    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  role   UserRole @default(NORMAL_USER)
-  pascos Pasco[]
-}
-
 enum UserRole {
   NORMAL_USER
   CONTRIBUTOR // can upload
   MODERATOR
   ADMIN
+}
+
+enum ProgramType {
+  BACHELOR
+  BTECH
+  HND
+  DIPLOMA
+}
+
+enum EducationLevel {
+  LEVEL_100
+  LEVEL_200
+  LEVEL_300
+  LEVEL_400
+}
+
+enum SemesterType {
+  FIRST_SEMESTER
+  SECOND_SEMESTER
+}
+
+enum PascoType {
+  MID_SEM
+  END_OF_SEM
+}
+
+enum PascoContentType {
+  QUESTIONS_ONLY
+  QUESTIONS_AND_ANSWERS
+  ANSWERS_ONLY
+}
+
+enum SolutionCompleteness {
+  FULLY_SOLVED
+  PARTIALLY_SOLVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  name      String
+  school    String?
+  role      UserRole @default(NORMAL_USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pascos Pasco[]
 }
 
 model Institution {
@@ -38,13 +73,13 @@ model Institution {
 }
 
 model Program {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   institutionId String
   name          String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  type          ProgramType
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  type        ProgramType
   institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
   courses     Course[]
 
@@ -52,78 +87,43 @@ model Program {
   @@index([institutionId, type])
 }
 
-enum PascoType {
-  MID_SEM
-  END_OF_SEM
-}
-
 model Course {
   id        String   @id @default(cuid())
   programId String
-  title     String
   code      String
+  title     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  pascos  Pasco[]
   program Program @relation(fields: [programId], references: [id], onDelete: Restrict)
+  pascos  Pasco[]
 
   @@unique([programId, code])
 }
 
 model Pasco {
-  id            String   @id @default(cuid())
-  courseId      String
-  publicId      String   @unique // Cloudinary public id
-  fileName      String
-  fileSize      Int
-  fileExtension String
-  fileUrl       String
-  year          Int
-  uploaderId    String?
-  description   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
+  id                   String                @id @default(cuid())
+  courseId             String
+  uploaderId           String?
+  publicId             String                @unique // Cloudinary public id
+  fileName             String
+  fileSize             Int
+  fileExtension        String
+  fileUrl              String
+  year                 Int
+  description          String?
   educationLevel       EducationLevel
-  type                 PascoType
   semesterType         SemesterType
+  type                 PascoType
   contentType          PascoContentType
   solutionCompleteness SolutionCompleteness?
-  course               Course                @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  uploader             User?                 @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  uploader User?  @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
 
   @@index([courseId, educationLevel, year])
   @@index([uploaderId])
   @@index([createdAt(sort: Desc)])
-}
-
-enum SemesterType {
-  FIRST_SEMESTER
-  SECOND_SEMESTER
-}
-
-enum EducationLevel {
-  LEVEL_100
-  LEVEL_200
-  LEVEL_300
-  LEVEL_400
-}
-
-enum ProgramType {
-  BACHELOR
-  BTECH
-  HND
-  DIPLOMA
-}
-
-enum PascoContentType {
-  QUESTIONS_ONLY
-  QUESTIONS_AND_ANSWERS
-  ANSWERS_ONLY
-}
-
-enum SolutionCompleteness {
-  FULLY_SOLVED
-  PARTIALLY_SOLVED
 }
