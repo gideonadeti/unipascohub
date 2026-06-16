@@ -1,8 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import type { CurrentUserResponse } from "@/types/api/users";
+import type { CurrentUserResponse, UserRole } from "@/types/api/users";
 
-import { apiFetch } from "./client";
+import { apiClient, apiFetch } from "./client";
 import { queryKeys } from "./query-keys";
 
 export function getCurrentUser() {
@@ -14,4 +14,17 @@ export function currentUserOptions() {
     queryKey: queryKeys.users.me,
     queryFn: getCurrentUser,
   });
+}
+
+export type UpgradeToContributorResponse = {
+  user: {
+    id: string;
+    role: UserRole;
+  };
+};
+
+export function upgradeToContributor() {
+  return apiClient
+    .post<UpgradeToContributorResponse>("/api/users/upgrade-to-contributor")
+    .then((response) => response.data);
 }

@@ -1,6 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import type {
+  PascoCreateInput,
+  PascoCreateResponse,
   PascoDetailResponse,
   PascoListFilters,
   PascoListResponse,
@@ -17,6 +19,12 @@ export function listPascos(filters: PascoListFilters = {}) {
 
 export function getPasco(id: string) {
   return apiFetch<PascoDetailResponse>(`/api/pascos/${id}`);
+}
+
+export function createPasco(input: PascoCreateInput) {
+  return apiClient
+    .post<PascoCreateResponse>("/api/pascos", input)
+    .then((response) => response.data);
 }
 
 export function pascosListOptions(filters: PascoListFilters = {}) {
