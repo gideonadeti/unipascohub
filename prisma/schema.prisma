@@ -56,6 +56,11 @@ enum CloudinaryResourceType {
   RAW
 }
 
+enum PascoReactionType {
+  LIKE
+  DISLIKE
+}
+
 model User {
   id        String   @id
   name      String
@@ -64,7 +69,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  pascos Pasco[]
+  pascos          Pasco[]
+  pascoReactions  PascoReaction[]
+  pascoDownloads  PascoDownload[]
 }
 
 model Institution {
@@ -121,16 +128,23 @@ model Pasco {
   contentType          PascoContentType
   solutionCompleteness SolutionCompleteness?
   isComplete           Boolean               @default(true)
+  likeCount            Int                   @default(0)
+  dislikeCount         Int                   @default(0)
+  downloadCount        Int                   @default(0)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
-  course   Course      @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  uploader User?       @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
-  files    PascoFile[]
+  course    Course          @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  uploader  User?           @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  files     PascoFile[]
+  reactions PascoReaction[]
+  downloads PascoDownload[]
 
   @@index([courseId, educationLevel, academicYear])
   @@index([uploaderId])
   @@index([createdAt(sort: Desc)])
+  @@index([likeCount(sort: Desc)])
+  @@index([downloadCount(sort: Desc)])
 }
 
 model PascoFile {
@@ -145,8 +159,39 @@ model PascoFile {
   createdAt     DateTime               @default(now())
   updatedAt     DateTime @updatedAt
 
-  pasco Pasco @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+  pasco     Pasco           @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+  downloads PascoDownload[]
 
   @@unique([pascoId, order])
   @@index([pascoId])
+}
+
+model PascoReaction {
+  id           String            @id @default(cuid())
+  userId       String
+  pascoId      String
+  reactionType PascoReactionType
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pasco Pasco @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pascoId])
+  @@index([pascoId, reactionType])
+}
+
+model PascoDownload {
+  id        String   @id @default(cuid())
+  userId    String
+  pascoId   String
+  fileId    String
+  createdAt DateTime @default(now())
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pasco Pasco     @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+  file  PascoFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([pascoId, createdAt])
+  @@index([userId, pascoId])
 }
