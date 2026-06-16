@@ -131,6 +131,7 @@ model Pasco {
   likeCount            Int                   @default(0)
   dislikeCount         Int                   @default(0)
   downloadCount        Int                   @default(0)
+  viewCount            Int                   @default(0)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
@@ -145,6 +146,7 @@ model Pasco {
   @@index([createdAt(sort: Desc)])
   @@index([likeCount(sort: Desc)])
   @@index([downloadCount(sort: Desc)])
+  @@index([viewCount(sort: Desc)])
 }
 
 model PascoFile {
