@@ -108,11 +108,6 @@ model Pasco {
   id                   String                @id @default(cuid())
   courseId             String
   uploaderId           String?
-  publicId             String                @unique // Cloudinary public id
-  fileName             String
-  fileSize             Int
-  fileExtension        String
-  fileUrl              String
   academicYear         String // e.g., "2024/2025"
   description          String?
   educationLevel       EducationLevel
@@ -124,10 +119,30 @@ model Pasco {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
-  uploader User?  @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  course   Course      @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  uploader User?       @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  files    PascoFile[]
 
   @@index([courseId, educationLevel, academicYear])
   @@index([uploaderId])
   @@index([createdAt(sort: Desc)])
+}
+
+model PascoFile {
+  id            String   @id @default(cuid())
+  pascoId       String
+  order         Int
+  publicId      String   @unique // Cloudinary public id
+  fileName      String
+  fileSize      Int
+  fileExtension String
+  fileUrl       String
+  mimeType      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pasco Pasco @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+
+  @@unique([pascoId, order])
+  @@index([pascoId])
 }
