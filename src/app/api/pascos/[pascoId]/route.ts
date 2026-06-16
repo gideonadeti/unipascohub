@@ -175,7 +175,15 @@ export async function DELETE(
     const result = await deletePasco(pascoId);
 
     if (!result.success) {
-      return Response.json({ error: "Pasco not found" }, { status: 404 });
+      switch (result.error) {
+        case "not_found":
+          return Response.json({ error: "Pasco not found" }, { status: 404 });
+        case "cloudinary_delete_failed":
+          return Response.json(
+            { error: "Failed to delete file from storage" },
+            { status: 502 },
+          );
+      }
     }
 
     return Response.json({ success: true });

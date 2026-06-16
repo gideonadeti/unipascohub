@@ -1,7 +1,13 @@
+import {
+  deleteCloudinaryAssets,
+  validatePdfResourceType,
+} from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import {
+  CloudinaryResourceType,
+  type CloudinaryResourceType as CloudinaryResourceTypeType,
   EducationLevel,
   type EducationLevel as EducationLevelType,
   PascoContentType,
@@ -25,6 +31,9 @@ const EDUCATION_LEVELS = new Set<string>(Object.values(EducationLevel));
 const SEMESTER_TYPES = new Set<string>(Object.values(SemesterType));
 const PASCO_TYPES = new Set<string>(Object.values(PascoType));
 const PASCO_CONTENT_TYPES = new Set<string>(Object.values(PascoContentType));
+const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
+  Object.values(CloudinaryResourceType),
+);
 const SOLUTION_COMPLETENESS_VALUES = new Set<string>(
   Object.values(SolutionCompleteness),
 );
@@ -39,6 +48,7 @@ export type PascoFileCreateInput = {
   fileExtension: string;
   fileUrl: string;
   mimeType: string;
+  resourceType: CloudinaryResourceTypeType;
 };
 
 export type PascoCreateInput = {
@@ -80,6 +90,8 @@ type PascoCreateParseError =
   | "invalid_file_extension"
   | "invalid_file_url"
   | "invalid_mime_type"
+  | "invalid_resource_type"
+  | "invalid_pdf_resource_type"
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
@@ -164,6 +176,12 @@ function parseMimeType(value: unknown): string | null {
   return mimeType;
 }
 
+function isCloudinaryResourceType(
+  value: string,
+): value is CloudinaryResourceTypeType {
+  return CLOUDINARY_RESOURCE_TYPES.has(value);
+}
+
 function parsePascoFileCreate(value: unknown):
   | { success: true; data: PascoFileCreateInput }
   | {
@@ -175,7 +193,9 @@ function parsePascoFileCreate(value: unknown):
         | "invalid_file_size"
         | "invalid_file_extension"
         | "invalid_file_url"
-        | "invalid_mime_type";
+        | "invalid_mime_type"
+        | "invalid_resource_type"
+        | "invalid_pdf_resource_type";
     } {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return { success: false, error: "invalid_public_id" };
@@ -191,6 +211,7 @@ function parsePascoFileCreate(value: unknown):
     "fileExtension",
     "fileUrl",
     "mimeType",
+    "resourceType",
   ] as const;
 
   if (!requiredFields.every((field) => field in record)) {
@@ -236,6 +257,17 @@ function parsePascoFileCreate(value: unknown):
     return { success: false, error: "invalid_mime_type" };
   }
 
+  if (
+    typeof record.resourceType !== "string" ||
+    !isCloudinaryResourceType(record.resourceType)
+  ) {
+    return { success: false, error: "invalid_resource_type" };
+  }
+
+  if (!validatePdfResourceType(mimeType, record.resourceType)) {
+    return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
   return {
     success: true,
     data: {
@@ -246,6 +278,7 @@ function parsePascoFileCreate(value: unknown):
       fileExtension,
       fileUrl,
       mimeType,
+      resourceType: record.resourceType,
     },
   };
 }
@@ -263,6 +296,8 @@ function parsePascoFiles(value: unknown):
         | "invalid_file_extension"
         | "invalid_file_url"
         | "invalid_mime_type"
+        | "invalid_resource_type"
+        | "invalid_pdf_resource_type"
         | "duplicate_order_in_files";
     } {
   if (!Array.isArray(value) || value.length === 0) {
@@ -642,6 +677,7 @@ function serializePascoFile(file: PascoFile) {
     fileExtension: file.fileExtension,
     fileUrl: file.fileUrl,
     mimeType: file.mimeType,
+    resourceType: file.resourceType,
     createdAt: file.createdAt.toISOString(),
     updatedAt: file.updatedAt.toISOString(),
   };
@@ -772,6 +808,7 @@ export async function createPasco(
             fileExtension: file.fileExtension,
             fileUrl: file.fileUrl,
             mimeType: file.mimeType,
+            resourceType: file.resourceType,
           })),
         },
       },
@@ -843,11 +880,28 @@ export async function updatePasco(
 
 export async function deletePasco(
   pascoId: string,
-): Promise<{ success: true } | { success: false; error: "not_found" }> {
-  const existing = await prisma.pasco.findUnique({ where: { id: pascoId } });
+): Promise<
+  | { success: true }
+  | { success: false; error: "not_found" | "cloudinary_delete_failed" }
+> {
+  const existing = await prisma.pasco.findUnique({
+    where: { id: pascoId },
+    include: { files: true },
+  });
 
   if (!existing) {
     return { success: false, error: "not_found" };
+  }
+
+  const cloudinaryResult = await deleteCloudinaryAssets(
+    existing.files.map((file) => ({
+      publicId: file.publicId,
+      resourceType: file.resourceType,
+    })),
+  );
+
+  if (!cloudinaryResult.success) {
+    return { success: false, error: "cloudinary_delete_failed" };
   }
 
   await prisma.pasco.delete({ where: { id: pascoId } });

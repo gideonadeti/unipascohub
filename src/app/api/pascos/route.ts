@@ -113,7 +113,7 @@ export async function POST(req: Request) {
         return Response.json(
           {
             error:
-              "Request must include courseId, files, academicYear, educationLevel, semesterType, type, and contentType",
+              "Request must include courseId, files (each with order, publicId, fileName, fileSize, fileExtension, fileUrl, mimeType, resourceType), academicYear, educationLevel, semesterType, type, and contentType",
           },
           { status: 400 },
         );
@@ -149,6 +149,16 @@ export async function POST(req: Request) {
         return Response.json({ error: "Invalid fileUrl" }, { status: 400 });
       case "invalid_mime_type":
         return Response.json({ error: "Invalid mimeType" }, { status: 400 });
+      case "invalid_resource_type":
+        return Response.json(
+          { error: "Invalid resourceType" },
+          { status: 400 },
+        );
+      case "invalid_pdf_resource_type":
+        return Response.json(
+          { error: "PDFs must use resourceType IMAGE" },
+          { status: 400 },
+        );
       case "invalid_academic_year":
         return Response.json(
           { error: "Invalid academicYear (expected format YYYY/YYYY)" },
