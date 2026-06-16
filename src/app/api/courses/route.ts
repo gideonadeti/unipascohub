@@ -12,10 +12,12 @@ export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
+  const institutionId = url.searchParams.get("institutionId");
   const programId = url.searchParams.get("programId");
 
   try {
     const result = await listCourses({
+      institutionId: institutionId ?? undefined,
       programId: programId ?? undefined,
     });
 
@@ -65,11 +67,16 @@ export async function POST(req: Request) {
     switch (parsed.error) {
       case "invalid_body":
         return Response.json(
-          { error: "Request must include programId, title, and code" },
+          { error: "Request must include institutionId, title, and code" },
           { status: 400 },
         );
-      case "invalid_program_id":
-        return Response.json({ error: "Invalid programId" }, { status: 400 });
+      case "invalid_institution_id":
+        return Response.json(
+          { error: "Invalid institutionId" },
+          { status: 400 },
+        );
+      case "invalid_program_ids":
+        return Response.json({ error: "Invalid programIds" }, { status: 400 });
       case "invalid_title":
         return Response.json({ error: "Invalid title" }, { status: 400 });
       case "invalid_code":
@@ -82,11 +89,21 @@ export async function POST(req: Request) {
 
     if (!result.success) {
       switch (result.error) {
+        case "institution_not_found":
+          return Response.json(
+            { error: "Institution not found" },
+            { status: 404 },
+          );
         case "program_not_found":
           return Response.json({ error: "Program not found" }, { status: 404 });
+        case "program_institution_mismatch":
+          return Response.json(
+            { error: "Programs must belong to the same institution" },
+            { status: 400 },
+          );
         case "duplicate_code":
           return Response.json(
-            { error: "Course code already exists for this program" },
+            { error: "Course code already exists for this institution" },
             { status: 409 },
           );
       }

@@ -71,13 +71,18 @@ export async function PATCH(
     switch (parsed.error) {
       case "invalid_body":
         return Response.json(
-          { error: "Request must include at least one of: title, code" },
+          {
+            error:
+              "Request must include at least one of: title, code, programIds",
+          },
           { status: 400 },
         );
       case "invalid_title":
         return Response.json({ error: "Invalid title" }, { status: 400 });
       case "invalid_code":
         return Response.json({ error: "Invalid code" }, { status: 400 });
+      case "invalid_program_ids":
+        return Response.json({ error: "Invalid programIds" }, { status: 400 });
     }
   }
 
@@ -93,9 +98,16 @@ export async function PATCH(
     switch (result.error) {
       case "not_found":
         return Response.json({ error: "Course not found" }, { status: 404 });
+      case "program_not_found":
+        return Response.json({ error: "Program not found" }, { status: 404 });
+      case "program_institution_mismatch":
+        return Response.json(
+          { error: "Programs must belong to the same institution" },
+          { status: 400 },
+        );
       case "duplicate_code":
         return Response.json(
-          { error: "Course code already exists for this program" },
+          { error: "Course code already exists for this institution" },
           { status: 409 },
         );
     }

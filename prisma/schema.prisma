@@ -69,6 +69,7 @@ model Institution {
   updatedAt DateTime @updatedAt
 
   programs Program[]
+  courses  Course[]
 
   @@unique([name])
 }
@@ -89,17 +90,18 @@ model Program {
 }
 
 model Course {
-  id        String   @id @default(cuid())
-  programId String
-  code      String
-  title     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  institutionId String
+  code          String
+  title         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  program Program @relation(fields: [programId], references: [id], onDelete: Restrict)
-  pascos  Pasco[]
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  programs    Program[]
+  pascos      Pasco[]
 
-  @@unique([programId, code])
+  @@unique([institutionId, code])
 }
 
 model Pasco {

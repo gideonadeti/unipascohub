@@ -24,8 +24,7 @@ export type ProgramUpdateInput = {
 type ProgramError =
   | "not_found"
   | "institution_not_found"
-  | "duplicate_name_and_type"
-  | "has_courses";
+  | "duplicate_name_and_type";
 
 type ProgramParseError =
   | "invalid_body"
@@ -261,20 +260,13 @@ export async function updateProgram(
 
 export async function deleteProgram(
   programId: string,
-): Promise<
-  { success: true } | { success: false; error: "not_found" | "has_courses" }
-> {
+): Promise<{ success: true } | { success: false; error: "not_found" }> {
   const existing = await prisma.program.findUnique({
     where: { id: programId },
-    include: { _count: { select: { courses: true } } },
   });
 
   if (!existing) {
     return { success: false, error: "not_found" };
-  }
-
-  if (existing._count.courses > 0) {
-    return { success: false, error: "has_courses" };
   }
 
   await prisma.program.delete({ where: { id: programId } });

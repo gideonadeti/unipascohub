@@ -139,11 +139,6 @@ export async function DELETE(
     switch (result.error) {
       case "not_found":
         return Response.json({ error: "Program not found" }, { status: 404 });
-      case "has_courses":
-        return Response.json(
-          { error: "Cannot delete program with linked courses" },
-          { status: 409 },
-        );
     }
   } catch (err) {
     console.error("Program delete failed:", err);
