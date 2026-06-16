@@ -25,6 +25,7 @@ export type Program = {
   institutionId: string;
   name: string;
   type: ProgramType;
+  label: string;
   createdAt: string;
   updatedAt: string;
 };

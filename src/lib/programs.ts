@@ -1,3 +1,4 @@
+import { formatProgramLabel } from "@/lib/catalog-labels";
 import { prisma } from "@/lib/db";
 import type { Program } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
@@ -151,6 +152,7 @@ export function serializeProgram(program: Program) {
     institutionId: program.institutionId,
     name: program.name,
     type: program.type,
+    label: formatProgramLabel(program),
     createdAt: program.createdAt.toISOString(),
     updatedAt: program.updatedAt.toISOString(),
   };
@@ -170,7 +172,7 @@ export async function listPrograms(params?: {
 
   const programs = await prisma.program.findMany({
     where: institutionId ? { institutionId } : undefined,
-    orderBy: { name: "asc" },
+    orderBy: [{ name: "asc" }, { type: "asc" }],
   });
 
   return { success: true, programs };
