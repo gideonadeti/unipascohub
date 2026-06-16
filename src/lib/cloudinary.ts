@@ -13,6 +13,14 @@ export type SignUploadInput = {
   courseId: string;
   resourceType: CloudinaryResourceTypeType;
   fileName: string;
+  widgetParams?: WidgetSignParams;
+};
+
+export type WidgetSignParams = {
+  timestamp: number;
+  asset_folder: string;
+  upload_preset: string;
+  source: string;
 };
 
 type SignUploadParseError =
@@ -20,9 +28,10 @@ type SignUploadParseError =
   | "invalid_course_id"
   | "invalid_resource_type"
   | "invalid_file_name"
-  | "invalid_pdf_resource_type";
+  | "invalid_pdf_resource_type"
+  | "invalid_widget_params";
 
-type SignUploadError = "missing_config";
+type SignUploadError = "missing_config" | "invalid_widget_params";
 
 export type SignedUploadParams = {
   signature: string;
@@ -112,6 +121,48 @@ function isPdfCloudinaryFormat(format: string): boolean {
   return format.toLowerCase() === "pdf";
 }
 
+function parseWidgetSignParams(value: unknown): WidgetSignParams | null {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  if (
+    typeof record.timestamp !== "number" ||
+    !Number.isFinite(record.timestamp) ||
+    typeof record.asset_folder !== "string" ||
+    record.asset_folder.trim().length === 0 ||
+    typeof record.upload_preset !== "string" ||
+    record.upload_preset.trim().length === 0 ||
+    typeof record.source !== "string" ||
+    record.source.trim().length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    timestamp: record.timestamp,
+    asset_folder: record.asset_folder.trim(),
+    upload_preset: record.upload_preset.trim(),
+    source: record.source.trim(),
+  };
+}
+
+function validateWidgetSignParams(
+  courseId: string,
+  uploadPreset: string,
+  widgetParams: WidgetSignParams,
+): boolean {
+  const expectedAssetFolder = `pascos/${courseId}`;
+
+  return (
+    widgetParams.asset_folder === expectedAssetFolder &&
+    widgetParams.upload_preset === uploadPreset &&
+    widgetParams.source === "uw"
+  );
+}
+
 export function parseSignUploadInput(
   body: unknown,
 ):
@@ -153,12 +204,25 @@ export function parseSignUploadInput(
     return { success: false, error: "invalid_pdf_resource_type" };
   }
 
+  let widgetParams: WidgetSignParams | undefined;
+
+  if ("widgetParams" in record && record.widgetParams !== undefined) {
+    const parsedWidgetParams = parseWidgetSignParams(record.widgetParams);
+
+    if (parsedWidgetParams === null) {
+      return { success: false, error: "invalid_widget_params" };
+    }
+
+    widgetParams = parsedWidgetParams;
+  }
+
   return {
     success: true,
     data: {
       courseId,
       fileName,
       resourceType: record.resourceType,
+      widgetParams,
     },
   };
 }
@@ -216,15 +280,31 @@ export function signUploadParams(
     return { success: false, error: "missing_config" };
   }
 
-  const timestamp = Math.round(Date.now() / 1000);
   const assetFolder = `pascos/${input.courseId}`;
   const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
-  const paramsToSign = {
-    timestamp,
-    upload_preset: uploadPreset,
-    asset_folder: assetFolder,
-  };
 
+  if (
+    input.widgetParams &&
+    !validateWidgetSignParams(input.courseId, uploadPreset, input.widgetParams)
+  ) {
+    return { success: false, error: "invalid_widget_params" };
+  }
+
+  const paramsToSign = input.widgetParams
+    ? {
+        asset_folder: input.widgetParams.asset_folder,
+        source: input.widgetParams.source,
+        timestamp: input.widgetParams.timestamp,
+        upload_preset: input.widgetParams.upload_preset,
+      }
+    : {
+        asset_folder: assetFolder,
+        source: "uw",
+        timestamp: Math.round(Date.now() / 1000),
+        upload_preset: uploadPreset,
+      };
+
+  const timestamp = paramsToSign.timestamp;
   const signature = cloudinary.utils.api_sign_request(paramsToSign, apiSecret);
 
   return {

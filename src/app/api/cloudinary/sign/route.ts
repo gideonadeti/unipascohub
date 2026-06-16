@@ -79,6 +79,11 @@ export async function POST(req: Request) {
           { error: "PDFs must use resourceType IMAGE" },
           { status: 400 },
         );
+      case "invalid_widget_params":
+        return Response.json(
+          { error: "Invalid widget upload parameters" },
+          { status: 400 },
+        );
     }
   }
 
@@ -91,10 +96,18 @@ export async function POST(req: Request) {
   const signResult = signUploadParams(parsed.data);
 
   if (!signResult.success) {
-    return Response.json(
-      { error: "Cloudinary is not configured" },
-      { status: 500 },
-    );
+    switch (signResult.error) {
+      case "invalid_widget_params":
+        return Response.json(
+          { error: "Invalid widget upload parameters" },
+          { status: 400 },
+        );
+      case "missing_config":
+        return Response.json(
+          { error: "Cloudinary is not configured" },
+          { status: 500 },
+        );
+    }
   }
 
   return Response.json(signResult.data);
