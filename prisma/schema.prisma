@@ -137,13 +137,11 @@ model PascoFile {
   id            String   @id @default(cuid())
   pascoId       String
   order         Int
-  publicId      String   @unique // Cloudinary public id
-  fileName      String
-  fileSize      Int
-  fileExtension String
-  fileUrl       String
-  mimeType      String
-  resourceType  CloudinaryResourceType @default(IMAGE)
+  publicId     String                 @unique // Cloudinary public id
+  fileName     String
+  fileSize     Int
+  fileUrl      String
+  resourceType CloudinaryResourceType @default(IMAGE)
   createdAt     DateTime               @default(now())
   updatedAt     DateTime @updatedAt
 
