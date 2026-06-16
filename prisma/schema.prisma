@@ -51,6 +51,11 @@ enum SolutionCompleteness {
   PARTIALLY_SOLVED
 }
 
+enum CloudinaryResourceType {
+  IMAGE
+  RAW
+}
+
 model User {
   id        String   @id
   name      String
@@ -138,7 +143,8 @@ model PascoFile {
   fileExtension String
   fileUrl       String
   mimeType      String
-  createdAt     DateTime @default(now())
+  resourceType  CloudinaryResourceType @default(IMAGE)
+  createdAt     DateTime               @default(now())
   updatedAt     DateTime @updatedAt
 
   pasco Pasco @relation(fields: [pascoId], references: [id], onDelete: Cascade)
