@@ -91,3 +91,29 @@ export type PascoListResponse = {
 export type PascoDetailResponse = {
   pasco: Pasco;
 };
+
+export type PascoFileCreateInput = {
+  order: number;
+  publicId: string;
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+  resourceType: CloudinaryResourceType;
+};
+
+export type PascoCreateInput = {
+  courseId: string;
+  files: PascoFileCreateInput[];
+  academicYear: string;
+  description?: string;
+  educationLevel: EducationLevel;
+  semesterType: SemesterType;
+  type: PascoType;
+  contentType: PascoContentType;
+  solutionCompleteness?: SolutionCompleteness | null;
+  isComplete?: boolean;
+};
+
+export type PascoCreateResponse = {
+  pasco: Pasco;
+};
