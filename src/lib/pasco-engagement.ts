@@ -15,6 +15,85 @@ type RecordPascoDownloadError =
   | "user_not_found"
   | "file_not_found";
 
+type RecordPascoViewError = "pasco_not_found";
+
+function parseRequestIp(req: Request): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+
+  if (forwardedFor) {
+    const firstHop = forwardedFor.split(",")[0]?.trim();
+
+    if (firstHop) {
+      return firstHop;
+    }
+  }
+
+  const realIp = req.headers.get("x-real-ip")?.trim();
+
+  if (realIp) {
+    return realIp;
+  }
+
+  return "unknown";
+}
+
+export function getRequestViewerKey(
+  req: Request,
+  userId?: string | null,
+): string {
+  if (userId) {
+    return `user:${userId}`;
+  }
+
+  return `ip:${parseRequestIp(req)}`;
+}
+
+export async function getPascoViewCount(
+  pascoId: string,
+): Promise<
+  | { success: true; viewCount: number }
+  | { success: false; error: RecordPascoViewError }
+> {
+  const pasco = await prisma.pasco.findUnique({
+    where: { id: pascoId },
+    select: { viewCount: true },
+  });
+
+  if (!pasco) {
+    return { success: false, error: "pasco_not_found" };
+  }
+
+  return { success: true, viewCount: pasco.viewCount };
+}
+
+export async function recordPascoView(
+  pascoId: string,
+): Promise<
+  | { success: true; viewCount: number }
+  | { success: false; error: RecordPascoViewError }
+> {
+  const pasco = await prisma.pasco.findUnique({
+    where: { id: pascoId },
+    select: { id: true },
+  });
+
+  if (!pasco) {
+    return { success: false, error: "pasco_not_found" };
+  }
+
+  const updated = await prisma.pasco.update({
+    where: { id: pascoId },
+    data: {
+      viewCount: { increment: 1 },
+    },
+    select: {
+      viewCount: true,
+    },
+  });
+
+  return { success: true, viewCount: updated.viewCount };
+}
+
 export function parsePascoReactionBody(
   body: unknown,
 ):

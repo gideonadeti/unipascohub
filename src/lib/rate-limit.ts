@@ -177,3 +177,23 @@ export function getPascoDownloadRateLimitOptions(): RateLimitOptions {
     ),
   };
 }
+
+export function getPascoViewDedupeOptions(): RateLimitOptions {
+  return {
+    limit: 1,
+    windowMs: parsePositiveInt(
+      process.env.PASCO_VIEW_DEDUPE_WINDOW_MS,
+      3_600_000,
+    ),
+  };
+}
+
+export function getPascoViewGlobalRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(process.env.PASCO_VIEW_GLOBAL_RATE_LIMIT, 300),
+    windowMs: parsePositiveInt(
+      process.env.PASCO_VIEW_GLOBAL_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}

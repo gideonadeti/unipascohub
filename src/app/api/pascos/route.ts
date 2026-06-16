@@ -55,7 +55,7 @@ export async function GET(req: Request) {
         return Response.json(
           {
             error:
-              "Invalid sortBy (allowed: createdAt, updatedAt, academicYear, likeCount, dislikeCount, downloadCount)",
+              "Invalid sortBy (allowed: createdAt, updatedAt, academicYear, likeCount, dislikeCount, downloadCount, viewCount)",
           },
           { status: 400 },
         );

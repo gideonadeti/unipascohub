@@ -39,6 +39,7 @@ const LIST_SORT_FIELDS = [
   "likeCount",
   "dislikeCount",
   "downloadCount",
+  "viewCount",
 ] as const;
 
 type PascoListSortBy = (typeof LIST_SORT_FIELDS)[number];
@@ -1040,6 +1041,7 @@ export function serializePasco(
     likeCount: pasco.likeCount,
     dislikeCount: pasco.dislikeCount,
     downloadCount: pasco.downloadCount,
+    viewCount: pasco.viewCount,
     files: pasco.files.map(serializePascoFile),
     createdAt: pasco.createdAt.toISOString(),
     updatedAt: pasco.updatedAt.toISOString(),
