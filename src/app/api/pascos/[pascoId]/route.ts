@@ -180,7 +180,10 @@ export async function DELETE(
           return Response.json({ error: "Pasco not found" }, { status: 404 });
         case "cloudinary_delete_failed":
           return Response.json(
-            { error: "Failed to delete file from storage" },
+            {
+              error: "Failed to delete file from storage",
+              failedPublicIds: result.failedPublicIds ?? [],
+            },
             { status: 502 },
           );
       }

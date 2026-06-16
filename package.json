@@ -10,6 +10,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
+    "cleanup:cloudinary-orphans": "tsx scripts/cleanup-cloudinary-orphans.ts",
     "prepare": "node .husky/install.mjs"
   },
   "dependencies": {

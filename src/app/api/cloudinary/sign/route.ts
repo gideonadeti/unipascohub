@@ -69,15 +69,10 @@ export async function POST(req: Request) {
   const signResult = signUploadParams(parsed.data);
 
   if (!signResult.success) {
-    switch (signResult.error) {
-      case "missing_config":
-        return Response.json(
-          { error: "Cloudinary is not configured" },
-          { status: 500 },
-        );
-      case "course_not_found":
-        return Response.json({ error: "Course not found" }, { status: 404 });
-    }
+    return Response.json(
+      { error: "Cloudinary is not configured" },
+      { status: 500 },
+    );
   }
 
   return Response.json(signResult.data);

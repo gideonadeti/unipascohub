@@ -1,6 +1,8 @@
 import {
   deleteCloudinaryAssets,
+  type VerifyFileError,
   validatePdfResourceType,
+  verifyCloudinaryFile,
 } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
@@ -776,7 +778,10 @@ export async function createPasco(
   uploaderId: string,
 ): Promise<
   | { success: true; pasco: PascoWithFiles }
-  | { success: false; error: "course_not_found" | "duplicate_public_id" }
+  | {
+      success: false;
+      error: "course_not_found" | "duplicate_public_id" | VerifyFileError;
+    }
 > {
   const course = await prisma.course.findUnique({
     where: { id: input.courseId },
@@ -784,6 +789,26 @@ export async function createPasco(
 
   if (!course) {
     return { success: false, error: "course_not_found" };
+  }
+
+  const expectedAssetFolder = `pascos/${input.courseId}`;
+  const verificationResults = await Promise.all(
+    input.files.map((file) =>
+      verifyCloudinaryFile({
+        publicId: file.publicId,
+        fileUrl: file.fileUrl,
+        fileSize: file.fileSize,
+        mimeType: file.mimeType,
+        resourceType: file.resourceType,
+        expectedAssetFolder,
+      }),
+    ),
+  );
+
+  for (const result of verificationResults) {
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
   }
 
   try {
@@ -878,11 +903,13 @@ export async function updatePasco(
   return { success: true, pasco };
 }
 
-export async function deletePasco(
-  pascoId: string,
-): Promise<
+export async function deletePasco(pascoId: string): Promise<
   | { success: true }
-  | { success: false; error: "not_found" | "cloudinary_delete_failed" }
+  | {
+      success: false;
+      error: "not_found" | "cloudinary_delete_failed";
+      failedPublicIds?: string[];
+    }
 > {
   const existing = await prisma.pasco.findUnique({
     where: { id: pascoId },
@@ -901,7 +928,11 @@ export async function deletePasco(
   );
 
   if (!cloudinaryResult.success) {
-    return { success: false, error: "cloudinary_delete_failed" };
+    return {
+      success: false,
+      error: "cloudinary_delete_failed",
+      failedPublicIds: cloudinaryResult.failedPublicIds,
+    };
   }
 
   await prisma.pasco.delete({ where: { id: pascoId } });

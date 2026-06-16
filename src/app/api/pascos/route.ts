@@ -210,6 +210,36 @@ export async function POST(req: Request) {
             { error: "A pasco file with this publicId already exists" },
             { status: 409 },
           );
+        case "asset_not_found":
+          return Response.json(
+            { error: "File not found in storage" },
+            { status: 400 },
+          );
+        case "asset_folder_mismatch":
+          return Response.json(
+            { error: "File was not uploaded to the expected course folder" },
+            { status: 400 },
+          );
+        case "asset_size_mismatch":
+          return Response.json(
+            { error: "File size does not match the uploaded asset" },
+            { status: 400 },
+          );
+        case "asset_url_mismatch":
+          return Response.json(
+            { error: "File URL does not match the uploaded asset" },
+            { status: 400 },
+          );
+        case "asset_resource_type_mismatch":
+          return Response.json(
+            { error: "File resource type does not match the uploaded asset" },
+            { status: 400 },
+          );
+        case "asset_mime_mismatch":
+          return Response.json(
+            { error: "File MIME type does not match the uploaded asset" },
+            { status: 400 },
+          );
       }
     }
 

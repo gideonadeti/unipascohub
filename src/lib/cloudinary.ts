@@ -22,7 +22,7 @@ type SignUploadParseError =
   | "invalid_mime_type"
   | "invalid_pdf_resource_type";
 
-type SignUploadError = "missing_config" | "course_not_found";
+type SignUploadError = "missing_config";
 
 export type SignedUploadParams = {
   signature: string;
@@ -32,6 +32,32 @@ export type SignedUploadParams = {
   uploadPreset: string;
   assetFolder: string;
   resourceType: CloudinaryResourceTypeType;
+  uploadUrl: string;
+};
+
+export type VerifyFileError =
+  | "asset_not_found"
+  | "asset_folder_mismatch"
+  | "asset_size_mismatch"
+  | "asset_url_mismatch"
+  | "asset_resource_type_mismatch"
+  | "asset_mime_mismatch";
+
+export type VerifyCloudinaryFileInput = {
+  publicId: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  resourceType: CloudinaryResourceTypeType;
+  expectedAssetFolder: string;
+};
+
+type CloudinaryResourceResponse = {
+  asset_folder?: string;
+  bytes?: number;
+  format?: string;
+  resource_type?: string;
+  secure_url?: string;
 };
 
 function parseCourseId(value: unknown): string | null {
@@ -140,6 +166,76 @@ export function toCloudinaryApiResourceType(
   return resourceType === CloudinaryResourceType.RAW ? "raw" : "image";
 }
 
+function fromCloudinaryApiResourceType(
+  resourceType: string,
+): CloudinaryResourceTypeType | null {
+  if (resourceType === "image") {
+    return CloudinaryResourceType.IMAGE;
+  }
+
+  if (resourceType === "raw") {
+    return CloudinaryResourceType.RAW;
+  }
+
+  return null;
+}
+
+const FORMAT_TO_MIME: Record<string, string> = {
+  pdf: "application/pdf",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  webp: "image/webp",
+  bmp: "image/bmp",
+  tiff: "image/tiff",
+  svg: "image/svg+xml",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  txt: "text/plain",
+  zip: "application/zip",
+};
+
+function mimeMatchesCloudinaryFormat(
+  mimeType: string,
+  format: string,
+): boolean {
+  const normalizedFormat = format.toLowerCase();
+  const normalizedMime = mimeType.toLowerCase();
+
+  const expectedMime = FORMAT_TO_MIME[normalizedFormat];
+
+  if (expectedMime !== undefined) {
+    return normalizedMime === expectedMime;
+  }
+
+  if (
+    ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "svg"].includes(
+      normalizedFormat,
+    )
+  ) {
+    return normalizedMime.startsWith("image/");
+  }
+
+  return (
+    normalizedMime.includes(normalizedFormat) ||
+    normalizedMime.endsWith(`/${normalizedFormat}`)
+  );
+}
+
+function isCloudinaryNotFoundError(error: unknown): boolean {
+  if (error === null || typeof error !== "object") {
+    return false;
+  }
+
+  const record = error as { error?: { http_code?: number } };
+  return record.error?.http_code === 404;
+}
+
 function getUploadPreset(): string | null {
   const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET?.trim();
 
@@ -166,11 +262,11 @@ export function signUploadParams(
 
   const timestamp = Math.round(Date.now() / 1000);
   const assetFolder = `pascos/${input.courseId}`;
+  const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
   const paramsToSign = {
     timestamp,
     upload_preset: uploadPreset,
     asset_folder: assetFolder,
-    resource_type: toCloudinaryApiResourceType(input.resourceType),
   };
 
   const signature = cloudinary.utils.api_sign_request(paramsToSign, apiSecret);
@@ -185,8 +281,66 @@ export function signUploadParams(
       uploadPreset,
       assetFolder,
       resourceType: input.resourceType,
+      uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/${apiResourceType}/upload`,
     },
   };
+}
+
+export async function verifyCloudinaryFile(
+  input: VerifyCloudinaryFileInput,
+): Promise<{ success: true } | { success: false; error: VerifyFileError }> {
+  const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
+
+  let asset: CloudinaryResourceResponse;
+
+  try {
+    asset = (await cloudinary.api.resource(input.publicId, {
+      resource_type: apiResourceType,
+    })) as CloudinaryResourceResponse;
+  } catch (error) {
+    if (isCloudinaryNotFoundError(error)) {
+      return { success: false, error: "asset_not_found" };
+    }
+
+    throw error;
+  }
+
+  if (asset.asset_folder !== input.expectedAssetFolder) {
+    return { success: false, error: "asset_folder_mismatch" };
+  }
+
+  if (asset.bytes !== input.fileSize) {
+    return { success: false, error: "asset_size_mismatch" };
+  }
+
+  if (asset.secure_url !== input.fileUrl) {
+    return { success: false, error: "asset_url_mismatch" };
+  }
+
+  const cloudinaryResourceType =
+    asset.resource_type === undefined
+      ? null
+      : fromCloudinaryApiResourceType(asset.resource_type);
+
+  if (
+    cloudinaryResourceType === null ||
+    cloudinaryResourceType !== input.resourceType
+  ) {
+    return { success: false, error: "asset_resource_type_mismatch" };
+  }
+
+  if (
+    asset.format === undefined ||
+    !mimeMatchesCloudinaryFormat(input.mimeType, asset.format)
+  ) {
+    return { success: false, error: "asset_mime_mismatch" };
+  }
+
+  if (!validatePdfResourceType(input.mimeType, input.resourceType)) {
+    return { success: false, error: "asset_mime_mismatch" };
+  }
+
+  return { success: true };
 }
 
 export async function deleteCloudinaryAsset(
@@ -221,17 +375,34 @@ export async function deleteCloudinaryAssets(
     resourceType: CloudinaryResourceTypeType;
   }>,
 ): Promise<
-  { success: true } | { success: false; error: "cloudinary_delete_failed" }
-> {
-  for (const file of files) {
-    const result = await deleteCloudinaryAsset(
-      file.publicId,
-      file.resourceType,
-    );
-
-    if (!result.success) {
-      return result;
+  | { success: true }
+  | {
+      success: false;
+      error: "cloudinary_delete_failed";
+      failedPublicIds: string[];
     }
+> {
+  const results = await Promise.all(
+    files.map(async (file) => {
+      const result = await deleteCloudinaryAsset(
+        file.publicId,
+        file.resourceType,
+      );
+
+      return { publicId: file.publicId, result };
+    }),
+  );
+
+  const failedPublicIds = results
+    .filter((entry) => !entry.result.success)
+    .map((entry) => entry.publicId);
+
+  if (failedPublicIds.length > 0) {
+    return {
+      success: false,
+      error: "cloudinary_delete_failed",
+      failedPublicIds,
+    };
   }
 
   return { success: true };
