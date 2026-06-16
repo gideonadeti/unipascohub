@@ -111,6 +111,7 @@ export type PascoListParseError =
   | "invalid_semester_type"
   | "invalid_type"
   | "invalid_content_type"
+  | "invalid_academic_year"
   | "invalid_is_complete"
   | "invalid_page"
   | "invalid_limit"
@@ -249,6 +250,15 @@ export function parseListPascosQuery(
     return { success: false, error: "invalid_content_type" };
   }
 
+  let academicYear: string | undefined;
+  if (academicYearParam !== null) {
+    const parsedAcademicYear = parseAcademicYear(academicYearParam);
+    if (parsedAcademicYear === null) {
+      return { success: false, error: "invalid_academic_year" };
+    }
+    academicYear = parsedAcademicYear;
+  }
+
   let isComplete: boolean | undefined;
   if (isCompleteParam !== null) {
     if (isCompleteParam === "true") {
@@ -296,7 +306,7 @@ export function parseListPascosQuery(
         educationLevelParam !== null
           ? (educationLevelParam as EducationLevelType)
           : undefined,
-      academicYear: academicYearParam?.trim() || undefined,
+      academicYear,
       semesterType:
         semesterTypeParam !== null
           ? (semesterTypeParam as SemesterTypeType)

@@ -33,6 +33,11 @@ export async function GET(req: Request) {
         return Response.json({ error: "Invalid type" }, { status: 400 });
       case "invalid_content_type":
         return Response.json({ error: "Invalid contentType" }, { status: 400 });
+      case "invalid_academic_year":
+        return Response.json(
+          { error: "Invalid academicYear (expected format YYYY/YYYY)" },
+          { status: 400 },
+        );
       case "invalid_is_complete":
         return Response.json({ error: "Invalid isComplete" }, { status: 400 });
       case "invalid_page":
