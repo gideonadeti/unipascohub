@@ -120,6 +120,7 @@ model Pasco {
   type                 PascoType
   contentType          PascoContentType
   solutionCompleteness SolutionCompleteness?
+  isComplete           Boolean               @default(true)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
