@@ -15,15 +15,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  role           UserRole        @default(NORMAL_USER)
-  educationLevel EducationLevel?
-}
-
-enum EducationLevel {
-  JHS
-  SHS
-  UNDERGRADUATE
-  POSTGRADUATE
+  role UserRole @default(NORMAL_USER)
 }
 
 enum UserRole {
