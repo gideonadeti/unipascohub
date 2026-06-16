@@ -24,7 +24,6 @@ enum EducationLevel {
   SHS
   UNDERGRADUATE
   POSTGRADUATE
-  OTHER
 }
 
 enum UserRole {
