@@ -1,29 +1,15 @@
 import { prisma } from "@/lib/db";
 import type { User } from "../../generated/prisma/client";
-import {
-  EducationLevel,
-  type EducationLevel as EducationLevelType,
-} from "../../generated/prisma/enums";
 
-const EDUCATION_LEVELS = new Set<string>(Object.values(EducationLevel));
 const MAX_SCHOOL_LENGTH = 200;
 
 export type ProfileUpdateInput = {
   school?: string | null;
-  educationLevel?: EducationLevelType | null;
 };
 
 type ProfileError = "not_found";
 
-type ProfileUpdateError =
-  | ProfileError
-  | "invalid_body"
-  | "invalid_school"
-  | "invalid_education_level";
-
-function isEducationLevel(value: string): value is EducationLevelType {
-  return EDUCATION_LEVELS.has(value);
-}
+type ProfileUpdateError = ProfileError | "invalid_body" | "invalid_school";
 
 export function parseProfileUpdate(
   body: unknown,
@@ -56,21 +42,6 @@ export function parseProfileUpdate(
     }
   }
 
-  if ("educationLevel" in record) {
-    hasUpdate = true;
-
-    if (record.educationLevel === null) {
-      data.educationLevel = null;
-    } else if (
-      typeof record.educationLevel !== "string" ||
-      !isEducationLevel(record.educationLevel)
-    ) {
-      return { success: false, error: "invalid_education_level" };
-    } else {
-      data.educationLevel = record.educationLevel;
-    }
-  }
-
   if (!hasUpdate) {
     return { success: false, error: "invalid_body" };
   }
@@ -83,7 +54,6 @@ export function serializeProfileUser(user: User) {
     id: user.id,
     name: user.name,
     school: user.school,
-    educationLevel: user.educationLevel,
     role: user.role,
   };
 }
@@ -118,9 +88,6 @@ export async function updateUserProfile(
     where: { clerkId },
     data: {
       ...(input.school !== undefined && { school: input.school }),
-      ...(input.educationLevel !== undefined && {
-        educationLevel: input.educationLevel,
-      }),
     },
   });
 

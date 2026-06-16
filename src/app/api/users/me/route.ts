@@ -52,19 +52,11 @@ export async function PATCH(req: Request) {
     switch (parsed.error) {
       case "invalid_body":
         return Response.json(
-          { error: "Request must include school and/or educationLevel" },
+          { error: "Request must include school" },
           { status: 400 },
         );
       case "invalid_school":
         return Response.json({ error: "Invalid school" }, { status: 400 });
-      case "invalid_education_level":
-        return Response.json(
-          {
-            error:
-              "Invalid educationLevel. Must be one of: JHS, SHS, UNDERGRADUATE, POSTGRADUATE, OTHER",
-          },
-          { status: 400 },
-        );
     }
   }
 
