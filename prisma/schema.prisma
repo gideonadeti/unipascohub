@@ -17,6 +17,7 @@ enum UserRole {
 enum ProgramType {
   BACHELOR
   BTECH
+  BTECH_TOP_UP
   HND
   DIPLOMA
 }
