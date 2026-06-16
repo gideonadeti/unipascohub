@@ -15,7 +15,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  role           Role            @default(NORMAL_USER)
+  role           UserRole        @default(NORMAL_USER)
   educationLevel EducationLevel?
 }
 
@@ -27,7 +27,7 @@ enum EducationLevel {
   OTHER
 }
 
-enum Role {
+enum UserRole {
   NORMAL_USER
   CONTRIBUTOR // can upload
   MODERATOR
