@@ -71,6 +71,7 @@ export async function POST(req: Request) {
       orphanCount: result.orphans.length,
       orphans: result.orphans,
       deleted: result.deleted,
+      deleteFailures: result.deleteFailures,
     });
   } catch (err) {
     console.error("Cloudinary orphan cleanup failed:", err);

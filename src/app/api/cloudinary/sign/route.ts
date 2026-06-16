@@ -1,7 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 import { parseSignUploadInput, signUploadParams } from "@/lib/cloudinary";
 import { getCourseById } from "@/lib/courses";
+import {
+  checkRateLimit,
+  getCloudinarySignRateLimitOptions,
+} from "@/lib/rate-limit";
 import { requireContributor } from "@/lib/require-contributor";
 
 export const runtime = "nodejs";
@@ -22,6 +27,23 @@ export async function POST(req: Request) {
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
     }
+  }
+
+  const rateLimitResult = await checkRateLimit(
+    `cloudinary-sign:${userId}`,
+    getCloudinarySignRateLimitOptions(),
+  );
+
+  if (rateLimitResult.rateLimited) {
+    const headers =
+      rateLimitResult.retryAfterSeconds !== undefined
+        ? { "Retry-After": String(rateLimitResult.retryAfterSeconds) }
+        : undefined;
+
+    return NextResponse.json(
+      { error: "Rate limit exceeded" },
+      { status: 429, headers },
+    );
   }
 
   let body: unknown;

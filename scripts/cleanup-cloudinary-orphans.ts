@@ -42,6 +42,7 @@ async function main() {
         orphanCount: result.orphans.length,
         orphans: result.orphans,
         deleted: result.deleted,
+        deleteFailures: result.deleteFailures,
       },
       null,
       2,

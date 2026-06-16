@@ -66,6 +66,10 @@ export type PascoCreateInput = {
   isComplete?: boolean;
 };
 
+export type PascoFileSyncInput = PascoFileCreateInput & {
+  id?: string;
+};
+
 export type PascoUpdateInput = {
   academicYear?: string;
   description?: string | null;
@@ -75,6 +79,7 @@ export type PascoUpdateInput = {
   contentType?: PascoContentTypeType;
   solutionCompleteness?: SolutionCompletenessType | null;
   isComplete?: boolean;
+  files?: PascoFileSyncInput[];
 };
 
 export type PascoWithFiles = Pasco & { files: PascoFile[] };
@@ -114,7 +119,28 @@ type PascoUpdateParseError =
   | "invalid_type"
   | "invalid_content_type"
   | "invalid_is_complete"
-  | "invalid_solution_completeness";
+  | "invalid_solution_completeness"
+  | "invalid_files"
+  | "invalid_file_order"
+  | "invalid_public_id"
+  | "invalid_file_name"
+  | "invalid_file_size"
+  | "invalid_file_extension"
+  | "invalid_file_url"
+  | "invalid_mime_type"
+  | "invalid_resource_type"
+  | "invalid_pdf_resource_type"
+  | "duplicate_order_in_files"
+  | "conflicting_file_update"
+  | "invalid_file_id"
+  | "duplicate_file_id_in_payload";
+
+type PascoFileSyncError =
+  | "unknown_file_id"
+  | "immutable_file_field"
+  | "cloudinary_delete_failed"
+  | VerifyFileError
+  | "duplicate_public_id";
 
 const pascoInclude = {
   files: { orderBy: { order: "asc" as const } },
@@ -321,6 +347,122 @@ function parsePascoFiles(value: unknown):
     }
 
     seenOrders.add(parsed.data.order);
+    files.push(parsed.data);
+  }
+
+  return { success: true, data: files };
+}
+
+function parsePascoFileId(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const id = value.trim();
+
+  if (id.length === 0) {
+    return null;
+  }
+
+  return id;
+}
+
+function parsePascoFileSync(value: unknown):
+  | { success: true; data: PascoFileSyncInput }
+  | {
+      success: false;
+      error:
+        | "invalid_file_id"
+        | "invalid_file_order"
+        | "invalid_public_id"
+        | "invalid_file_name"
+        | "invalid_file_size"
+        | "invalid_file_extension"
+        | "invalid_file_url"
+        | "invalid_mime_type"
+        | "invalid_resource_type"
+        | "invalid_pdf_resource_type";
+    } {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return { success: false, error: "invalid_public_id" };
+  }
+
+  const record = value as Record<string, unknown>;
+  const hasId = "id" in record && record.id !== undefined && record.id !== null;
+
+  const parsed = parsePascoFileCreate(value);
+
+  if (!parsed.success) {
+    return parsed;
+  }
+
+  if (!hasId) {
+    return { success: true, data: parsed.data };
+  }
+
+  const id = parsePascoFileId(record.id);
+
+  if (id === null) {
+    return { success: false, error: "invalid_file_id" };
+  }
+
+  return {
+    success: true,
+    data: {
+      ...parsed.data,
+      id,
+    },
+  };
+}
+
+function parsePascoFilesSync(value: unknown):
+  | { success: true; data: PascoFileSyncInput[] }
+  | {
+      success: false;
+      error:
+        | "invalid_files"
+        | "invalid_file_id"
+        | "invalid_file_order"
+        | "invalid_public_id"
+        | "invalid_file_name"
+        | "invalid_file_size"
+        | "invalid_file_extension"
+        | "invalid_file_url"
+        | "invalid_mime_type"
+        | "invalid_resource_type"
+        | "invalid_pdf_resource_type"
+        | "duplicate_order_in_files"
+        | "duplicate_file_id_in_payload";
+    } {
+  if (!Array.isArray(value) || value.length === 0) {
+    return { success: false, error: "invalid_files" };
+  }
+
+  const files: PascoFileSyncInput[] = [];
+  const seenOrders = new Set<number>();
+  const seenIds = new Set<string>();
+
+  for (const file of value) {
+    const parsed = parsePascoFileSync(file);
+
+    if (!parsed.success) {
+      return parsed;
+    }
+
+    if (seenOrders.has(parsed.data.order)) {
+      return { success: false, error: "duplicate_order_in_files" };
+    }
+
+    seenOrders.add(parsed.data.order);
+
+    if (parsed.data.id !== undefined) {
+      if (seenIds.has(parsed.data.id)) {
+        return { success: false, error: "duplicate_file_id_in_payload" };
+      }
+
+      seenIds.add(parsed.data.id);
+    }
+
     files.push(parsed.data);
   }
 
@@ -661,6 +803,22 @@ export function parsePascoUpdate(
     data.solutionCompleteness = solutionCompleteness ?? null;
   }
 
+  if ("addFiles" in record) {
+    return { success: false, error: "conflicting_file_update" };
+  }
+
+  if ("files" in record) {
+    hasUpdate = true;
+
+    const filesResult = parsePascoFilesSync(record.files);
+
+    if (!filesResult.success) {
+      return filesResult;
+    }
+
+    data.files = filesResult.data;
+  }
+
   if (!hasUpdate) {
     return { success: false, error: "invalid_body" };
   }
@@ -725,6 +883,154 @@ function validateUpdateSolutionCompleteness(
     contentType,
     solutionCompleteness,
   );
+}
+
+function storageFieldsMatch(
+  existing: PascoFile,
+  input: PascoFileCreateInput,
+): boolean {
+  return (
+    existing.publicId === input.publicId &&
+    existing.fileUrl === input.fileUrl &&
+    existing.fileSize === input.fileSize &&
+    existing.mimeType === input.mimeType &&
+    existing.resourceType === input.resourceType
+  );
+}
+
+async function syncPascoFiles(
+  pascoId: string,
+  existing: PascoWithFiles,
+  inputFiles: PascoFileSyncInput[],
+): Promise<
+  | { success: true; pasco: PascoWithFiles }
+  | {
+      success: false;
+      error: PascoFileSyncError;
+      failedPublicIds?: string[];
+    }
+> {
+  const existingById = new Map(existing.files.map((file) => [file.id, file]));
+  const toAdd: PascoFileCreateInput[] = [];
+  const toKeep: PascoFileSyncInput[] = [];
+
+  for (const file of inputFiles) {
+    if (file.id === undefined) {
+      toAdd.push(file);
+      continue;
+    }
+
+    const existingFile = existingById.get(file.id);
+
+    if (existingFile === undefined) {
+      return { success: false, error: "unknown_file_id" };
+    }
+
+    if (!storageFieldsMatch(existingFile, file)) {
+      return { success: false, error: "immutable_file_field" };
+    }
+
+    toKeep.push(file);
+  }
+
+  const keptIds = new Set(toKeep.map((file) => file.id as string));
+  const toDelete = existing.files.filter((file) => !keptIds.has(file.id));
+
+  const expectedAssetFolder = `pascos/${existing.courseId}`;
+  const verificationResults = await Promise.all(
+    toAdd.map((file) =>
+      verifyCloudinaryFile({
+        publicId: file.publicId,
+        fileUrl: file.fileUrl,
+        fileSize: file.fileSize,
+        mimeType: file.mimeType,
+        resourceType: file.resourceType,
+        expectedAssetFolder,
+      }),
+    ),
+  );
+
+  for (const result of verificationResults) {
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+  }
+
+  if (toDelete.length > 0) {
+    const cloudinaryResult = await deleteCloudinaryAssets(
+      toDelete.map((file) => ({
+        publicId: file.publicId,
+        resourceType: file.resourceType,
+      })),
+    );
+
+    if (!cloudinaryResult.success) {
+      return {
+        success: false,
+        error: "cloudinary_delete_failed",
+        failedPublicIds: cloudinaryResult.failedPublicIds,
+      };
+    }
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const [index, file] of toKeep.entries()) {
+        await tx.pascoFile.update({
+          where: { id: file.id },
+          data: { order: -(index + 1) },
+        });
+      }
+
+      if (toDelete.length > 0) {
+        await tx.pascoFile.deleteMany({
+          where: {
+            id: { in: toDelete.map((file) => file.id) },
+          },
+        });
+      }
+
+      for (const file of toKeep) {
+        await tx.pascoFile.update({
+          where: { id: file.id },
+          data: {
+            order: file.order,
+            fileName: file.fileName,
+            fileExtension: file.fileExtension,
+          },
+        });
+      }
+
+      if (toAdd.length > 0) {
+        await tx.pascoFile.createMany({
+          data: toAdd.map((file) => ({
+            pascoId,
+            order: file.order,
+            publicId: file.publicId,
+            fileName: file.fileName,
+            fileSize: file.fileSize,
+            fileExtension: file.fileExtension,
+            fileUrl: file.fileUrl,
+            mimeType: file.mimeType,
+            resourceType: file.resourceType,
+          })),
+        });
+      }
+    });
+  } catch (error) {
+    if (isDuplicatePublicIdError(error)) {
+      return { success: false, error: "duplicate_public_id" };
+    }
+
+    throw error;
+  }
+
+  const pasco = await prisma.pasco.findUniqueOrThrow({
+    where: { id: pascoId },
+    include: pascoInclude,
+  });
+
+  return { success: true, pasco };
 }
 
 export async function listPascos(params?: {
@@ -857,10 +1163,17 @@ export async function updatePasco(
   | { success: true; pasco: PascoWithFiles }
   | {
       success: false;
-      error: "not_found" | "invalid_solution_completeness_for_content_type";
+      error:
+        | "not_found"
+        | "invalid_solution_completeness_for_content_type"
+        | PascoFileSyncError;
+      failedPublicIds?: string[];
     }
 > {
-  const existing = await prisma.pasco.findUnique({ where: { id: pascoId } });
+  const existing = await prisma.pasco.findUnique({
+    where: { id: pascoId },
+    include: pascoInclude,
+  });
 
   if (!existing) {
     return { success: false, error: "not_found" };
@@ -873,30 +1186,62 @@ export async function updatePasco(
     };
   }
 
-  const pasco = await prisma.pasco.update({
+  const hasMetadataUpdate =
+    input.academicYear !== undefined ||
+    input.description !== undefined ||
+    input.educationLevel !== undefined ||
+    input.semesterType !== undefined ||
+    input.type !== undefined ||
+    input.contentType !== undefined ||
+    input.solutionCompleteness !== undefined ||
+    input.isComplete !== undefined;
+
+  if (hasMetadataUpdate) {
+    await prisma.pasco.update({
+      where: { id: pascoId },
+      data: {
+        ...(input.academicYear !== undefined && {
+          academicYear: input.academicYear,
+        }),
+        ...(input.description !== undefined && {
+          description: input.description,
+        }),
+        ...(input.educationLevel !== undefined && {
+          educationLevel: input.educationLevel,
+        }),
+        ...(input.semesterType !== undefined && {
+          semesterType: input.semesterType,
+        }),
+        ...(input.type !== undefined && { type: input.type }),
+        ...(input.contentType !== undefined && {
+          contentType: input.contentType,
+        }),
+        ...(input.solutionCompleteness !== undefined && {
+          solutionCompleteness: input.solutionCompleteness,
+        }),
+        ...(input.isComplete !== undefined && { isComplete: input.isComplete }),
+      },
+    });
+  }
+
+  if (input.files !== undefined) {
+    const syncResult = await syncPascoFiles(pascoId, existing, input.files);
+
+    if (!syncResult.success) {
+      return {
+        success: false,
+        error: syncResult.error,
+        ...(syncResult.failedPublicIds !== undefined && {
+          failedPublicIds: syncResult.failedPublicIds,
+        }),
+      };
+    }
+
+    return { success: true, pasco: syncResult.pasco };
+  }
+
+  const pasco = await prisma.pasco.findUniqueOrThrow({
     where: { id: pascoId },
-    data: {
-      ...(input.academicYear !== undefined && {
-        academicYear: input.academicYear,
-      }),
-      ...(input.description !== undefined && {
-        description: input.description,
-      }),
-      ...(input.educationLevel !== undefined && {
-        educationLevel: input.educationLevel,
-      }),
-      ...(input.semesterType !== undefined && {
-        semesterType: input.semesterType,
-      }),
-      ...(input.type !== undefined && { type: input.type }),
-      ...(input.contentType !== undefined && {
-        contentType: input.contentType,
-      }),
-      ...(input.solutionCompleteness !== undefined && {
-        solutionCompleteness: input.solutionCompleteness,
-      }),
-      ...(input.isComplete !== undefined && { isComplete: input.isComplete }),
-    },
     include: pascoInclude,
   });
 

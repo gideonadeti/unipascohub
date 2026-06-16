@@ -84,6 +84,7 @@ export async function cleanupOrphanCloudinaryAssets(options: {
   scanned: number;
   orphans: string[];
   deleted: string[];
+  deleteFailures: string[];
 }> {
   const dryRun = options.dryRun ?? true;
 
@@ -102,32 +103,43 @@ export async function cleanupOrphanCloudinaryAssets(options: {
       );
 
   let scanned = 0;
-  const orphans: string[] = [];
-  const deleted: string[] = [];
+  const orphanAssets: OrphanAsset[] = [];
 
   for (const courseId of courseIds) {
     const assets = await listAssetsInFolder(`pascos/${courseId}`);
     scanned += assets.length;
 
     for (const asset of assets) {
-      if (dbPublicIds.has(asset.publicId)) {
-        continue;
+      if (!dbPublicIds.has(asset.publicId)) {
+        orphanAssets.push(asset);
       }
+    }
+  }
 
-      orphans.push(asset.publicId);
+  const orphans = orphanAssets.map((asset) => asset.publicId);
+  const deleted: string[] = [];
+  const deleteFailures: string[] = [];
 
-      if (!dryRun) {
+  if (!dryRun && orphanAssets.length > 0) {
+    const results = await Promise.all(
+      orphanAssets.map(async (asset) => {
         const result = await deleteCloudinaryAsset(
           asset.publicId,
           asset.resourceType,
         );
 
-        if (result.success) {
-          deleted.push(asset.publicId);
-        }
+        return { publicId: asset.publicId, result };
+      }),
+    );
+
+    for (const entry of results) {
+      if (entry.result.success) {
+        deleted.push(entry.publicId);
+      } else {
+        deleteFailures.push(entry.publicId);
       }
     }
   }
 
-  return { scanned, orphans, deleted };
+  return { scanned, orphans, deleted, deleteFailures };
 }

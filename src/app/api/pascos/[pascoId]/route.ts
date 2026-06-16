@@ -79,7 +79,7 @@ export async function PATCH(
         return Response.json(
           {
             error:
-              "Request must include at least one of: academicYear, description, educationLevel, semesterType, type, contentType, solutionCompleteness, isComplete",
+              "Request must include at least one of: academicYear, description, educationLevel, semesterType, type, contentType, solutionCompleteness, isComplete, files",
           },
           { status: 400 },
         );
@@ -111,6 +111,58 @@ export async function PATCH(
           { error: "Invalid solutionCompleteness" },
           { status: 400 },
         );
+      case "invalid_files":
+        return Response.json(
+          { error: "Invalid files (expected a non-empty array)" },
+          { status: 400 },
+        );
+      case "conflicting_file_update":
+        return Response.json(
+          { error: "Use files instead of addFiles for file updates" },
+          { status: 400 },
+        );
+      case "invalid_file_id":
+        return Response.json({ error: "Invalid file id" }, { status: 400 });
+      case "duplicate_file_id_in_payload":
+        return Response.json(
+          { error: "Duplicate file id values in files" },
+          { status: 400 },
+        );
+      case "invalid_file_order":
+        return Response.json(
+          { error: "Invalid file order (expected a positive integer)" },
+          { status: 400 },
+        );
+      case "duplicate_order_in_files":
+        return Response.json(
+          { error: "Duplicate order values in files" },
+          { status: 400 },
+        );
+      case "invalid_public_id":
+        return Response.json({ error: "Invalid publicId" }, { status: 400 });
+      case "invalid_file_name":
+        return Response.json({ error: "Invalid fileName" }, { status: 400 });
+      case "invalid_file_size":
+        return Response.json({ error: "Invalid fileSize" }, { status: 400 });
+      case "invalid_file_extension":
+        return Response.json(
+          { error: "Invalid fileExtension" },
+          { status: 400 },
+        );
+      case "invalid_file_url":
+        return Response.json({ error: "Invalid fileUrl" }, { status: 400 });
+      case "invalid_mime_type":
+        return Response.json({ error: "Invalid mimeType" }, { status: 400 });
+      case "invalid_resource_type":
+        return Response.json(
+          { error: "Invalid resourceType" },
+          { status: 400 },
+        );
+      case "invalid_pdf_resource_type":
+        return Response.json(
+          { error: "PDFs must use resourceType IMAGE" },
+          { status: 400 },
+        );
     }
   }
 
@@ -127,6 +179,61 @@ export async function PATCH(
               error:
                 "solutionCompleteness must not be set when contentType is QUESTIONS_ONLY",
             },
+            { status: 400 },
+          );
+        case "unknown_file_id":
+          return Response.json(
+            { error: "File id does not belong to this pasco" },
+            { status: 400 },
+          );
+        case "immutable_file_field":
+          return Response.json(
+            {
+              error: "Storage fields cannot be changed on existing files",
+            },
+            { status: 400 },
+          );
+        case "cloudinary_delete_failed":
+          return Response.json(
+            {
+              error: "Failed to delete file from storage",
+              failedPublicIds: result.failedPublicIds ?? [],
+            },
+            { status: 502 },
+          );
+        case "duplicate_public_id":
+          return Response.json(
+            { error: "A pasco file with this publicId already exists" },
+            { status: 409 },
+          );
+        case "asset_not_found":
+          return Response.json(
+            { error: "File not found in storage" },
+            { status: 400 },
+          );
+        case "asset_folder_mismatch":
+          return Response.json(
+            { error: "File was not uploaded to the expected course folder" },
+            { status: 400 },
+          );
+        case "asset_size_mismatch":
+          return Response.json(
+            { error: "File size does not match the uploaded asset" },
+            { status: 400 },
+          );
+        case "asset_url_mismatch":
+          return Response.json(
+            { error: "File URL does not match the uploaded asset" },
+            { status: 400 },
+          );
+        case "asset_resource_type_mismatch":
+          return Response.json(
+            { error: "File resource type does not match the uploaded asset" },
+            { status: 400 },
+          );
+        case "asset_mime_mismatch":
+          return Response.json(
+            { error: "File MIME type does not match the uploaded asset" },
             { status: 400 },
           );
       }
