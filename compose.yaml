@@ -2,14 +2,14 @@ services:
   postgres:
     image: postgres:18
     environment:
-      POSTGRES_DB: ghpascohub
+      POSTGRES_DB: unipascohub
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     secrets:
       - postgres_password
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d ghpascohub']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d unipascohub']
       interval: 5s
       timeout: 3s
       retries: 10

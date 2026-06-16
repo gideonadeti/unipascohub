@@ -23,8 +23,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GH Pasco Hub",
-  description: "A hub to post and get past questions in Ghana",
+  title: "Uni Pasco Hub",
+  description: "A hub to share pasco and better prepare for exams",
 };
 
 export default function RootLayout({
