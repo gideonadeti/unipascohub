@@ -1,0 +1,35 @@
+import type {
+  CourseListFilters,
+  ProgramListFilters,
+} from "@/types/api/catalog";
+import type { PascoListFilters } from "@/types/api/pascos";
+
+export const queryKeys = {
+  institutions: {
+    all: ["institutions"] as const,
+    list: () => [...queryKeys.institutions.all, "list"] as const,
+    detail: (id: string) =>
+      [...queryKeys.institutions.all, "detail", id] as const,
+  },
+  programs: {
+    all: ["programs"] as const,
+    list: (filters: ProgramListFilters) =>
+      [...queryKeys.programs.all, "list", filters] as const,
+    detail: (id: string) => [...queryKeys.programs.all, "detail", id] as const,
+  },
+  courses: {
+    all: ["courses"] as const,
+    list: (filters: CourseListFilters) =>
+      [...queryKeys.courses.all, "list", filters] as const,
+    detail: (id: string) => [...queryKeys.courses.all, "detail", id] as const,
+  },
+  pascos: {
+    all: ["pascos"] as const,
+    list: (filters: PascoListFilters) =>
+      [...queryKeys.pascos.all, "list", filters] as const,
+    detail: (id: string) => [...queryKeys.pascos.all, "detail", id] as const,
+  },
+  users: {
+    me: ["users", "me"] as const,
+  },
+} as const;

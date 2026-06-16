@@ -1,5 +1,11 @@
+import { ApiSmokeTest } from "@/components/api-smoke-test";
+
 const Page = () => {
-  return <div>Page</div>;
+  return (
+    <div>
+      <ApiSmokeTest />
+    </div>
+  );
 };
 
 export default Page;
