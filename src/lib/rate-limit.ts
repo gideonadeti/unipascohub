@@ -157,3 +157,23 @@ export function getCloudinarySignRateLimitOptions(): RateLimitOptions {
     ),
   };
 }
+
+export function getPascoReactionRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(process.env.PASCO_REACTION_RATE_LIMIT, 60),
+    windowMs: parsePositiveInt(
+      process.env.PASCO_REACTION_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}
+
+export function getPascoDownloadRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(process.env.PASCO_DOWNLOAD_RATE_LIMIT, 120),
+    windowMs: parsePositiveInt(
+      process.env.PASCO_DOWNLOAD_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}

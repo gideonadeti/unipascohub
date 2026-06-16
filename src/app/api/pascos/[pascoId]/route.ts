@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
   deletePasco,
   getPascoById,
@@ -26,8 +27,21 @@ export async function GET(
       return Response.json({ error: "Pasco not found" }, { status: 404 });
     }
 
+    const { isAuthenticated, userId } = await auth();
+    const viewerReactions =
+      isAuthenticated && userId
+        ? await getViewerReactionsForPascos(userId, [pascoId])
+        : null;
+
     return Response.json({
-      pasco: serializePasco(result.pasco),
+      pasco: serializePasco(
+        result.pasco,
+        viewerReactions
+          ? {
+              viewerReaction: viewerReactions.get(pascoId) ?? null,
+            }
+          : undefined,
+      ),
     });
   } catch (err) {
     console.error("Pasco fetch failed:", err);

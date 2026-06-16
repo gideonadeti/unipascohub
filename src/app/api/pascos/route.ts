@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
   createPasco,
   getPascoMaxFileSizeBytes,
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
         return Response.json(
           {
             error:
-              "Invalid sortBy (allowed: createdAt, updatedAt, academicYear)",
+              "Invalid sortBy (allowed: createdAt, updatedAt, academicYear, likeCount, dislikeCount, downloadCount)",
           },
           { status: 400 },
         );
@@ -73,10 +74,28 @@ export async function GET(req: Request) {
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 
+    const { isAuthenticated, userId } = await auth();
+    const viewerReactions =
+      isAuthenticated && userId
+        ? await getViewerReactionsForPascos(
+            userId,
+            result.pascos.map((pasco) => pasco.id),
+          )
+        : null;
+
     const totalPages = Math.ceil(result.total / result.limit);
 
     return Response.json({
-      pascos: result.pascos.map(serializePasco),
+      pascos: result.pascos.map((pasco) =>
+        serializePasco(
+          pasco,
+          viewerReactions
+            ? {
+                viewerReaction: viewerReactions.get(pasco.id) ?? null,
+              }
+            : undefined,
+        ),
+      ),
       pagination: {
         page: result.page,
         limit: result.limit,

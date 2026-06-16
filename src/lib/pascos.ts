@@ -14,6 +14,7 @@ import {
   type EducationLevel as EducationLevelType,
   PascoContentType,
   type PascoContentType as PascoContentTypeType,
+  type PascoReactionType as PascoReactionTypeValue,
   PascoType,
   type PascoType as PascoTypeType,
   SemesterType,
@@ -31,7 +32,14 @@ const DEFAULT_LIST_LIMIT = 20;
 const MAX_LIST_LIMIT = 100;
 
 const EXISTING_FILE_SYNC_KEYS = new Set(["id", "order"]);
-const LIST_SORT_FIELDS = ["createdAt", "updatedAt", "academicYear"] as const;
+const LIST_SORT_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "academicYear",
+  "likeCount",
+  "dislikeCount",
+  "downloadCount",
+] as const;
 
 type PascoListSortBy = (typeof LIST_SORT_FIELDS)[number];
 type PascoListSortOrder = "asc" | "desc";
@@ -1011,8 +1019,13 @@ function serializePascoFile(file: PascoFile) {
   };
 }
 
-export function serializePasco(pasco: PascoWithFiles) {
-  return {
+export function serializePasco(
+  pasco: PascoWithFiles,
+  options?: {
+    viewerReaction?: PascoReactionTypeValue | null;
+  },
+) {
+  const serialized = {
     id: pasco.id,
     courseId: pasco.courseId,
     uploaderId: pasco.uploaderId,
@@ -1024,11 +1037,25 @@ export function serializePasco(pasco: PascoWithFiles) {
     contentType: pasco.contentType,
     solutionCompleteness: pasco.solutionCompleteness,
     isComplete: pasco.isComplete,
+    likeCount: pasco.likeCount,
+    dislikeCount: pasco.dislikeCount,
+    downloadCount: pasco.downloadCount,
     files: pasco.files.map(serializePascoFile),
     createdAt: pasco.createdAt.toISOString(),
     updatedAt: pasco.updatedAt.toISOString(),
   };
+
+  if (options && "viewerReaction" in options) {
+    return {
+      ...serialized,
+      viewerReaction: options.viewerReaction ?? null,
+    };
+  }
+
+  return serialized;
 }
+
+export type SerializedPasco = ReturnType<typeof serializePasco>;
 
 function isDuplicatePublicIdError(error: unknown): boolean {
   return (
