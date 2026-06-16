@@ -54,6 +54,18 @@ function showUploadError(message: string) {
   toast.error(message);
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1_048_576) {
+    return `${(bytes / 1024).toFixed(bytes < 10_240 ? 1 : 0)} KB`;
+  }
+
+  return `${(bytes / 1_048_576).toFixed(1)} MB`;
+}
+
 function loadCloudinaryWidgetScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.resolve();
@@ -376,8 +388,13 @@ export function PascoCloudinaryUpload({
               key={`${file.publicId}-${file.order}`}
               className="flex items-center justify-between gap-2 text-sm"
             >
-              <span>
-                {file.order}. {file.fileName}
+              <span className="min-w-0">
+                <span className="block truncate">
+                  {file.order}. {file.fileName}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatFileSize(file.fileSize)}
+                </span>
               </span>
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">Uploaded</Badge>

@@ -693,6 +693,18 @@ function parseDescription(value: unknown): string | null | undefined {
   return description.length === 0 ? null : description;
 }
 
+function isInvalidDescriptionValue(value: unknown): boolean {
+  if (value === undefined || value === null) {
+    return false;
+  }
+
+  if (typeof value !== "string") {
+    return true;
+  }
+
+  return value.trim().length > MAX_DESCRIPTION_LENGTH;
+}
+
 function isEducationLevel(value: string): value is EducationLevelType {
   return EDUCATION_LEVELS.has(value);
 }
@@ -797,10 +809,11 @@ export function parsePascoCreate(
     return { success: false, error: "invalid_academic_year" };
   }
 
-  const description = parseDescription(record.description);
-  if (description === null && record.description !== null) {
+  if (isInvalidDescriptionValue(record.description)) {
     return { success: false, error: "invalid_description" };
   }
+
+  const description = parseDescription(record.description);
 
   if (
     typeof record.educationLevel !== "string" ||
@@ -902,7 +915,7 @@ export function parsePascoUpdate(
     hasUpdate = true;
 
     const description = parseDescription(record.description);
-    if (description === null && record.description !== null) {
+    if (isInvalidDescriptionValue(record.description)) {
       return { success: false, error: "invalid_description" };
     }
 

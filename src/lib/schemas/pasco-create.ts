@@ -149,14 +149,17 @@ export function toPascoCreateInput(
   const {
     institutionId: _institutionId,
     programId: _programId,
+    description,
     ...rest
   } = values;
 
-  const description = rest.description.trim();
+  const trimmedDescription = description.trim();
 
   return {
     ...rest,
-    ...(description.length > 0 ? { description } : {}),
+    ...(trimmedDescription.length > 0
+      ? { description: trimmedDescription }
+      : {}),
     ...(rest.contentType === "QUESTIONS_ONLY"
       ? { solutionCompleteness: null }
       : {}),
