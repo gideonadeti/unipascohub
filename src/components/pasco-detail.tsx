@@ -19,18 +19,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { useCourse } from "@/hooks/api/use-courses";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { useRecordPascoView } from "@/hooks/api/use-pasco-engagement";
 import { usePasco } from "@/hooks/api/use-pascos";
+import { formatEnumLabel } from "@/lib/catalog-labels";
 import { canUserModifyPasco } from "@/lib/pasco-permissions";
 import type { PascoFile } from "@/types/api/pascos";
-
-function formatLabel(value: string) {
-  return value
-    .toLowerCase()
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
 
 export function PascoDetail() {
   const params = useParams<{ pascoId: string }>();
@@ -38,6 +33,8 @@ export function PascoDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewFile, setViewFile] = useState<PascoFile | null>(null);
   const pascoQuery = usePasco(pascoId);
+  const courseId = pascoQuery.data?.pasco.courseId ?? "";
+  const courseQuery = useCourse(courseId);
   const currentUser = useCurrentUser();
   useRecordPascoView(pascoId, pascoQuery.isSuccess);
 
@@ -60,11 +57,14 @@ export function PascoDetail() {
   }
 
   const pasco = pascoQuery.data.pasco;
+  const courseLabel = courseQuery.data?.course
+    ? `${courseQuery.data.course.code} — ${courseQuery.data.course.title}`
+    : pasco.courseId;
   const canEdit =
     currentUser.data?.user && canUserModifyPasco(currentUser.data.user, pasco);
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
+    <Card className="w-full">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
           <CardTitle>Pasco details</CardTitle>
@@ -94,8 +94,8 @@ export function PascoDetail() {
       <CardContent className="space-y-6">
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-muted-foreground">Course ID</dt>
-            <dd>{pasco.courseId}</dd>
+            <dt className="text-muted-foreground">Course</dt>
+            <dd>{courseLabel}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Academic year</dt>
@@ -103,24 +103,24 @@ export function PascoDetail() {
           </div>
           <div>
             <dt className="text-muted-foreground">Education level</dt>
-            <dd>{formatLabel(pasco.educationLevel)}</dd>
+            <dd>{formatEnumLabel(pasco.educationLevel)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Semester</dt>
-            <dd>{formatLabel(pasco.semesterType)}</dd>
+            <dd>{formatEnumLabel(pasco.semesterType)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Type</dt>
-            <dd>{formatLabel(pasco.type)}</dd>
+            <dd>{formatEnumLabel(pasco.type)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Content type</dt>
-            <dd>{formatLabel(pasco.contentType)}</dd>
+            <dd>{formatEnumLabel(pasco.contentType)}</dd>
           </div>
           {pasco.solutionCompleteness && (
             <div>
               <dt className="text-muted-foreground">Solution completeness</dt>
-              <dd>{formatLabel(pasco.solutionCompleteness)}</dd>
+              <dd>{formatEnumLabel(pasco.solutionCompleteness)}</dd>
             </div>
           )}
           <div>
