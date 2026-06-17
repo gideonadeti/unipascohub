@@ -185,6 +185,36 @@ export function isAllowedPascoFileName(fileName: string): boolean {
   );
 }
 
+export function isPascoPdfFileName(fileName: string): boolean {
+  const extension = getFileExtension(fileName);
+
+  return PASCO_PDF_EXTENSIONS.includes(
+    extension as (typeof PASCO_PDF_EXTENSIONS)[number],
+  );
+}
+
+export function isPascoImageFileName(fileName: string): boolean {
+  const extension = getFileExtension(fileName);
+
+  return PASCO_IMAGE_EXTENSIONS.includes(
+    extension as (typeof PASCO_IMAGE_EXTENSIONS)[number],
+  );
+}
+
+export type PascoFileViewKind = "pdf" | "image" | "download-only";
+
+export function getPascoFileViewKind(fileName: string): PascoFileViewKind {
+  if (isPascoPdfFileName(fileName)) {
+    return "pdf";
+  }
+
+  if (isPascoImageFileName(fileName)) {
+    return "image";
+  }
+
+  return "download-only";
+}
+
 export function inferPascoResourceType(
   fileName: string,
 ): CloudinaryResourceType {

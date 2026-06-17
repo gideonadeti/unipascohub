@@ -6,26 +6,20 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useRecordPascoFileDownload } from "@/hooks/api/use-pasco-engagement";
+import { formatPascoFileSize } from "@/lib/pasco-file-format";
 import type { PascoFile } from "@/types/api/pascos";
 
 type PascoFileDownloadProps = {
   pascoId: string;
   file: PascoFile;
+  showLabel?: boolean;
 };
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  if (bytes < 1_048_576) {
-    return `${(bytes / 1024).toFixed(bytes < 10_240 ? 1 : 0)} KB`;
-  }
-
-  return `${(bytes / 1_048_576).toFixed(1)} MB`;
-}
-
-export function PascoFileDownload({ pascoId, file }: PascoFileDownloadProps) {
+export function PascoFileDownload({
+  pascoId,
+  file,
+  showLabel = false,
+}: PascoFileDownloadProps) {
   const { isSignedIn } = useAuth();
   const downloadMutation = useRecordPascoFileDownload(pascoId);
 
@@ -34,18 +28,14 @@ export function PascoFileDownload({ pascoId, file }: PascoFileDownloadProps) {
     window.open(result.fileUrl, "_blank", "noopener,noreferrer");
   }
 
-  const label = `${file.order}. ${file.fileName} (${formatFileSize(file.fileSize)})`;
+  const label = `${file.order}. ${file.fileName} (${formatPascoFileSize(file.fileSize)})`;
 
   if (isSignedIn !== true) {
     return (
       <SignInButton mode="modal">
-        <Button
-          type="button"
-          variant="link"
-          className="h-auto justify-start px-0 text-left"
-        >
-          <Download className="size-4 shrink-0" aria-hidden />
-          <span>{label}</span>
+        <Button type="button" variant="outline" size="sm">
+          <Download className="size-4" aria-hidden />
+          {showLabel ? label : "Download"}
         </Button>
       </SignInButton>
     );
@@ -54,17 +44,17 @@ export function PascoFileDownload({ pascoId, file }: PascoFileDownloadProps) {
   return (
     <Button
       type="button"
-      variant="link"
-      className="h-auto justify-start px-0 text-left"
+      variant="outline"
+      size="sm"
       disabled={downloadMutation.isPending}
       onClick={() => void handleDownload()}
     >
       {downloadMutation.isPending ? (
         <Spinner />
       ) : (
-        <Download className="size-4 shrink-0" aria-hidden />
+        <Download className="size-4" aria-hidden />
       )}
-      <span>{label}</span>
+      {showLabel ? label : "Download"}
     </Button>
   );
 }

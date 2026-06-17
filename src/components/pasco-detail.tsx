@@ -6,7 +6,8 @@ import { useState } from "react";
 
 import { PascoDeleteDialog } from "@/components/pasco-delete-dialog";
 import { PascoEngagementBar } from "@/components/pasco-engagement-bar";
-import { PascoFileDownload } from "@/components/pasco-file-download";
+import { PascoFileActions } from "@/components/pasco-file-actions";
+import { PascoFileView } from "@/components/pasco-file-view";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { useRecordPascoView } from "@/hooks/api/use-pasco-engagement";
 import { usePasco } from "@/hooks/api/use-pascos";
 import { canUserModifyPasco } from "@/lib/pasco-permissions";
+import type { PascoFile } from "@/types/api/pascos";
 
 function formatLabel(value: string) {
   return value
@@ -34,6 +36,7 @@ export function PascoDetail() {
   const params = useParams<{ pascoId: string }>();
   const pascoId = params.pascoId ?? "";
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [viewFile, setViewFile] = useState<PascoFile | null>(null);
   const pascoQuery = usePasco(pascoId);
   const currentUser = useCurrentUser();
   useRecordPascoView(pascoId, pascoQuery.isSuccess);
@@ -144,12 +147,17 @@ export function PascoDetail() {
           <ul className="space-y-2">
             {pasco.files.map((file) => (
               <li key={file.id}>
-                <PascoFileDownload pascoId={pascoId} file={file} />
+                <PascoFileActions
+                  pascoId={pascoId}
+                  file={file}
+                  onView={setViewFile}
+                />
               </li>
             ))}
           </ul>
         </div>
       </CardContent>
+      <PascoFileView file={viewFile} onClose={() => setViewFile(null)} />
     </Card>
   );
 }

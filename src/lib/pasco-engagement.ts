@@ -11,9 +11,10 @@ type PascoReactionParseError = "invalid_body" | "invalid_reaction_type";
 
 type SetPascoReactionError = "pasco_not_found" | "user_not_found";
 
-type RecordPascoDownloadError =
+type RecordPascoDownloadError = GetPascoFileSignedUrlError | "user_not_found";
+
+export type GetPascoFileSignedUrlError =
   | "pasco_not_found"
-  | "user_not_found"
   | "file_not_found"
   | "asset_not_found"
   | "missing_config"
@@ -284,6 +285,56 @@ export async function setPascoReaction(
   });
 }
 
+export async function getPascoFileSignedUrl(
+  pascoId: string,
+  fileId: string,
+): Promise<
+  | { success: true; fileUrl: string; fileName: string }
+  | { success: false; error: GetPascoFileSignedUrlError }
+> {
+  const [pasco, file] = await Promise.all([
+    prisma.pasco.findUnique({
+      where: { id: pascoId },
+      select: { id: true },
+    }),
+    prisma.pascoFile.findFirst({
+      where: {
+        id: fileId,
+        pascoId,
+      },
+      select: {
+        publicId: true,
+        fileName: true,
+        resourceType: true,
+      },
+    }),
+  ]);
+
+  if (!pasco) {
+    return { success: false, error: "pasco_not_found" };
+  }
+
+  if (!file) {
+    return { success: false, error: "file_not_found" };
+  }
+
+  const signedUrlResult = await createSignedCloudinaryDownloadUrl({
+    publicId: file.publicId,
+    fileName: file.fileName,
+    resourceType: file.resourceType,
+  });
+
+  if (!signedUrlResult.success) {
+    return { success: false, error: signedUrlResult.error };
+  }
+
+  return {
+    success: true,
+    fileUrl: signedUrlResult.url,
+    fileName: file.fileName,
+  };
+}
+
 export async function recordPascoDownload(
   userId: string,
   pascoId: string,
@@ -352,11 +403,7 @@ export async function recordPascoDownload(
     });
   });
 
-  const signedUrlResult = await createSignedCloudinaryDownloadUrl({
-    publicId: file.publicId,
-    fileName: file.fileName,
-    resourceType: file.resourceType,
-  });
+  const signedUrlResult = await getPascoFileSignedUrl(pascoId, fileId);
 
   if (!signedUrlResult.success) {
     return { success: false, error: signedUrlResult.error };
@@ -365,7 +412,7 @@ export async function recordPascoDownload(
   return {
     success: true,
     downloadCount: updated.downloadCount,
-    fileUrl: signedUrlResult.url,
-    fileName: file.fileName,
+    fileUrl: signedUrlResult.fileUrl,
+    fileName: signedUrlResult.fileName,
   };
 }

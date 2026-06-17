@@ -197,3 +197,8 @@ export type PascoDownloadResponse = {
   fileUrl: string;
   fileName: string;
 };
+
+export type PascoFileViewResponse = {
+  fileUrl: string;
+  fileName: string;
+};

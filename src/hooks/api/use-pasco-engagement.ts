@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import {
+  getPascoFileViewUrl,
   patchPascoDetailEngagement,
   recordPascoFileDownload,
   recordPascoView,
@@ -74,6 +75,15 @@ export function useRecordPascoFileDownload(pascoId: string) {
     },
     onError: (error) => {
       toast.error(getPascoEngagementErrorMessage(error, "download"));
+    },
+  });
+}
+
+export function usePascoFileViewUrl(pascoId: string) {
+  return useMutation({
+    mutationFn: (fileId: string) => getPascoFileViewUrl(pascoId, fileId),
+    onError: (error) => {
+      toast.error(getPascoEngagementErrorMessage(error, "fileView"));
     },
   });
 }

@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type {
   PascoDetailResponse,
   PascoDownloadResponse,
+  PascoFileViewResponse,
   PascoReactionResponse,
   PascoReactionType,
   PascoViewResponse,
@@ -33,6 +34,12 @@ export function recordPascoFileDownload(pascoId: string, fileId: string) {
     .post<PascoDownloadResponse>(
       `/api/pascos/${pascoId}/files/${fileId}/download`,
     )
+    .then((response) => response.data);
+}
+
+export function getPascoFileViewUrl(pascoId: string, fileId: string) {
+  return apiClient
+    .post<PascoFileViewResponse>(`/api/pascos/${pascoId}/files/${fileId}/view`)
     .then((response) => response.data);
 }
 

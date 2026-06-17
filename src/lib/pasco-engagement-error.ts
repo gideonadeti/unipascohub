@@ -2,7 +2,7 @@ import { ApiError } from "@/lib/api/client";
 
 export function getPascoEngagementErrorMessage(
   error: unknown,
-  action: "reaction" | "view" | "download",
+  action: "reaction" | "view" | "download" | "fileView",
 ): string {
   if (error instanceof ApiError) {
     if (error.status === 401) {
@@ -20,7 +20,7 @@ export function getPascoEngagementErrorMessage(
         return "File not found";
       }
 
-      return action === "download"
+      return action === "download" || action === "fileView"
         ? "Pasco or file not found"
         : "Pasco not found";
     }
@@ -29,16 +29,25 @@ export function getPascoEngagementErrorMessage(
       return "Too many requests. Please wait a moment and try again.";
     }
 
-    if (error.status === 500 && action === "download") {
+    if (
+      error.status === 500 &&
+      (action === "download" || action === "fileView")
+    ) {
       const data = error.data as { error?: string } | undefined;
 
       if (data?.error === "Cloudinary is not configured") {
-        return "Downloads are temporarily unavailable. Please try again later.";
+        return action === "download"
+          ? "Downloads are temporarily unavailable. Please try again later."
+          : "Viewing is temporarily unavailable. Please try again later.";
       }
     }
 
     if (error.status === 502 && action === "download") {
       return "Could not prepare download. Please try again.";
+    }
+
+    if (error.status === 502 && action === "fileView") {
+      return "Could not prepare view. Please try again.";
     }
 
     const data = error.data as { error?: string; message?: string } | undefined;
@@ -64,6 +73,10 @@ export function getPascoEngagementErrorMessage(
 
   if (action === "download") {
     return "Could not download file";
+  }
+
+  if (action === "fileView") {
+    return "Could not open file";
   }
 
   return "Could not record view";
