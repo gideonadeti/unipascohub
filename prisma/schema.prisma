@@ -158,6 +158,7 @@ model PascoFile {
   fileSize     Int
   fileUrl      String
   resourceType CloudinaryResourceType @default(IMAGE)
+  contentHash  String?
   createdAt     DateTime               @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -166,6 +167,7 @@ model PascoFile {
 
   @@unique([pascoId, order])
   @@index([pascoId])
+  @@index([contentHash])
 }
 
 model PascoReaction {
