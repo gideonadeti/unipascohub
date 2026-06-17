@@ -90,10 +90,6 @@ export function resolvePrepareUploadFileName(params: unknown): string | null {
   for (const key of ["file", "source"]) {
     const candidate = record[key];
 
-    if (candidate instanceof File) {
-      return readNonEmptyString(candidate.name);
-    }
-
     if (
       candidate !== null &&
       typeof candidate === "object" &&

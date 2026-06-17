@@ -4,7 +4,8 @@ import type {
   PascoCreateInput,
   PascoCreateResponse,
   PascoDetailResponse,
-  PascoFileDuplicate,
+  PascoFileComputeHashInput,
+  PascoFileComputeHashResponse,
   PascoFileDuplicateCheckResponse,
   PascoListFilters,
   PascoListResponse,
@@ -41,6 +42,12 @@ export function checkPascoFileDuplicates(
         contentHashes,
       },
     )
+    .then((response) => response.data);
+}
+
+export function computePascoFileHash(input: PascoFileComputeHashInput) {
+  return apiClient
+    .post<PascoFileComputeHashResponse>("/api/pascos/files/compute-hash", input)
     .then((response) => response.data);
 }
 

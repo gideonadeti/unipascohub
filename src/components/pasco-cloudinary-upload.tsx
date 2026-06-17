@@ -22,9 +22,11 @@ import {
   resolveUploadedFileName,
   signCloudinaryUpload,
 } from "@/lib/api/cloudinary";
-import { checkPascoFileDuplicates } from "@/lib/api/pascos";
+import {
+  checkPascoFileDuplicates,
+  computePascoFileHash,
+} from "@/lib/api/pascos";
 import { formatDuplicateFileMessage } from "@/lib/content-hash";
-import { asHashableFile, hashFile } from "@/lib/file-hash";
 import {
   extractCloudinaryWidgetErrorMessage,
   getPascoFileTooLargeMessage,
@@ -33,6 +35,7 @@ import {
   PASCO_UPLOAD_ACCEPT_DESCRIPTION,
   PASCO_UPLOAD_REJECTED_MESSAGE,
   PASCO_WIDGET_ALLOWED_FORMATS,
+  readPreBatchFileName,
   resolvePascoFileSizeErrorMessage,
 } from "@/lib/pasco-file-types";
 import {
@@ -158,7 +161,7 @@ export function PascoCloudinaryUpload({
   const filesRef = useRef(files);
   const courseIdRef = useRef(courseId);
   const preBatchFileNamesRef = useRef<string[]>([]);
-  const fileContentHashesRef = useRef<Map<string, string>>(new Map());
+  const batchContentHashesRef = useRef<Set<string>>(new Set());
   const isOpeningRef = useRef(false);
   const openingFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -254,37 +257,73 @@ export function PascoCloudinaryUpload({
         result.info &&
         typeof result.info === "object"
       ) {
-        try {
-          const currentFiles = filesRef.current;
-          const nextOrder =
-            currentFiles.length > 0
-              ? Math.max(...currentFiles.map((file) => file.order)) + 1
-              : 1;
+        void (async () => {
+          try {
+            const uploadInfo = result.info;
 
-          const fileName = resolveUploadedFileName(result.info);
-          const contentHash = fileContentHashesRef.current.get(fileName);
+            if (!uploadInfo || typeof uploadInfo !== "object") {
+              showUploadError("Could not verify file fingerprint.");
+              return;
+            }
 
-          if (!contentHash) {
-            showUploadError("Could not verify file fingerprint.");
-            return;
+            const currentFiles = filesRef.current;
+            const nextOrder =
+              currentFiles.length > 0
+                ? Math.max(...currentFiles.map((file) => file.order)) + 1
+                : 1;
+
+            const fileName = resolveUploadedFileName(uploadInfo);
+            const { contentHash } = await computePascoFileHash({
+              courseId: courseIdRef.current,
+              publicId: uploadInfo.public_id,
+              fileName,
+              fileSize: uploadInfo.bytes,
+              fileUrl: uploadInfo.secure_url,
+              resourceType:
+                uploadInfo.resource_type === "raw" ? "RAW" : "IMAGE",
+            });
+
+            if (batchContentHashesRef.current.has(contentHash)) {
+              showUploadError("Duplicate files detected in this selection.");
+              return;
+            }
+
+            const duplicateCheck = await checkPascoFileDuplicates(
+              courseIdRef.current,
+              [contentHash],
+            );
+
+            if (duplicateCheck.duplicates.length > 0) {
+              const duplicate = duplicateCheck.duplicates[0];
+              const message = formatDuplicateFileMessage(duplicate);
+
+              setUploadDuplicate({
+                ...duplicate,
+                message,
+              });
+              showUploadError(message);
+              return;
+            }
+
+            batchContentHashesRef.current.add(contentHash);
+
+            const uploadedFile = cloudinaryUploadInfoToPascoFile(
+              uploadInfo,
+              nextOrder,
+              contentHash,
+            );
+
+            onFilesChange([...currentFiles, uploadedFile]);
+            setUploadDuplicate(null);
+            toast.success(`Uploaded ${uploadedFile.fileName}`);
+          } catch (mappingError) {
+            const message =
+              mappingError instanceof Error
+                ? mappingError.message
+                : PASCO_UPLOAD_REJECTED_MESSAGE;
+            showUploadError(message);
           }
-
-          const uploadedFile = cloudinaryUploadInfoToPascoFile(
-            result.info,
-            nextOrder,
-            contentHash,
-          );
-
-          onFilesChange([...currentFiles, uploadedFile]);
-          setUploadDuplicate(null);
-          toast.success(`Uploaded ${uploadedFile.fileName}`);
-        } catch (mappingError) {
-          const message =
-            mappingError instanceof Error
-              ? mappingError.message
-              : PASCO_UPLOAD_REJECTED_MESSAGE;
-          showUploadError(message);
-        }
+        })();
       }
     },
     [finishOpening, onFilesChange],
@@ -315,6 +354,7 @@ export function PascoCloudinaryUpload({
     isOpeningRef.current = true;
     setIsOpening(true);
     setUploadDuplicate(null);
+    batchContentHashesRef.current.clear();
 
     try {
       const bootstrapSign = await signCloudinaryUpload({
@@ -341,109 +381,59 @@ export function PascoCloudinaryUpload({
             callback: (result?: CloudinaryPreBatchCallbackResult) => void,
             data: CloudinaryPreBatchData,
           ) => {
-            void (async () => {
-              try {
-                const batchFiles = data.files ?? [];
-                const singularFile =
-                  "file" in (data as object)
-                    ? (data as { file?: { name?: string } }).file
-                    : undefined;
-                const preBatchCandidates =
-                  batchFiles.length > 0
-                    ? batchFiles
-                    : singularFile
-                      ? [singularFile]
-                      : [];
-                preBatchFileNamesRef.current = preBatchCandidates
-                  .map((file) => file?.name)
-                  .filter(
-                    (name): name is string =>
-                      typeof name === "string" && isAllowedPascoFileName(name),
-                  );
-                const invalidFile = preBatchCandidates.find(
-                  (file) => !file?.name || !isAllowedPascoFileName(file.name),
+            try {
+              const batchFiles = data.files ?? [];
+              const singularFile =
+                "file" in (data as object)
+                  ? (data as { file?: { name?: string } }).file
+                  : undefined;
+              const preBatchCandidates =
+                batchFiles.length > 0
+                  ? batchFiles
+                  : singularFile
+                    ? [singularFile]
+                    : [];
+              preBatchFileNamesRef.current = preBatchCandidates
+                .map((file) => readPreBatchFileName(file))
+                .filter(
+                  (name): name is string =>
+                    typeof name === "string" && isAllowedPascoFileName(name),
                 );
+              const invalidFile = preBatchCandidates.find((file) => {
+                const fileName = readPreBatchFileName(file);
 
-                if (invalidFile) {
-                  rejectPreBatchUpload(callback, PASCO_UPLOAD_REJECTED_MESSAGE);
-                  return;
-                }
+                return !fileName || !isAllowedPascoFileName(fileName);
+              });
 
-                const tooLargeFile = preBatchCandidates.find((file) => {
-                  const size = getPreBatchFileSize(file);
-
-                  return (
-                    typeof size === "number" && size > PASCO_MAX_FILE_SIZE_BYTES
-                  );
-                });
-
-                if (tooLargeFile) {
-                  rejectPreBatchUpload(
-                    callback,
-                    getPascoFileTooLargeMessage(PASCO_MAX_FILE_SIZE_BYTES),
-                  );
-                  return;
-                }
-
-                const hashableFiles = preBatchCandidates
-                  .map((file) => asHashableFile(file))
-                  .filter((file): file is File => file !== null);
-
-                if (hashableFiles.length !== preBatchCandidates.length) {
-                  rejectPreBatchUpload(
-                    callback,
-                    "Could not verify file fingerprint.",
-                  );
-                  return;
-                }
-
-                const nextHashes = new Map<string, string>();
-                const contentHashes: string[] = [];
-
-                for (const file of hashableFiles) {
-                  const contentHash = await hashFile(file);
-                  nextHashes.set(file.name, contentHash);
-                  contentHashes.push(contentHash);
-                }
-
-                if (new Set(contentHashes).size !== contentHashes.length) {
-                  rejectPreBatchUpload(
-                    callback,
-                    "Duplicate files detected in this selection.",
-                  );
-                  return;
-                }
-
-                const duplicateCheck = await checkPascoFileDuplicates(
-                  courseIdRef.current,
-                  contentHashes,
-                );
-
-                if (duplicateCheck.duplicates.length > 0) {
-                  const duplicate = duplicateCheck.duplicates[0];
-                  const message = formatDuplicateFileMessage(duplicate);
-
-                  setUploadDuplicate({
-                    ...duplicate,
-                    message,
-                  });
-                  callback({ cancel: true, error: message });
-                  return;
-                }
-
-                fileContentHashesRef.current = new Map([
-                  ...fileContentHashesRef.current,
-                  ...nextHashes,
-                ]);
-                callback();
-              } catch (error) {
-                const message =
-                  error instanceof Error
-                    ? error.message
-                    : "Could not verify file fingerprint.";
-                rejectPreBatchUpload(callback, message);
+              if (invalidFile) {
+                rejectPreBatchUpload(callback, PASCO_UPLOAD_REJECTED_MESSAGE);
+                return;
               }
-            })();
+
+              const tooLargeFile = preBatchCandidates.find((file) => {
+                const size = getPreBatchFileSize(file);
+
+                return (
+                  typeof size === "number" && size > PASCO_MAX_FILE_SIZE_BYTES
+                );
+              });
+
+              if (tooLargeFile) {
+                rejectPreBatchUpload(
+                  callback,
+                  getPascoFileTooLargeMessage(PASCO_MAX_FILE_SIZE_BYTES),
+                );
+                return;
+              }
+
+              callback();
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Could not validate selected files.";
+              rejectPreBatchUpload(callback, message);
+            }
           },
           prepareUploadParams: (
             callback: (

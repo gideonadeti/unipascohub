@@ -102,6 +102,19 @@ export type PascoFileCreateInput = {
   contentHash: string;
 };
 
+export type PascoFileComputeHashInput = {
+  courseId: string;
+  publicId: string;
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+  resourceType: CloudinaryResourceType;
+};
+
+export type PascoFileComputeHashResponse = {
+  contentHash: string;
+};
+
 export type PascoFileDuplicate = {
   contentHash: string;
   fileName: string;

@@ -27,7 +27,8 @@ export type CloudinaryPrepareUploadParams = {
 };
 
 export type CloudinaryPreBatchData = {
-  files?: Array<{ name: string; size?: number }>;
+  files?: Array<File | Blob | { name: string; size?: number; file?: unknown }>;
+  file?: File | Blob | { name?: string; size?: number };
 };
 
 export type CloudinaryPreBatchCallbackResult = {

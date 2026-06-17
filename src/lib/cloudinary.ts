@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
 
 import {
@@ -66,7 +67,23 @@ type CloudinaryResourceResponse = {
   format?: string;
   resource_type?: string;
   secure_url?: string;
+  type?: string;
 };
+
+function resolveAssetDownloadFormat(
+  asset: CloudinaryResourceResponse,
+  fileName: string,
+): string {
+  if (typeof asset.format === "string" && asset.format.length > 0) {
+    return asset.format;
+  }
+
+  const extension = fileName.includes(".")
+    ? fileName.split(".").pop()?.toLowerCase()
+    : undefined;
+
+  return extension && extension.length > 0 ? extension : "bin";
+}
 
 function parseCourseId(value: unknown): string | null {
   if (typeof value !== "string") {
@@ -322,6 +339,135 @@ export function signUploadParams(
   };
 }
 
+export type ComputeCloudinaryFileHashParseInput = {
+  courseId: string;
+  publicId: string;
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+  resourceType: CloudinaryResourceTypeType;
+};
+
+type ComputeCloudinaryFileHashParseError =
+  | "invalid_body"
+  | "invalid_course_id"
+  | "invalid_public_id"
+  | "invalid_file_name"
+  | "invalid_file_size"
+  | "invalid_file_url"
+  | "invalid_resource_type"
+  | "invalid_pdf_resource_type"
+  | "file_size_exceeded";
+
+const MAX_PUBLIC_ID_LENGTH = 255;
+const MAX_FILE_URL_LENGTH = 2048;
+
+function parsePositiveInt(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  return Math.trunc(value);
+}
+
+function parseNonEmptyString(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  if (trimmed.length === 0 || trimmed.length > maxLength) {
+    return null;
+  }
+
+  return trimmed;
+}
+
+function getMaxPascoFileSizeBytes(): number {
+  const raw = process.env.PASCO_MAX_FILE_SIZE_BYTES;
+  const parsed = raw ? Number.parseInt(raw, 10) : 10_485_760;
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10_485_760;
+}
+
+export function parseComputeCloudinaryFileHashInput(
+  body: unknown,
+):
+  | { success: true; data: ComputeCloudinaryFileHashParseInput }
+  | { success: false; error: ComputeCloudinaryFileHashParseError } {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return { success: false, error: "invalid_body" };
+  }
+
+  const record = body as Record<string, unknown>;
+  const requiredFields = [
+    "courseId",
+    "publicId",
+    "fileName",
+    "fileSize",
+    "fileUrl",
+    "resourceType",
+  ] as const;
+
+  if (!requiredFields.every((field) => field in record)) {
+    return { success: false, error: "invalid_body" };
+  }
+
+  const courseId = parseCourseId(record.courseId);
+  const publicId = parseNonEmptyString(record.publicId, MAX_PUBLIC_ID_LENGTH);
+  const fileName = parseFileName(record.fileName);
+  const fileSize = parsePositiveInt(record.fileSize);
+  const fileUrl = parseNonEmptyString(record.fileUrl, MAX_FILE_URL_LENGTH);
+
+  if (courseId === null) {
+    return { success: false, error: "invalid_course_id" };
+  }
+
+  if (publicId === null) {
+    return { success: false, error: "invalid_public_id" };
+  }
+
+  if (fileName === null) {
+    return { success: false, error: "invalid_file_name" };
+  }
+
+  if (fileSize === null) {
+    return { success: false, error: "invalid_file_size" };
+  }
+
+  if (fileSize > getMaxPascoFileSizeBytes()) {
+    return { success: false, error: "file_size_exceeded" };
+  }
+
+  if (fileUrl === null) {
+    return { success: false, error: "invalid_file_url" };
+  }
+
+  if (
+    typeof record.resourceType !== "string" ||
+    !isCloudinaryResourceType(record.resourceType)
+  ) {
+    return { success: false, error: "invalid_resource_type" };
+  }
+
+  if (!validatePdfResourceType(fileName, record.resourceType)) {
+    return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
+  return {
+    success: true,
+    data: {
+      courseId,
+      publicId,
+      fileName,
+      fileSize,
+      fileUrl,
+      resourceType: record.resourceType,
+    },
+  };
+}
+
 export async function verifyCloudinaryFile(
   input: VerifyCloudinaryFileInput,
 ): Promise<{ success: true } | { success: false; error: VerifyFileError }> {
@@ -374,6 +520,101 @@ export async function verifyCloudinaryFile(
   }
 
   return { success: true };
+}
+
+export type HashCloudinaryFileError =
+  | VerifyFileError
+  | "missing_config"
+  | "download_failed";
+
+export type ComputeCloudinaryFileHashInput = VerifyCloudinaryFileInput & {
+  fileName: string;
+};
+
+export async function hashCloudinaryFile(
+  input: ComputeCloudinaryFileHashInput,
+): Promise<
+  | { success: true; contentHash: string }
+  | { success: false; error: HashCloudinaryFileError }
+> {
+  const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
+
+  let asset: CloudinaryResourceResponse;
+
+  try {
+    asset = (await cloudinary.api.resource(input.publicId, {
+      resource_type: apiResourceType,
+    })) as CloudinaryResourceResponse;
+  } catch (error) {
+    if (isCloudinaryNotFoundError(error)) {
+      return { success: false, error: "asset_not_found" };
+    }
+
+    throw error;
+  }
+
+  if (asset.asset_folder !== input.expectedAssetFolder) {
+    return { success: false, error: "asset_folder_mismatch" };
+  }
+
+  if (asset.bytes !== input.fileSize) {
+    return { success: false, error: "asset_size_mismatch" };
+  }
+
+  if (asset.secure_url !== input.fileUrl) {
+    return { success: false, error: "asset_url_mismatch" };
+  }
+
+  const cloudinaryResourceType =
+    asset.resource_type === undefined
+      ? null
+      : fromCloudinaryApiResourceType(asset.resource_type);
+
+  if (
+    cloudinaryResourceType === null ||
+    cloudinaryResourceType !== input.resourceType
+  ) {
+    return { success: false, error: "asset_resource_type_mismatch" };
+  }
+
+  if (
+    asset.format !== undefined &&
+    isPdfCloudinaryFormat(asset.format) &&
+    input.resourceType === CloudinaryResourceType.RAW
+  ) {
+    return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
+  const apiSecret = cloudinary.config().api_secret;
+  const cloudName = cloudinary.config().cloud_name;
+
+  if (!apiSecret || !cloudName) {
+    return { success: false, error: "missing_config" };
+  }
+
+  const downloadFormat = resolveAssetDownloadFormat(asset, input.fileName);
+  const deliveryType = asset.type ?? "upload";
+  const downloadUrl = cloudinary.utils.private_download_url(
+    input.publicId,
+    downloadFormat,
+    {
+      resource_type: apiResourceType,
+      type: deliveryType,
+      expires_at: Math.floor(Date.now() / 1000) + 300,
+    },
+  );
+
+  const response = await fetch(downloadUrl);
+
+  if (!response.ok) {
+    return { success: false, error: "download_failed" };
+  }
+
+  const contentHash = createHash("sha256")
+    .update(Buffer.from(await response.arrayBuffer()))
+    .digest("hex");
+
+  return { success: true, contentHash };
 }
 
 export async function deleteCloudinaryAsset(

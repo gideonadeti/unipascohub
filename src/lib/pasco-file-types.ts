@@ -134,14 +134,24 @@ export function resolvePascoFileSizeErrorMessage(
   );
 }
 
-export function getPreBatchFileSize(
-  file: File | { name?: string; size?: number },
-): number | undefined {
-  if (file instanceof File) {
-    return file.size;
+export function getPreBatchFileSize(file: unknown): number | undefined {
+  if (file == null || typeof file !== "object") {
+    return undefined;
   }
 
-  return typeof file.size === "number" ? file.size : undefined;
+  const size = (file as { size?: unknown }).size;
+
+  return typeof size === "number" ? size : undefined;
+}
+
+export function readPreBatchFileName(file: unknown): string | null {
+  if (file == null || typeof file !== "object") {
+    return null;
+  }
+
+  const name = (file as { name?: unknown }).name;
+
+  return typeof name === "string" && name.length > 0 ? name : null;
 }
 
 export function getFileExtension(fileName: string): string {
