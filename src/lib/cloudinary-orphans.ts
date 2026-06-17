@@ -14,7 +14,7 @@ type OrphanAsset = {
 
 type ResourcesByAssetFolderResponse = {
   resources?: Array<{ public_id: string; resource_type: string }>;
-  next_cursor?: string;
+  next_cursor?: string | null;
 };
 
 function mapCloudinaryResourceType(
@@ -71,7 +71,7 @@ async function listAssetsInFolder(assetFolder: string): Promise<OrphanAsset[]> {
       }
     }
 
-    nextCursor = response.next_cursor;
+    nextCursor = response.next_cursor ?? undefined;
   } while (nextCursor !== undefined && nextCursor.length > 0);
 
   return assets;
