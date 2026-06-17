@@ -771,12 +771,12 @@ function PascoEditFormFields({
         <Button type="submit" form="pasco-edit-form" disabled={isSubmitting}>
           {updatePasco.isSuccess ? (
             <>
-              <Spinner />
+              <Spinner aria-hidden />
               Redirecting…
             </>
           ) : updatePasco.isPending ? (
             <>
-              <Spinner />
+              <Spinner aria-hidden />
               Saving…
             </>
           ) : (

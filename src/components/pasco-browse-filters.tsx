@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,6 +41,7 @@ import {
   PASCO_TYPES,
   SEMESTER_TYPES,
 } from "@/lib/schemas/pasco-create";
+import { cn } from "@/lib/utils";
 import type { Program } from "@/types/api/catalog";
 import type { PascoListFilters } from "@/types/api/pascos";
 
@@ -114,14 +116,31 @@ function draftToFilters(
   };
 }
 
+function countActiveFilters(filters: PascoListFilters): number {
+  let count = 0;
+
+  if (filters.courseId) count += 1;
+  if (filters.academicYear) count += 1;
+  if (filters.educationLevel) count += 1;
+  if (filters.semesterType) count += 1;
+  if (filters.type) count += 1;
+  if (filters.contentType) count += 1;
+  if (filters.isComplete !== undefined) count += 1;
+
+  return count;
+}
+
 export function PascoBrowseFilters({
   appliedFilters,
   onApply,
   onClear,
 }: PascoBrowseFiltersProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [draft, setDraft] = useState<DraftFilters>(() =>
     filtersToDraft(appliedFilters),
   );
+
+  const activeFilterCount = countActiveFilters(appliedFilters);
 
   const courseIdFromUrl = appliedFilters.courseId ?? "";
   const courseQuery = useCourse(courseIdFromUrl);
@@ -161,7 +180,7 @@ export function PascoBrowseFilters({
   const selectedProgram =
     programItems.find((program) => program.id === draft.programId) ?? null;
 
-  return (
+  const filterPanel = (
     <Card>
       <CardHeader>
         <CardTitle>Filters</CardTitle>
@@ -417,5 +436,30 @@ export function PascoBrowseFilters({
         </Button>
       </CardFooter>
     </Card>
+  );
+
+  return (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full justify-between lg:hidden"
+        aria-expanded={mobileOpen}
+        aria-controls="browse-filters-panel"
+        onClick={() => setMobileOpen((open) => !open)}
+      >
+        <span>Filters</span>
+        {activeFilterCount > 0 ? (
+          <Badge variant="secondary">{activeFilterCount}</Badge>
+        ) : null}
+      </Button>
+
+      <div
+        id="browse-filters-panel"
+        className={cn(mobileOpen ? "block" : "hidden", "lg:block")}
+      >
+        {filterPanel}
+      </div>
+    </div>
   );
 }

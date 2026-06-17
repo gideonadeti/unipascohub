@@ -27,6 +27,7 @@ export function PascoBrowsePagination({
           type="button"
           variant="outline"
           disabled={page <= 1}
+          aria-label="Previous page"
           onClick={() => onPageChange(page - 1)}
         >
           Previous
@@ -35,6 +36,7 @@ export function PascoBrowsePagination({
           type="button"
           variant="outline"
           disabled={page >= totalPages}
+          aria-label="Next page"
           onClick={() => onPageChange(page + 1)}
         >
           Next

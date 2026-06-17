@@ -555,7 +555,7 @@ export function PascoCloudinaryUpload({
       >
         {isOpening ? (
           <>
-            <Spinner />
+            <Spinner aria-hidden />
             Opening uploader…
           </>
         ) : (

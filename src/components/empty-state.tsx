@@ -29,7 +29,7 @@ export function EmptyState({
       <EmptyHeader>
         {Icon ? (
           <EmptyMedia variant="icon">
-            <Icon />
+            <Icon aria-hidden />
           </EmptyMedia>
         ) : null}
         <EmptyTitle>{title}</EmptyTitle>

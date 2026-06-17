@@ -161,6 +161,18 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
   const sortBy = filters.sortBy ?? "createdAt";
   const sortOrder = filters.sortOrder ?? "desc";
 
+  let resultsStatus: string | null = null;
+
+  if (pascosQuery.isPending) {
+    resultsStatus = "Loading pascos…";
+  } else if (pascosQuery.isSuccess) {
+    const total = pascosQuery.data.pagination.total;
+    resultsStatus =
+      total === 0
+        ? "No results"
+        : `Showing ${(page - 1) * limit + 1}–${Math.min(page * limit, total)} of ${total}`;
+  }
+
   return (
     <div className="space-y-8">
       <PascoBrowseFilters
@@ -219,60 +231,64 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
           </Field>
         </div>
 
-        {pascosQuery.isSuccess ? (
-          <p className="text-sm text-muted-foreground">
-            {pascosQuery.data.pagination.total === 0
-              ? "No results"
-              : `Showing ${(page - 1) * limit + 1}–${Math.min(page * limit, pascosQuery.data.pagination.total)} of ${pascosQuery.data.pagination.total}`}
+        {resultsStatus ? (
+          <p
+            aria-live="polite"
+            aria-atomic="true"
+            className="text-sm text-muted-foreground"
+          >
+            {resultsStatus}
           </p>
         ) : null}
       </div>
 
-      {pascosQuery.isPending ? <PascoListSkeleton count={limit} /> : null}
+      <div aria-busy={pascosQuery.isPending}>
+        {pascosQuery.isPending ? <PascoListSkeleton count={limit} /> : null}
 
-      {pascosQuery.isError ? (
-        <Alert variant="destructive">
-          <AlertTitle>Could not load pascos</AlertTitle>
-          <AlertDescription>
-            {pascosQuery.error.message || "Something went wrong. Try again."}
-          </AlertDescription>
-        </Alert>
-      ) : null}
+        {pascosQuery.isError ? (
+          <Alert variant="destructive">
+            <AlertTitle>Could not load pascos</AlertTitle>
+            <AlertDescription>
+              {pascosQuery.error.message || "Something went wrong. Try again."}
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-      {pascosQuery.isSuccess && pascosQuery.data.pascos.length === 0 ? (
-        <EmptyState
-          title="No pascos match these filters"
-          description="Try clearing a filter or upload a new pasco."
-          icon={FileQuestion}
-          action={{ label: "Upload a pasco", href: "/pascos/new" }}
-        />
-      ) : null}
-
-      {pascosQuery.isSuccess && pascosQuery.data.pascos.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {pascosQuery.data.pascos.map((pasco) => (
-              <PascoCard
-                key={pasco.id}
-                pasco={pasco}
-                title={
-                  courseLabel && pasco.courseId === filters.courseId
-                    ? `${pasco.academicYear} · ${courseLabel}`
-                    : undefined
-                }
-              />
-            ))}
-          </div>
-
-          <PascoBrowsePagination
-            page={pascosQuery.data.pagination.page}
-            totalPages={pascosQuery.data.pagination.totalPages}
-            onPageChange={(nextPage) => {
-              updateFilters({ ...filters, page: nextPage });
-            }}
+        {pascosQuery.isSuccess && pascosQuery.data.pascos.length === 0 ? (
+          <EmptyState
+            title="No pascos match these filters"
+            description="Try clearing a filter or upload a new pasco."
+            icon={FileQuestion}
+            action={{ label: "Upload a pasco", href: "/pascos/new" }}
           />
-        </>
-      ) : null}
+        ) : null}
+
+        {pascosQuery.isSuccess && pascosQuery.data.pascos.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {pascosQuery.data.pascos.map((pasco) => (
+                <PascoCard
+                  key={pasco.id}
+                  pasco={pasco}
+                  title={
+                    courseLabel && pasco.courseId === filters.courseId
+                      ? `${pasco.academicYear} · ${courseLabel}`
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+
+            <PascoBrowsePagination
+              page={pascosQuery.data.pagination.page}
+              totalPages={pascosQuery.data.pagination.totalPages}
+              onPageChange={(nextPage) => {
+                updateFilters({ ...filters, page: nextPage });
+              }}
+            />
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

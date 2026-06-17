@@ -61,7 +61,7 @@ export function PascoCreateGate({ children }: PascoCreateGateProps) {
   if (currentUser.isPending) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Spinner />
+        <Spinner aria-hidden />
         Loading account…
       </div>
     );
@@ -104,7 +104,7 @@ export function PascoCreateGate({ children }: PascoCreateGateProps) {
           >
             {upgradeMutation.isPending ? (
               <>
-                <Spinner />
+                <Spinner aria-hidden />
                 Upgrading…
               </>
             ) : (

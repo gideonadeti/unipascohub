@@ -78,7 +78,9 @@ export function SiteFooter() {
                     className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <Icon className="size-4" aria-hidden />
-                    <span className="sr-only">{link.label}</span>
+                    <span className="sr-only">
+                      {link.label} (opens in new tab)
+                    </span>
                   </a>
                 );
               })}
@@ -87,7 +89,7 @@ export function SiteFooter() {
         </div>
 
         {footerNav.map((group) => (
-          <div key={group.title} className="space-y-3">
+          <nav key={group.title} className="space-y-3" aria-label={group.title}>
             <p className="text-sm font-medium">{group.title}</p>
             <ul className="space-y-2">
               {group.links.map((link) => (
@@ -100,6 +102,7 @@ export function SiteFooter() {
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {link.label}
+                      <span className="sr-only"> (opens in new tab)</span>
                     </a>
                   ) : (
                     <Link
@@ -112,7 +115,7 @@ export function SiteFooter() {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
         ))}
       </div>
     </footer>

@@ -551,12 +551,12 @@ export function PascoCreateForm() {
         <Button type="submit" form="pasco-create-form" disabled={isSubmitting}>
           {createPasco.isSuccess ? (
             <>
-              <Spinner />
+              <Spinner aria-hidden />
               Redirecting…
             </>
           ) : createPasco.isPending ? (
             <>
-              <Spinner />
+              <Spinner aria-hidden />
               Adding…
             </>
           ) : (

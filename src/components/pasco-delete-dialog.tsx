@@ -1,10 +1,12 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -12,10 +14,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeletePasco } from "@/hooks/api/use-pascos";
 import { getPascoDeleteErrorMessage } from "@/lib/pasco-duplicate-error";
+import { cn } from "@/lib/utils";
 
 type PascoDeleteDialogProps = {
   pascoId: string;
@@ -38,7 +41,8 @@ export function PascoDeleteDialog({
     toast.error(getPascoDeleteErrorMessage(deletePasco.error));
   }, [deletePasco.error]);
 
-  function handleDelete() {
+  function handleDelete(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
     deletePasco.mutate();
   }
 
@@ -56,21 +60,20 @@ export function PascoDeleteDialog({
           <AlertDialogCancel disabled={deletePasco.isPending}>
             Cancel
           </AlertDialogCancel>
-          <Button
-            type="button"
-            variant="destructive"
+          <AlertDialogAction
+            className={cn(buttonVariants({ variant: "destructive" }))}
             disabled={deletePasco.isPending}
             onClick={handleDelete}
           >
             {deletePasco.isPending ? (
               <>
-                <Spinner />
+                <Spinner aria-hidden />
                 Deleting…
               </>
             ) : (
               "Delete pasco"
             )}
-          </Button>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

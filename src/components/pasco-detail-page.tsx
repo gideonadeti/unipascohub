@@ -58,7 +58,9 @@ export function PascoDetailPage() {
   const course = courseQuery.data?.course;
   const courseLabel = course
     ? `${course.code} — ${course.title}`
-    : pasco.courseId;
+    : courseQuery.isPending
+      ? "Loading course details…"
+      : pasco.courseId;
   const canEdit =
     currentUser.data?.user && canUserModifyPasco(currentUser.data.user, pasco);
 

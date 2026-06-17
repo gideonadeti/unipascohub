@@ -62,7 +62,7 @@ export function PascoFileActions({
         onClick={() => void handleView()}
       >
         {viewUrlMutation.isPending ? (
-          <Spinner />
+          <Spinner aria-hidden />
         ) : (
           <Eye className="size-4" aria-hidden />
         )}

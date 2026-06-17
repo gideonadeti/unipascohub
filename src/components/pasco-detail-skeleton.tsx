@@ -14,7 +14,8 @@ const detailFieldSkeletonKeys = [
 
 export function PascoDetailSkeleton() {
   return (
-    <div className="space-y-8">
+    <div aria-busy="true" className="space-y-8">
+      <span className="sr-only">Loading pasco…</span>
       <div className="space-y-4">
         <Skeleton className="h-8 w-2/3 sm:h-9" />
         <Skeleton className="h-4 w-1/2" />

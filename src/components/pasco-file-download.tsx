@@ -50,7 +50,7 @@ export function PascoFileDownload({
       onClick={() => void handleDownload()}
     >
       {downloadMutation.isPending ? (
-        <Spinner />
+        <Spinner aria-hidden />
       ) : (
         <Download className="size-4" aria-hidden />
       )}

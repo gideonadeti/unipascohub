@@ -6,6 +6,7 @@ import Image from "next/image";
 import {
   Dialog,
   DialogContentInOverlay,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -21,8 +22,9 @@ const PascoEmbedPdfViewer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full items-center justify-center">
-        <Spinner />
+      <div className="flex h-full items-center justify-center" aria-busy="true">
+        <Spinner aria-hidden />
+        <span className="sr-only">Loading PDF viewer…</span>
       </div>
     ),
   },
@@ -56,6 +58,9 @@ export function PascoFileView({ file, onClose }: PascoFileViewProps) {
               <DialogTitle className="truncate text-base">
                 {file.fileName}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                File preview
+              </DialogDescription>
             </DialogHeader>
             <div
               className="h-[calc(90vh-3.5rem)] min-h-0 bg-muted/30"

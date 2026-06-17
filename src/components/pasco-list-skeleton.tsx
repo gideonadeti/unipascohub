@@ -19,7 +19,11 @@ type PascoListSkeletonProps = {
 
 export function PascoListSkeleton({ count = 6 }: PascoListSkeletonProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      aria-busy="true"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      <span className="sr-only">Loading pascos…</span>
       {SKELETON_KEYS.slice(0, count).map((key) => (
         <PascoCardSkeleton key={key} />
       ))}

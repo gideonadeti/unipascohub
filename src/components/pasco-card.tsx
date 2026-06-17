@@ -27,6 +27,7 @@ export function PascoCard({ pasco, title, course, className }: PascoCardProps) {
     <Link
       href={`/pascos/${pasco.id}`}
       className={cn("group block h-full", className)}
+      aria-label={`${displayTitle}. ${formatCount(pasco.viewCount)} views, ${formatCount(pasco.downloadCount)} downloads, ${formatCount(pasco.likeCount)} likes.`}
     >
       <Card className="h-full transition-colors group-hover:bg-muted/50">
         <CardHeader className="space-y-3">
@@ -45,15 +46,18 @@ export function PascoCard({ pasco, title, course, className }: PascoCardProps) {
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground sm:text-sm">
             <span className="inline-flex items-center gap-1">
               <Eye className="size-3.5" aria-hidden />
-              {formatCount(pasco.viewCount)}
+              <span>{formatCount(pasco.viewCount)}</span>
+              <span className="sr-only">views</span>
             </span>
             <span className="inline-flex items-center gap-1">
               <Download className="size-3.5" aria-hidden />
-              {formatCount(pasco.downloadCount)}
+              <span>{formatCount(pasco.downloadCount)}</span>
+              <span className="sr-only">downloads</span>
             </span>
             <span className="inline-flex items-center gap-1">
               <ThumbsUp className="size-3.5" aria-hidden />
-              {formatCount(pasco.likeCount)}
+              <span>{formatCount(pasco.likeCount)}</span>
+              <span className="sr-only">likes</span>
             </span>
           </div>
         </CardContent>

@@ -47,7 +47,7 @@ export function PascoEditGate({ pascoId, children }: PascoEditGateProps) {
   if (currentUser.isPending || pascoQuery.isPending) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Spinner />
+        <Spinner aria-hidden />
         Loading…
       </div>
     );

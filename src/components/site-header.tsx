@@ -2,17 +2,22 @@
 
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { siteName } from "@/config/site";
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
   return (
     <header className="sticky top-0 z-50 flex h-14 items-center border-b border-border bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/80 sm:h-16 sm:px-6">
       <Link
         href="/"
         className="text-base font-semibold tracking-tight sm:text-lg"
+        aria-current={isHome ? "page" : undefined}
       >
         <span className="sm:hidden">Uni Pasco</span>
         <span className="hidden sm:inline">{siteName}</span>
@@ -22,12 +27,16 @@ export function SiteHeader() {
         <ThemeToggle />
         <Show when="signed-out">
           <SignInButton mode="modal">
-            <Button variant="ghost" size="sm" type="button">
+            <Button
+              variant="ghost"
+              type="button"
+              className="min-h-11 px-3 sm:min-h-0 sm:px-4"
+            >
               Sign in
             </Button>
           </SignInButton>
           <SignUpButton mode="modal">
-            <Button size="sm" type="button">
+            <Button type="button" className="min-h-11 px-3 sm:min-h-0 sm:px-4">
               Sign up
             </Button>
           </SignUpButton>
