@@ -101,12 +101,12 @@ See [operations.md](operations.md) for maintenance workflows.
 
 ## Frontend (current state)
 
-| Page                  | Path                     | Status                                                                                    |
-| --------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
-| Home (API smoke test) | `/`                      | Placeholder — [`src/components/api-smoke-test.tsx`](../src/components/api-smoke-test.tsx) |
-| Create pasco          | `/pascos/new`            | Functional                                                                                |
-| Pasco detail          | `/pascos/[pascoId]`      | Functional (shows `courseId`, not course name)                                            |
-| Edit pasco            | `/pascos/[pascoId]/edit` | Functional                                                                                |
+| Page                 | Path                     | Status                                                |
+| -------------------- | ------------------------ | ----------------------------------------------------- |
+| Home (recent pascos) | `/`                      | `PascoListSection` preview — full homepage in Phase 4 |
+| Create pasco         | `/pascos/new`            | Functional                                            |
+| Pasco detail         | `/pascos/[pascoId]`      | Functional (course code/title on detail)              |
+| Edit pasco           | `/pascos/[pascoId]/edit` | Functional                                            |
 
 Infrastructure in place: TanStack Query, shadcn/ui components, toast notifications, basic header with auth.
 

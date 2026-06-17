@@ -10,7 +10,7 @@ Current UI structure, conventions, and planned work.
 | ----- | ------------------------------------------------------- | ------- |
 | 0     | Standards, `site.ts`, Motion, shadcn `empty`/`skeleton` | Done    |
 | 1     | Theme, header, footer, favicon                          | Done    |
-| 2     | Shared primitives, `PascoCard`, skeletons               | Planned |
+| 2     | Shared primitives, `PascoCard`, skeletons               | Done    |
 | 3     | Stub pages (contributors, legal, feedback)              | Planned |
 | 4     | Homepage                                                | Planned |
 | 5     | Browse with URL filters                                 | Planned |
@@ -22,7 +22,7 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 
 | Route                    | File                                                                                  | Renders                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | [`ApiSmokeTest`](../src/components/api-smoke-test.tsx) — dev placeholder |
+| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Recent pascos list via `PascoListSection`                                |
 | `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | Create form behind contributor gate                                      |
 | `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | Pasco detail                                                             |
 | `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | Edit form behind permission gate                                         |
@@ -38,6 +38,18 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 | `ThemeToggle` | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx) | Light / dark / system picker |
 | `ScrollToTop` | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx) | Fixed scroll-to-top button |
 | `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper |
+
+### Layout and list components
+
+| Component | File | Purpose |
+| --------- | ---- | ------- |
+| `PageContainer` | [`layout/page-container.tsx`](../src/components/layout/page-container.tsx) | Width-tiered `<main>` wrapper (`narrow` / `default` / `wide`) |
+| `PageHeader` | [`layout/page-header.tsx`](../src/components/layout/page-header.tsx) | Page title, description, optional actions |
+| `Section` | [`layout/section.tsx`](../src/components/layout/section.tsx) | Titled content section |
+| `PascoCard` | [`pasco-card.tsx`](../src/components/pasco-card.tsx) | Linked card for pasco list grids |
+| `PascoListSection` | [`pasco-list-section.tsx`](../src/components/pasco-list-section.tsx) | Async list section with skeleton/error/empty states |
+| `PascoListSkeleton` | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx) | Grid of card skeletons |
+| `EmptyState` | [`empty-state.tsx`](../src/components/empty-state.tsx) | shadcn Empty wrapper with optional CTA |
 
 ## Component layers
 
@@ -94,7 +106,7 @@ Domain wrappers: [`src/lib/api/`](../src/lib/api/) — `pascos.ts`, `users.ts`, 
 | [`use-current-user.ts`](../src/hooks/api/use-current-user.ts)         | Current user profile                                        |
 | [`use-institutions.ts`](../src/hooks/api/use-institutions.ts)         | Institution list                                            |
 | [`use-programs.ts`](../src/hooks/api/use-programs.ts)                 | Program list                                                |
-| [`use-courses.ts`](../src/hooks/api/use-courses.ts)                   | Course list                                                 |
+| [`use-courses.ts`](../src/hooks/api/use-courses.ts)                   | Course list and detail (`useCourse`)                        |
 
 Query keys: [`src/lib/api/query-keys.ts`](../src/lib/api/query-keys.ts)
 
@@ -121,11 +133,11 @@ Zod schemas with react-hook-form:
 These are the main frontend items not yet built:
 
 1. **Browse page** — filtered pasco list using `usePascosList` with catalog filters
-2. **Homepage** — replace `ApiSmokeTest` with landing/discovery experience
-3. **Enriched display** — show course code/title instead of raw `courseId` on detail and cards
+2. **Homepage** — hero, search UI, popular section (Phase 4; recent list is live)
+3. **Enriched display** — show course code/title on list cards (detail page enriched)
 4. **Navigation** — logo/home link, breadcrumbs (institution → program → course)
 5. **Admin dashboard** — UI for orphan cleanup and storage failure inspection
-6. **Responsive polish** — mobile header, empty states, loading skeletons
+6. **Responsive polish** — mobile header polish, additional empty states
 
 See [features.md](features.md) for the full implemented vs planned breakdown.
 

@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Frontend standards doc, site config module, Motion, shadcn `empty`/`skeleton`
 - App shell: `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme toggle (system/light/dark)
-- Dynamic favicon (`src/app/icon.tsx`) and metadata from site config
+- Frontend Phase 2: layout primitives (`PageContainer`, `PageHeader`, `Section`), `PascoCard`, list skeletons, `PascoListSection`, `EmptyState`, `useCourse` hook, homepage recent-pascos preview
 
 ### Planned
 
