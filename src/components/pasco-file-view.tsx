@@ -5,7 +5,7 @@ import Image from "next/image";
 
 import {
   Dialog,
-  DialogContent,
+  DialogContentInOverlay,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -46,8 +46,8 @@ export function PascoFileView({ file, onClose }: PascoFileViewProps) {
         }
       }}
     >
-      <DialogContent
-        className="flex h-[90vh] max-w-6xl flex-col gap-0 overflow-hidden p-0 sm:max-w-6xl"
+      <DialogContentInOverlay
+        className="flex h-[90vh] max-w-6xl flex-col gap-0 overflow-hidden p-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-none sm:max-w-6xl"
         showCloseButton
       >
         {file ? (
@@ -57,14 +57,19 @@ export function PascoFileView({ file, onClose }: PascoFileViewProps) {
                 {file.fileName}
               </DialogTitle>
             </DialogHeader>
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/30">
+            <div
+              className="h-[calc(90vh-3.5rem)] min-h-0 bg-muted/30"
+              onWheel={(event) => event.stopPropagation()}
+              onTouchMove={(event) => event.stopPropagation()}
+            >
               {viewKind === "pdf" ? (
-                <div className="h-full min-h-0 flex-1">
-                  <PascoEmbedPdfViewer fileUrl={file.fileUrl} />
-                </div>
+                <PascoEmbedPdfViewer
+                  key={file.fileUrl}
+                  fileUrl={file.fileUrl}
+                />
               ) : null}
               {viewKind === "image" ? (
-                <div className="relative min-h-0 flex-1 p-4">
+                <div className="relative h-full p-4">
                   <Image
                     src={file.fileUrl}
                     alt={file.fileName}
@@ -77,7 +82,7 @@ export function PascoFileView({ file, onClose }: PascoFileViewProps) {
             </div>
           </>
         ) : null}
-      </DialogContent>
+      </DialogContentInOverlay>
     </Dialog>
   );
 }
