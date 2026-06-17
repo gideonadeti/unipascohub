@@ -1,11 +1,11 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertAction, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -32,6 +32,7 @@ import {
   getPascoFileTooLargeMessage,
   getPreBatchFileSize,
   isAllowedPascoFileName,
+  isPascoFileSizeError,
   PASCO_UPLOAD_ACCEPT_DESCRIPTION,
   PASCO_UPLOAD_REJECTED_MESSAGE,
   PASCO_WIDGET_ALLOWED_FORMATS,
@@ -42,10 +43,7 @@ import {
   PASCO_MAX_FILE_SIZE_BYTES,
   PASCO_MAX_FILES,
 } from "@/lib/schemas/pasco-create";
-import type {
-  PascoFileCreateInput,
-  PascoFileDuplicate,
-} from "@/types/api/pascos";
+import type { PascoFileCreateInput } from "@/types/api/pascos";
 import type {
   CloudinaryPreBatchCallbackResult,
   CloudinaryPreBatchData,
@@ -57,8 +55,10 @@ import type {
 const CLOUDINARY_WIDGET_SCRIPT =
   "https://upload-widget.cloudinary.com/global/all.js";
 
-type UploadDuplicateAlert = PascoFileDuplicate & {
+type UploadIssueAlert = {
   message: string;
+  pascoId?: string;
+  fileName?: string;
 };
 
 type PascoCloudinaryUploadProps = {
@@ -70,14 +70,20 @@ type PascoCloudinaryUploadProps = {
 };
 
 const UPLOAD_ERROR_TOAST_ID = "pasco-upload-error";
-const UPLOAD_ERROR_TOAST_DURATION_MS = 30_000;
+const UPLOAD_FILE_SIZE_TOAST_DURATION_MS = 30_000;
 
 function showUploadError(message: string) {
+  const isFileSizeError = isPascoFileSizeError(message);
+
   toast.error(
-    resolvePascoFileSizeErrorMessage(message, PASCO_MAX_FILE_SIZE_BYTES),
+    isFileSizeError
+      ? resolvePascoFileSizeErrorMessage(message, PASCO_MAX_FILE_SIZE_BYTES)
+      : message,
     {
       id: UPLOAD_ERROR_TOAST_ID,
-      duration: UPLOAD_ERROR_TOAST_DURATION_MS,
+      ...(isFileSizeError && {
+        duration: UPLOAD_FILE_SIZE_TOAST_DURATION_MS,
+      }),
     },
   );
 }
@@ -162,6 +168,7 @@ export function PascoCloudinaryUpload({
   const courseIdRef = useRef(courseId);
   const preBatchFileNamesRef = useRef<string[]>([]);
   const batchContentHashesRef = useRef<Set<string>>(new Set());
+  const uploadSuccessQueueRef = useRef(Promise.resolve());
   const isOpeningRef = useRef(false);
   const openingFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -169,8 +176,7 @@ export function PascoCloudinaryUpload({
   const [isScriptReady, setIsScriptReady] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
-  const [uploadDuplicate, setUploadDuplicate] =
-    useState<UploadDuplicateAlert | null>(null);
+  const [uploadIssue, setUploadIssue] = useState<UploadIssueAlert | null>(null);
 
   filesRef.current = files;
   courseIdRef.current = courseId;
@@ -257,73 +263,79 @@ export function PascoCloudinaryUpload({
         result.info &&
         typeof result.info === "object"
       ) {
-        void (async () => {
-          try {
-            const uploadInfo = result.info;
+        const uploadInfo = result.info;
 
-            if (!uploadInfo || typeof uploadInfo !== "object") {
-              showUploadError("Could not verify file fingerprint.");
-              return;
-            }
+        if (!uploadInfo || typeof uploadInfo !== "object") {
+          showUploadError("Could not verify file fingerprint.");
+          return;
+        }
 
-            const currentFiles = filesRef.current;
-            const nextOrder =
-              currentFiles.length > 0
-                ? Math.max(...currentFiles.map((file) => file.order)) + 1
-                : 1;
-
-            const fileName = resolveUploadedFileName(uploadInfo);
-            const { contentHash } = await computePascoFileHash({
-              courseId: courseIdRef.current,
-              publicId: uploadInfo.public_id,
-              fileName,
-              fileSize: uploadInfo.bytes,
-              fileUrl: uploadInfo.secure_url,
-              resourceType:
-                uploadInfo.resource_type === "raw" ? "RAW" : "IMAGE",
-            });
-
-            if (batchContentHashesRef.current.has(contentHash)) {
-              showUploadError("Duplicate files detected in this selection.");
-              return;
-            }
-
-            const duplicateCheck = await checkPascoFileDuplicates(
-              courseIdRef.current,
-              [contentHash],
-            );
-
-            if (duplicateCheck.duplicates.length > 0) {
-              const duplicate = duplicateCheck.duplicates[0];
-              const message = formatDuplicateFileMessage(duplicate);
-
-              setUploadDuplicate({
-                ...duplicate,
-                message,
+        uploadSuccessQueueRef.current = uploadSuccessQueueRef.current.then(
+          async () => {
+            try {
+              const fileName = resolveUploadedFileName(uploadInfo);
+              const { contentHash } = await computePascoFileHash({
+                courseId: courseIdRef.current,
+                publicId: uploadInfo.public_id,
+                fileName,
+                fileSize: uploadInfo.bytes,
+                fileUrl: uploadInfo.secure_url,
+                resourceType:
+                  uploadInfo.resource_type === "raw" ? "RAW" : "IMAGE",
               });
+
+              if (batchContentHashesRef.current.has(contentHash)) {
+                setUploadIssue({
+                  message: "Duplicate files detected in this selection.",
+                  fileName,
+                });
+                return;
+              }
+
+              const duplicateCheck = await checkPascoFileDuplicates(
+                courseIdRef.current,
+                [contentHash],
+              );
+
+              if (duplicateCheck.duplicates.length > 0) {
+                const duplicate = duplicateCheck.duplicates[0];
+                const message = formatDuplicateFileMessage(duplicate);
+
+                setUploadIssue({
+                  message,
+                  pascoId: duplicate.pascoId,
+                  fileName: duplicate.fileName,
+                });
+                return;
+              }
+
+              batchContentHashesRef.current.add(contentHash);
+
+              const currentFiles = filesRef.current;
+              const nextOrder =
+                currentFiles.length > 0
+                  ? Math.max(...currentFiles.map((file) => file.order)) + 1
+                  : 1;
+
+              const uploadedFile = cloudinaryUploadInfoToPascoFile(
+                uploadInfo,
+                nextOrder,
+                contentHash,
+              );
+              const nextFiles = [...currentFiles, uploadedFile];
+
+              filesRef.current = nextFiles;
+              onFilesChange(nextFiles);
+              toast.success(`Uploaded ${uploadedFile.fileName}`);
+            } catch (mappingError) {
+              const message =
+                mappingError instanceof Error
+                  ? mappingError.message
+                  : PASCO_UPLOAD_REJECTED_MESSAGE;
               showUploadError(message);
-              return;
             }
-
-            batchContentHashesRef.current.add(contentHash);
-
-            const uploadedFile = cloudinaryUploadInfoToPascoFile(
-              uploadInfo,
-              nextOrder,
-              contentHash,
-            );
-
-            onFilesChange([...currentFiles, uploadedFile]);
-            setUploadDuplicate(null);
-            toast.success(`Uploaded ${uploadedFile.fileName}`);
-          } catch (mappingError) {
-            const message =
-              mappingError instanceof Error
-                ? mappingError.message
-                : PASCO_UPLOAD_REJECTED_MESSAGE;
-            showUploadError(message);
-          }
-        })();
+          },
+        );
       }
     },
     [finishOpening, onFilesChange],
@@ -353,8 +365,8 @@ export function PascoCloudinaryUpload({
 
     isOpeningRef.current = true;
     setIsOpening(true);
-    setUploadDuplicate(null);
     batchContentHashesRef.current.clear();
+    uploadSuccessQueueRef.current = Promise.resolve();
 
     try {
       const bootstrapSign = await signCloudinaryUpload({
@@ -548,17 +560,34 @@ export function PascoCloudinaryUpload({
         )}
       </Button>
 
-      {uploadDuplicate && (
+      {uploadIssue && (
         <Alert variant="destructive">
           <AlertDescription>
-            {uploadDuplicate.message}{" "}
-            <Link
-              href={`/pascos/${uploadDuplicate.pascoId}`}
-              className="font-medium underline underline-offset-3"
-            >
-              View existing pasco
-            </Link>
+            {uploadIssue.message}
+            {uploadIssue.pascoId ? (
+              <>
+                {" "}
+                <Link
+                  href={`/pascos/${uploadIssue.pascoId}`}
+                  className="font-medium underline underline-offset-3"
+                >
+                  View existing pasco
+                  {uploadIssue.fileName ? ` (${uploadIssue.fileName})` : ""}
+                </Link>
+              </>
+            ) : null}
           </AlertDescription>
+          <AlertAction>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setUploadIssue(null)}
+              aria-label="Dismiss upload issue"
+            >
+              <X />
+            </Button>
+          </AlertAction>
         </Alert>
       )}
 
