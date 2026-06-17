@@ -204,7 +204,7 @@ export async function PATCH(
   }
 
   try {
-    const result = await updatePasco(pascoId, parsed.data);
+    const result = await updatePasco(pascoId, parsed.data, userId);
 
     if (!result.success) {
       switch (result.error) {
@@ -322,7 +322,7 @@ export async function DELETE(
   }
 
   try {
-    const result = await deletePasco(pascoId);
+    const result = await deletePasco(pascoId, userId);
 
     if (!result.success) {
       return Response.json({ error: "Pasco not found" }, { status: 404 });

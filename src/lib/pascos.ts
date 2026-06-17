@@ -25,6 +25,7 @@ import {
   type SemesterType as SemesterTypeType,
   SolutionCompleteness,
   type SolutionCompleteness as SolutionCompletenessType,
+  StorageCleanupSource,
 } from "../../generated/prisma/enums";
 
 const MAX_DESCRIPTION_LENGTH = 1000;
@@ -1217,6 +1218,7 @@ async function syncPascoFiles(
   existing: PascoWithFiles,
   inputFiles: PascoFileSyncInput[],
   courseId: string,
+  triggeredById?: string,
 ): Promise<
   | { success: true; pasco: PascoWithFiles; storageCleanupFailures?: string[] }
   | {
@@ -1350,7 +1352,11 @@ async function syncPascoFiles(
     return { success: true, pasco };
   }
 
-  const cloudinaryResult = await deleteCloudinaryAssets(storageDeleteTargets);
+  const cloudinaryResult = await deleteCloudinaryAssets(storageDeleteTargets, {
+    source: StorageCleanupSource.PASCO_SYNC,
+    pascoId,
+    triggeredById,
+  });
 
   if (!cloudinaryResult.success) {
     return {
@@ -1523,6 +1529,7 @@ export async function createPasco(
 export async function updatePasco(
   pascoId: string,
   input: PascoUpdateInput,
+  triggeredById?: string,
 ): Promise<
   | { success: true; pasco: PascoWithFiles; storageCleanupFailures?: string[] }
   | {
@@ -1609,6 +1616,7 @@ export async function updatePasco(
       existing,
       input.files,
       effectiveCourseId,
+      triggeredById,
     );
 
     if (!syncResult.success) {
@@ -1640,6 +1648,7 @@ export async function updatePasco(
 
 export async function deletePasco(
   pascoId: string,
+  triggeredById?: string,
 ): Promise<
   | { success: true; storageCleanupFailures?: string[] }
   | { success: false; error: "not_found" }
@@ -1664,7 +1673,11 @@ export async function deletePasco(
     return { success: true };
   }
 
-  const cloudinaryResult = await deleteCloudinaryAssets(storageDeleteTargets);
+  const cloudinaryResult = await deleteCloudinaryAssets(storageDeleteTargets, {
+    source: StorageCleanupSource.PASCO_DELETE,
+    pascoId,
+    triggeredById,
+  });
 
   if (!cloudinaryResult.success) {
     return {

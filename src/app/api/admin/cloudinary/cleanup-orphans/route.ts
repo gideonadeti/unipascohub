@@ -62,7 +62,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await cleanupOrphanCloudinaryAssets({ dryRun, courseId });
+    const result = await cleanupOrphanCloudinaryAssets({
+      dryRun,
+      courseId,
+      triggeredById: userId,
+    });
 
     return Response.json({
       dryRun,

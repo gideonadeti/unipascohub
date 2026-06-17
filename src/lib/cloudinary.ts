@@ -1,9 +1,13 @@
 import { createHash } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
-
+import {
+  recordStorageCleanupFailures,
+  resolveStorageCleanupFailures,
+} from "@/lib/storage-cleanup-log";
 import {
   CloudinaryResourceType,
   type CloudinaryResourceType as CloudinaryResourceTypeType,
+  type StorageCleanupSource,
 } from "../../generated/prisma/enums";
 
 const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
@@ -719,11 +723,18 @@ export async function deleteCloudinaryAsset(
   }
 }
 
+export type StorageCleanupContext = {
+  source: StorageCleanupSource;
+  pascoId?: string;
+  triggeredById?: string;
+};
+
 export async function deleteCloudinaryAssets(
   files: Array<{
     publicId: string;
     resourceType: CloudinaryResourceTypeType;
   }>,
+  cleanupContext?: StorageCleanupContext,
 ): Promise<
   | { success: true }
   | {
@@ -738,6 +749,19 @@ export async function deleteCloudinaryAssets(
         file.publicId,
         file.resourceType,
       );
+
+      if (cleanupContext !== undefined) {
+        if (result.success) {
+          await resolveStorageCleanupFailures([file.publicId]);
+        } else {
+          await recordStorageCleanupFailures({
+            files: [file],
+            source: cleanupContext.source,
+            pascoId: cleanupContext.pascoId,
+            triggeredById: cleanupContext.triggeredById,
+          });
+        }
+      }
 
       return { publicId: file.publicId, result };
     }),

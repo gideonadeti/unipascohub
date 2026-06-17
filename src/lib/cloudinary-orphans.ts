@@ -3,8 +3,14 @@ import { v2 as cloudinary } from "cloudinary";
 import { deleteCloudinaryAsset } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
 import {
+  recordOrphanCleanupRun,
+  recordStorageCleanupFailures,
+  resolveStorageCleanupFailures,
+} from "@/lib/storage-cleanup-log";
+import {
   CloudinaryResourceType,
   type CloudinaryResourceType as CloudinaryResourceTypeType,
+  StorageCleanupSource,
 } from "../../generated/prisma/enums";
 
 type OrphanAsset = {
@@ -80,6 +86,7 @@ async function listAssetsInFolder(assetFolder: string): Promise<OrphanAsset[]> {
 export async function cleanupOrphanCloudinaryAssets(options: {
   dryRun?: boolean;
   courseId?: string;
+  triggeredById?: string;
 }): Promise<{
   scanned: number;
   orphans: string[];
@@ -135,11 +142,39 @@ export async function cleanupOrphanCloudinaryAssets(options: {
     for (const entry of results) {
       if (entry.result.success) {
         deleted.push(entry.publicId);
+        await resolveStorageCleanupFailures([entry.publicId]);
       } else {
         deleteFailures.push(entry.publicId);
       }
     }
+
+    if (deleteFailures.length > 0) {
+      const failedAssets = orphanAssets.filter((asset) =>
+        deleteFailures.includes(asset.publicId),
+      );
+
+      await recordStorageCleanupFailures({
+        files: failedAssets,
+        source: StorageCleanupSource.ORPHAN_BATCH,
+        triggeredById: options.triggeredById,
+      });
+    }
   }
+
+  await recordOrphanCleanupRun({
+    dryRun,
+    courseId: options.courseId,
+    scanned,
+    orphanCount: orphans.length,
+    deletedCount: deleted.length,
+    failureCount: deleteFailures.length,
+    triggeredById: options.triggeredById,
+    details: {
+      orphans,
+      deleted,
+      deleteFailures,
+    },
+  });
 
   return { scanned, orphans, deleted, deleteFailures };
 }
