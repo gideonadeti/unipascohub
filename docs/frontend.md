@@ -11,7 +11,7 @@ Current UI structure, conventions, and planned work.
 | 0     | Standards, `site.ts`, Motion, shadcn `empty`/`skeleton` | Done    |
 | 1     | Theme, header, footer, favicon                          | Done    |
 | 2     | Shared primitives, `PascoCard`, skeletons               | Done    |
-| 3     | Stub pages (contributors, legal, feedback)              | Planned |
+| 3     | Stub pages (contributors, legal, feedback)              | Done    |
 | 4     | Homepage                                                | Planned |
 | 5     | Browse with URL filters                                 | Planned |
 | 6–7   | Page alignment, polish                                  | Planned |
@@ -20,36 +20,42 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 
 ## Pages
 
-| Route                    | File                                                                                  | Renders                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Recent pascos list via `PascoListSection`                                |
-| `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | Create form behind contributor gate                                      |
-| `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | Pasco detail                                                             |
-| `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | Edit form behind permission gate                                         |
+| Route                    | File                                                                                  | Renders                                          |
+| ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Recent pascos list via `PascoListSection`        |
+| `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | Create form behind contributor gate              |
+| `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | Pasco detail                                     |
+| `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | Edit form behind permission gate                 |
+| `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Credits and contributors list from `siteCredits` |
+| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsorship stub + optional BMC CTA              |
+| `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                 |
+| `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                          |
+| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub with anchor sections                |
 
 Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
 
 ### Shell components
 
-| Component | File | Purpose |
-| --------- | ---- | ------- |
-| `SiteHeader` | [`site-header.tsx`](../src/components/site-header.tsx) | Brand link, theme toggle, Clerk auth |
-| `SiteFooter` | [`site-footer.tsx`](../src/components/site-footer.tsx) | Nav groups, credits, social links |
-| `ThemeToggle` | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx) | Light / dark / system picker |
-| `ScrollToTop` | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx) | Fixed scroll-to-top button |
-| `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper |
+| Component       | File                                                                             | Purpose                              |
+| --------------- | -------------------------------------------------------------------------------- | ------------------------------------ |
+| `SiteHeader`    | [`site-header.tsx`](../src/components/site-header.tsx)                           | Brand link, theme toggle, Clerk auth |
+| `SiteFooter`    | [`site-footer.tsx`](../src/components/site-footer.tsx)                           | Nav groups, credits, social links    |
+| `ThemeToggle`   | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx)                         | Light / dark / system picker         |
+| `ScrollToTop`   | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx)                       | Fixed scroll-to-top button           |
+| `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper                |
 
 ### Layout and list components
 
-| Component | File | Purpose |
-| --------- | ---- | ------- |
-| `PageContainer` | [`layout/page-container.tsx`](../src/components/layout/page-container.tsx) | Width-tiered `<main>` wrapper (`narrow` / `default` / `wide`) |
-| `PageHeader` | [`layout/page-header.tsx`](../src/components/layout/page-header.tsx) | Page title, description, optional actions |
-| `Section` | [`layout/section.tsx`](../src/components/layout/section.tsx) | Titled content section |
-| `PascoCard` | [`pasco-card.tsx`](../src/components/pasco-card.tsx) | Linked card for pasco list grids |
-| `PascoListSection` | [`pasco-list-section.tsx`](../src/components/pasco-list-section.tsx) | Async list section with skeleton/error/empty states |
-| `PascoListSkeleton` | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx) | Grid of card skeletons |
-| `EmptyState` | [`empty-state.tsx`](../src/components/empty-state.tsx) | shadcn Empty wrapper with optional CTA |
+| Component           | File                                                                       | Purpose                                                       |
+| ------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `PageContainer`     | [`layout/page-container.tsx`](../src/components/layout/page-container.tsx) | Width-tiered `<main>` wrapper (`narrow` / `default` / `wide`) |
+| `PageHeader`        | [`layout/page-header.tsx`](../src/components/layout/page-header.tsx)       | Page title, description, optional actions                     |
+| `Section`           | [`layout/section.tsx`](../src/components/layout/section.tsx)               | Titled content section                                        |
+| `PascoCard`         | [`pasco-card.tsx`](../src/components/pasco-card.tsx)                       | Linked card for pasco list grids                              |
+| `PascoListSection`  | [`pasco-list-section.tsx`](../src/components/pasco-list-section.tsx)       | Async list section with skeleton/error/empty states           |
+| `PascoListSkeleton` | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx)     | Grid of card skeletons                                        |
+| `EmptyState`        | [`empty-state.tsx`](../src/components/empty-state.tsx)                     | shadcn Empty wrapper with optional CTA                        |
+| `ProseContent`      | [`layout/prose-content.tsx`](../src/components/layout/prose-content.tsx)   | Lightweight wrapper for static copy pages                     |
 
 ## Component layers
 

@@ -107,6 +107,11 @@ See [operations.md](operations.md) for maintenance workflows.
 | Create pasco         | `/pascos/new`            | Functional                                            |
 | Pasco detail         | `/pascos/[pascoId]`      | Functional (course code/title on detail)              |
 | Edit pasco           | `/pascos/[pascoId]/edit` | Functional                                            |
+| Contributors         | `/contributors`          | Stub page (reads from `siteCredits`)                  |
+| Sponsors             | `/sponsors`              | Stub page                                             |
+| Privacy              | `/privacy`               | Draft placeholder                                     |
+| Terms                | `/terms`                 | Draft placeholder                                     |
+| Feedback             | `/feedback`              | Feedback hub with anchor sections                     |
 
 Infrastructure in place: TanStack Query, shadcn/ui components, toast notifications, basic header with auth.
 
