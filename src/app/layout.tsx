@@ -50,7 +50,7 @@ export default function RootLayout({
                   href="/pascos/new"
                   className="text-sm font-medium hover:underline"
                 >
-                  Upload Pasco
+                  Add pasco
                 </Link>
               </Show>
               <div className="ml-auto flex items-center gap-4">

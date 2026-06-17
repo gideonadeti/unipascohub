@@ -110,7 +110,7 @@ export function PascoCreateForm() {
   return (
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>Upload pasco</CardTitle>
+        <CardTitle>Add pasco</CardTitle>
         <CardDescription>
           Add exam papers for a course. Files are uploaded to Cloudinary before
           submission.
