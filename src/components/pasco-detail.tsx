@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 
 import { PascoDeleteDialog } from "@/components/pasco-delete-dialog";
+import { PascoEngagementBar } from "@/components/pasco-engagement-bar";
+import { PascoFileDownload } from "@/components/pasco-file-download";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
+import { useRecordPascoView } from "@/hooks/api/use-pasco-engagement";
 import { usePasco } from "@/hooks/api/use-pascos";
 import { canUserModifyPasco } from "@/lib/pasco-permissions";
 
@@ -33,6 +36,7 @@ export function PascoDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const pascoQuery = usePasco(pascoId);
   const currentUser = useCurrentUser();
+  useRecordPascoView(pascoId, pascoQuery.isSuccess);
 
   if (pascoQuery.isPending) {
     return (
@@ -133,19 +137,14 @@ export function PascoDetail() {
           </div>
         )}
 
+        <PascoEngagementBar pascoId={pascoId} pasco={pasco} />
+
         <div>
           <h3 className="mb-2 text-sm font-medium">Files</h3>
           <ul className="space-y-2">
             {pasco.files.map((file) => (
               <li key={file.id}>
-                <a
-                  href={file.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary underline-offset-4 hover:underline"
-                >
-                  {file.order}. {file.fileName}
-                </a>
+                <PascoFileDownload pascoId={pascoId} file={file} />
               </li>
             ))}
           </ul>

@@ -180,3 +180,20 @@ export type PascoDeleteResponse = {
   success: true;
   storageCleanupFailures?: string[];
 };
+
+export type PascoReactionResponse = {
+  likeCount: number;
+  dislikeCount: number;
+  viewerReaction: PascoReactionType | null;
+};
+
+export type PascoViewResponse = {
+  viewCount: number;
+  recorded: boolean;
+};
+
+export type PascoDownloadResponse = {
+  downloadCount: number;
+  fileUrl: string;
+  fileName: string;
+};
