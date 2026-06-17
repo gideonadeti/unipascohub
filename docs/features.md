@@ -103,7 +103,7 @@ See [operations.md](operations.md) for maintenance workflows.
 
 | Page                 | Path                     | Status                                                |
 | -------------------- | ------------------------ | ----------------------------------------------------- |
-| Home (recent pascos) | `/`                      | `PascoListSection` preview — full homepage in Phase 4 |
+| Home                 | `/`                      | Hero, v1 search, recent + popular pasco sections      |
 | Create pasco         | `/pascos/new`            | Functional                                            |
 | Pasco detail         | `/pascos/[pascoId]`      | Functional (course code/title on detail)              |
 | Edit pasco           | `/pascos/[pascoId]/edit` | Functional                                            |
@@ -122,8 +122,7 @@ See [frontend.md](frontend.md) for component structure and planned UI work.
 These are the main gaps before a student-facing product launch:
 
 - **Browse / discovery UI** — filtered pasco list, catalog navigation (institution → program → course)
-- **Production homepage** — landing page, recent/popular pascos
-- **Enriched pasco display** — course code/title on cards and detail (API currently returns `courseId` only)
+- **Enriched pasco display** — course code/title on list cards (detail page enriched)
 - **Navigation polish** — logo, breadcrumbs, mobile layout
 - **Admin dashboard UI** — orphan cleanup and failure inspection in the browser
 - **Automated tests** — no test suite yet
