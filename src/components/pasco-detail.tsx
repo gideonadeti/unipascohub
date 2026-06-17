@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useState } from "react";
+
+import { PascoDeleteDialog } from "@/components/pasco-delete-dialog";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -27,6 +30,7 @@ function formatLabel(value: string) {
 export function PascoDetail() {
   const params = useParams<{ pascoId: string }>();
   const pascoId = params.pascoId ?? "";
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const pascoQuery = usePasco(pascoId);
   const currentUser = useCurrentUser();
 
@@ -60,11 +64,26 @@ export function PascoDetail() {
           <CardDescription>ID: {pasco.id}</CardDescription>
         </div>
         {canEdit && (
-          <Button type="button" variant="outline" size="sm" asChild>
-            <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" asChild>
+              <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete
+            </Button>
+          </div>
         )}
       </CardHeader>
+      <PascoDeleteDialog
+        pascoId={pascoId}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+      />
       <CardContent className="space-y-6">
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>

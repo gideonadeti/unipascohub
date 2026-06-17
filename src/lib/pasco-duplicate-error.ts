@@ -22,9 +22,19 @@ export function getPascoFileDuplicatesFromError(
 
 export function getPascoMutationErrorMessage(
   error: unknown,
-  action: "create" | "update",
+  action: "create" | "update" | "delete",
 ): string {
   if (error instanceof ApiError) {
+    if (error.status === 403) {
+      return "You do not have permission to perform this action";
+    }
+
+    if (error.status === 404) {
+      return action === "delete"
+        ? "Pasco not found. It may have already been deleted."
+        : "Pasco not found";
+    }
+
     const data = error.data as { message?: string } | undefined;
 
     if (typeof data?.message === "string" && data.message.length > 0) {
@@ -38,7 +48,15 @@ export function getPascoMutationErrorMessage(
     return error.message;
   }
 
-  return action === "create" ? "Could not add pasco" : "Could not update pasco";
+  if (action === "create") {
+    return "Could not add pasco";
+  }
+
+  if (action === "delete") {
+    return "Could not delete pasco";
+  }
+
+  return "Could not update pasco";
 }
 
 /** @deprecated Use getPascoMutationErrorMessage(error, "create") */
@@ -48,4 +66,8 @@ export function getPascoCreateErrorMessage(error: unknown): string {
 
 export function getPascoUpdateErrorMessage(error: unknown): string {
   return getPascoMutationErrorMessage(error, "update");
+}
+
+export function getPascoDeleteErrorMessage(error: unknown): string {
+  return getPascoMutationErrorMessage(error, "delete");
 }

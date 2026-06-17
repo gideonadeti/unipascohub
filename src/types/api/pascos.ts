@@ -175,3 +175,8 @@ export type PascoUpdateResponse = {
   pasco: Pasco;
   storageCleanupFailures?: string[];
 };
+
+export type PascoDeleteResponse = {
+  success: true;
+  storageCleanupFailures?: string[];
+};

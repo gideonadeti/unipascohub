@@ -3,6 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import type {
   PascoCreateInput,
   PascoCreateResponse,
+  PascoDeleteResponse,
   PascoDetailResponse,
   PascoFileComputeHashInput,
   PascoFileComputeHashResponse,
@@ -35,6 +36,12 @@ export function createPasco(input: PascoCreateInput) {
 export function updatePasco(id: string, input: PascoUpdateInput) {
   return apiClient
     .patch<PascoUpdateResponse>(`/api/pascos/${id}`, input)
+    .then((response) => response.data);
+}
+
+export function deletePasco(id: string) {
+  return apiClient
+    .delete<PascoDeleteResponse>(`/api/pascos/${id}`)
     .then((response) => response.data);
 }
 

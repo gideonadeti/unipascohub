@@ -2,9 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import {
   createPasco,
+  deletePasco,
   pascoDetailOptions,
   pascosListOptions,
   updatePasco,
@@ -82,4 +84,30 @@ export function useSubmitPascoEdit(pascoId: string) {
     submit: (values: PascoEditFormValues) =>
       updatePascoMutation.mutateAsync(toPascoUpdateInput(values)),
   };
+}
+
+export function useDeletePasco(pascoId: string) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: () => deletePasco(pascoId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.pascos.all });
+      queryClient.removeQueries({ queryKey: queryKeys.pascos.detail(pascoId) });
+
+      if (
+        data.storageCleanupFailures &&
+        data.storageCleanupFailures.length > 0
+      ) {
+        toast.warning(
+          "Pasco deleted, but some files could not be removed from storage.",
+        );
+      } else {
+        toast.success("Pasco deleted");
+      }
+
+      router.push("/");
+    },
+  });
 }
