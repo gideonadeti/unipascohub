@@ -1,3 +1,4 @@
+import { PageContainer } from "@/components/layout/page-container";
 import { PascoEditForm } from "@/components/pasco-edit-form";
 import { PascoEditGate } from "@/components/pasco-edit-gate";
 
@@ -9,10 +10,10 @@ export default async function EditPascoPage({ params }: EditPascoPageProps) {
   const { pascoId } = await params;
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-4">
+    <PageContainer width="narrow">
       <PascoEditGate pascoId={pascoId}>
         <PascoEditForm pascoId={pascoId} />
       </PascoEditGate>
-    </main>
+    </PageContainer>
   );
 }

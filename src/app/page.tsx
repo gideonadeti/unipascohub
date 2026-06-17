@@ -1,11 +1,14 @@
-import { ApiSmokeTest } from "@/components/api-smoke-test";
+import { PageContainer } from "@/components/layout/page-container";
+import { PascoListSection } from "@/components/pasco-list-section";
 
-const Page = () => {
+export default function HomePage() {
   return (
-    <div>
-      <ApiSmokeTest />
-    </div>
+    <PageContainer width="default" className="space-y-8">
+      <PascoListSection
+        title="Recent pascos"
+        filters={{ sortBy: "createdAt", sortOrder: "desc", limit: 6 }}
+        emptyAction={{ label: "Upload a pasco", href: "/pascos/new" }}
+      />
+    </PageContainer>
   );
-};
-
-export default Page;
+}

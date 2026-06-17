@@ -1,9 +1,10 @@
+import { PageContainer } from "@/components/layout/page-container";
 import { PascoDetail } from "@/components/pasco-detail";
 
 export default function PascoDetailPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-4">
+    <PageContainer width="narrow">
       <PascoDetail />
-    </main>
+    </PageContainer>
   );
 }
