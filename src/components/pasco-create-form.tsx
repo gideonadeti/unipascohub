@@ -29,7 +29,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -41,6 +40,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubmitPascoCreate } from "@/hooks/api/use-pascos";
+import { ACADEMIC_YEAR_OPTIONS } from "@/lib/academic-year";
 import { coursesListOptions } from "@/lib/api/courses";
 import { institutionsListOptions } from "@/lib/api/institutions";
 import { programsListOptions } from "@/lib/api/programs";
@@ -64,7 +64,7 @@ export function PascoCreateForm() {
       institutionId: "",
       programId: "",
       courseId: "",
-      academicYear: "",
+      academicYear: ACADEMIC_YEAR_OPTIONS[0],
       educationLevel: "LEVEL_100",
       semesterType: "FIRST_SEMESTER",
       type: "END_OF_SEM",
@@ -252,12 +252,26 @@ export function PascoCreateForm() {
                   <FieldLabel htmlFor="pasco-academic-year">
                     Academic year
                   </FieldLabel>
-                  <Input
-                    {...field}
-                    id="pasco-academic-year"
-                    placeholder="2024/2025"
-                    aria-invalid={fieldState.invalid}
-                  />
+                  <Select
+                    name={field.name}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger
+                      id="pasco-academic-year"
+                      className="w-full"
+                      aria-invalid={fieldState.invalid}
+                    >
+                      <SelectValue placeholder="Select academic year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACADEMIC_YEAR_OPTIONS.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}

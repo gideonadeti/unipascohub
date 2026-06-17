@@ -1,5 +1,9 @@
 import * as z from "zod";
 
+import {
+  ACADEMIC_YEAR_OPTIONS,
+  academicYearValidationMessage,
+} from "@/lib/academic-year";
 import type {
   CloudinaryResourceType,
   EducationLevel,
@@ -63,40 +67,15 @@ export const pascoFileCreateSchema = z.object({
   resourceType: z.enum(CLOUDINARY_RESOURCE_TYPES),
 });
 
-function validateAcademicYear(
-  value: string,
-  ctx: z.RefinementCtx<Record<string, unknown>>,
-) {
-  const academicYear = value.trim();
-  const match = /^(\d{4})\/(\d{4})$/.exec(academicYear);
-
-  if (!match) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Use format YYYY/YYYY (e.g. 2024/2025)",
-      path: ["academicYear"],
-    });
-    return;
-  }
-
-  const startYear = Number.parseInt(match[1], 10);
-  const endYear = Number.parseInt(match[2], 10);
-
-  if (endYear !== startYear + 1) {
-    ctx.addIssue({
-      code: "custom",
-      message: "End year must be one year after the start year",
-      path: ["academicYear"],
-    });
-  }
-}
-
 export const pascoCreateFormSchema = z
   .object({
     institutionId: z.string().min(1, "Select an institution"),
     programId: z.string().min(1, "Select a program"),
     courseId: z.string().min(1, "Select a course"),
-    academicYear: z.string().min(1, "Academic year is required"),
+    academicYear: z.enum(
+      ACADEMIC_YEAR_OPTIONS as [string, ...string[]],
+      "Select an academic year",
+    ),
     educationLevel: z.enum(EDUCATION_LEVELS),
     semesterType: z.enum(SEMESTER_TYPES),
     type: z.enum(PASCO_TYPES),
@@ -112,7 +91,14 @@ export const pascoCreateFormSchema = z
       .max(PASCO_MAX_FILES, `You can upload up to ${PASCO_MAX_FILES} files`),
   })
   .superRefine((data, ctx) => {
-    validateAcademicYear(data.academicYear, ctx);
+    const academicYearError = academicYearValidationMessage(data.academicYear);
+    if (academicYearError) {
+      ctx.addIssue({
+        code: "custom",
+        message: academicYearError,
+        path: ["academicYear"],
+      });
+    }
 
     if (data.contentType === "QUESTIONS_ONLY") {
       if (data.solutionCompleteness !== null) {

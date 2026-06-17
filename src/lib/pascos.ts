@@ -1,3 +1,4 @@
+import { academicYearValidationMessage } from "@/lib/academic-year";
 import {
   deleteCloudinaryAssets,
   type VerifyFileError,
@@ -655,16 +656,8 @@ function parseAcademicYear(value: unknown): string | null {
   }
 
   const academicYear = value.trim();
-  const match = /^(\d{4})\/(\d{4})$/.exec(academicYear);
 
-  if (!match) {
-    return null;
-  }
-
-  const startYear = Number.parseInt(match[1], 10);
-  const endYear = Number.parseInt(match[2], 10);
-
-  if (endYear !== startYear + 1) {
+  if (academicYearValidationMessage(academicYear) !== null) {
     return null;
   }
 

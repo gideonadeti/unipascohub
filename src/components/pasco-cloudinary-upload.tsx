@@ -1,10 +1,10 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -396,18 +396,16 @@ export function PascoCloudinaryUpload({
                   {formatFileSize(file.fileSize)}
                 </span>
               </span>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Uploaded</Badge>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeFile(file.order)}
-                  disabled={disabled}
-                >
-                  Remove
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon-xs"
+                onClick={() => removeFile(file.order)}
+                disabled={disabled}
+                aria-label={`Remove ${file.fileName}`}
+              >
+                <Trash2 />
+              </Button>
             </li>
           ))}
         </ul>
