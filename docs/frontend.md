@@ -2,6 +2,22 @@
 
 Current UI structure, conventions, and planned work.
 
+**Standards:** All new UI work must follow [frontend-standards.md](frontend-standards.md). Site branding, links, and credits live in [`src/config/site.ts`](../src/config/site.ts).
+
+## Phased roadmap
+
+| Phase | Focus                                                   | Status  |
+| ----- | ------------------------------------------------------- | ------- |
+| 0     | Standards, `site.ts`, Motion, shadcn `empty`/`skeleton` | Done    |
+| 1     | Theme, header, footer, favicon                          | Next    |
+| 2     | Shared primitives, `PascoCard`, skeletons               | Planned |
+| 3     | Stub pages (contributors, legal, feedback)              | Planned |
+| 4     | Homepage                                                | Planned |
+| 5     | Browse with URL filters                                 | Planned |
+| 6–7   | Page alignment, polish                                  | Planned |
+
+See [frontend-standards.md](frontend-standards.md) for full conventions.
+
 ## Pages
 
 | Route                    | File                                                                                  | Renders                                                                  |
@@ -49,7 +65,7 @@ layout.tsx
 
 ### UI primitives
 
-shadcn-style components in [`src/components/ui/`](../src/components/ui/): button, card, dialog, select, combobox, field, alert, spinner, etc.
+shadcn-style components in [`src/components/ui/`](../src/components/ui/): button, card, dialog, select, combobox, field, alert, spinner, empty, skeleton, etc.
 
 ## Data fetching
 

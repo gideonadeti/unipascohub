@@ -33,17 +33,19 @@ Index of all documentation for Uni Pasco Hub.
 
 ## Guides
 
-| Doc                                | Description                                           |
-| ---------------------------------- | ----------------------------------------------------- |
-| [file-uploads.md](file-uploads.md) | Upload pipeline, duplicates, Cloudinary folders       |
-| [frontend.md](frontend.md)         | Pages, components, hooks, UI gaps                     |
-| [operations.md](operations.md)     | Orphan cleanup CLI, rate limits, production checklist |
+| Doc                                            | Description                                           |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| [frontend-standards.md](frontend-standards.md) | UI/UX conventions, component layers, phase roadmap    |
+| [file-uploads.md](file-uploads.md)             | Upload pipeline, duplicates, Cloudinary folders       |
+| [frontend.md](frontend.md)                     | Pages, components, hooks, UI gaps                     |
+| [operations.md](operations.md)                 | Orphan cleanup CLI, rate limits, production checklist |
 
 ## Source of truth
 
-| Topic              | Canonical location                                              |
-| ------------------ | --------------------------------------------------------------- |
-| Database schema    | [`prisma/schema.prisma`](../prisma/schema.prisma)               |
-| API types          | [`src/types/api/`](../src/types/api/)                           |
-| Env vars           | [`.env.example`](../.env.example)                               |
-| Allowed file types | [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts) |
+| Topic               | Canonical location                                              |
+| ------------------- | --------------------------------------------------------------- |
+| Database schema     | [`prisma/schema.prisma`](../prisma/schema.prisma)               |
+| API types           | [`src/types/api/`](../src/types/api/)                           |
+| Env vars            | [`.env.example`](../.env.example)                               |
+| Allowed file types  | [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts) |
+| Site branding/links | [`src/config/site.ts`](../src/config/site.ts)                   |

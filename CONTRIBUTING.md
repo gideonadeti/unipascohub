@@ -50,6 +50,8 @@ When you change the codebase, update the relevant docs:
 | New env var            | `.env.example`, `docs/development.md`              |
 | Schema migration       | `docs/data-model.md` if models or relations change |
 | New user-facing page   | `docs/frontend.md`, `docs/features.md`             |
+| UI pattern or rule     | `docs/frontend-standards.md`                       |
+| Site links or branding | `src/config/site.ts`, `.env.example`               |
 | Shipped feature        | `CHANGELOG.md` under `Unreleased`                  |
 | Auth/permission change | `docs/authentication.md`                           |
 

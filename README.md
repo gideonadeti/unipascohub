@@ -58,20 +58,21 @@ Open [http://localhost:3000](http://localhost:3000). The home page runs a basic 
 
 ## Documentation
 
-| Doc                                              | Description                          |
-| ------------------------------------------------ | ------------------------------------ |
-| [docs/README.md](docs/README.md)                 | Documentation index                  |
-| [docs/development.md](docs/development.md)       | Local setup and troubleshooting      |
-| [docs/architecture.md](docs/architecture.md)     | System overview and folder structure |
-| [docs/features.md](docs/features.md)             | Implemented features and roadmap     |
-| [docs/authentication.md](docs/authentication.md) | Clerk integration and role matrix    |
-| [docs/data-model.md](docs/data-model.md)         | Database schema guide                |
-| [docs/api/](docs/api/)                           | REST API reference                   |
-| [docs/file-uploads.md](docs/file-uploads.md)     | Upload pipeline                      |
-| [docs/frontend.md](docs/frontend.md)             | UI pages and components              |
-| [docs/operations.md](docs/operations.md)         | Admin ops and maintenance            |
-| [CONTRIBUTING.md](CONTRIBUTING.md)               | Contributor guide                    |
-| [CHANGELOG.md](CHANGELOG.md)                     | Release history                      |
+| Doc                                                      | Description                          |
+| -------------------------------------------------------- | ------------------------------------ |
+| [docs/README.md](docs/README.md)                         | Documentation index                  |
+| [docs/development.md](docs/development.md)               | Local setup and troubleshooting      |
+| [docs/architecture.md](docs/architecture.md)             | System overview and folder structure |
+| [docs/features.md](docs/features.md)                     | Implemented features and roadmap     |
+| [docs/authentication.md](docs/authentication.md)         | Clerk integration and role matrix    |
+| [docs/data-model.md](docs/data-model.md)                 | Database schema guide                |
+| [docs/api/](docs/api/)                                   | REST API reference                   |
+| [docs/file-uploads.md](docs/file-uploads.md)             | Upload pipeline                      |
+| [docs/frontend.md](docs/frontend.md)                     | UI pages and components              |
+| [docs/frontend-standards.md](docs/frontend-standards.md) | UI/UX conventions and phase roadmap  |
+| [docs/operations.md](docs/operations.md)                 | Admin ops and maintenance            |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                       | Contributor guide                    |
+| [CHANGELOG.md](CHANGELOG.md)                             | Release history                      |
 
 ## License
 
