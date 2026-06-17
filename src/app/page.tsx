@@ -23,6 +23,7 @@ export default function HomePage() {
             description="Latest uploads from contributors."
             filters={{ sortBy: "createdAt", sortOrder: "desc", limit: 6 }}
             emptyAction={{ label: "Upload a pasco", href: "/pascos/new" }}
+            viewAllHref="/pascos"
           />
         </RevealOnScroll>
 
@@ -33,6 +34,7 @@ export default function HomePage() {
             filters={{ sortBy: "viewCount", sortOrder: "desc", limit: 6 }}
             emptyTitle="No popular pascos yet"
             emptyDescription="View counts will appear as students explore papers."
+            viewAllHref="/pascos?sortBy=viewCount&sortOrder=desc"
           />
         </RevealOnScroll>
       </div>
