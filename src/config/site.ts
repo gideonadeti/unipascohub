@@ -76,6 +76,12 @@ export const footerNav: FooterNavGroup[] = [
   },
 ];
 
+export const heroCopy = {
+  headline: siteName,
+  subheadline: siteTagline,
+  searchAriaLabel: "Search pascos",
+} as const;
+
 export const heroSearchExamples = [
   "DCIT 101",
   "Level 200",
