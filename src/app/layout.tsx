@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SkipToContent } from "@/components/skip-to-content";
 import { Toaster } from "@/components/ui/sonner";
 import { siteDescription, siteName } from "@/config/site";
 
@@ -43,6 +44,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
+        <SkipToContent />
         <ClerkProvider>
           <ThemeProvider>
             <QueryProvider>
