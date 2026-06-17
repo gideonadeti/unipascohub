@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Frontend Phase 3: stub pages for `/contributors`, `/sponsors`, `/privacy`, `/terms`, `/feedback` (footer links + credit link)
 - Frontend Phase 4: production homepage with `HomeHero`, `HeroSearch` (v1 decorative), recent + popular `PascoListSection` blocks
 - Frontend Phase 5: `/pascos` browse page with URL-driven filters, sort, pagination, and homepage wiring
+- Frontend Phase 6: pasco create/detail/edit pages aligned to shell (`PageHeader`, `PascoPageNav`, `PascoDetailPage`, `PascoDetailSkeleton`, `pasco-display` helpers)
 
 ### Planned
 

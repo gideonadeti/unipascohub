@@ -14,24 +14,25 @@ Current UI structure, conventions, and planned work.
 | 3     | Stub pages (contributors, legal, feedback)              | Done    |
 | 4     | Homepage                                                | Done    |
 | 5     | Browse with URL filters                                 | Done    |
-| 6–7   | Page alignment, polish                                  | Planned |
+| 6     | Pasco page shell alignment                              | Done    |
+| 7     | A11y polish, docs update                                | Planned |
 
 See [frontend-standards.md](frontend-standards.md) for full conventions.
 
 ## Pages
 
-| Route                    | File                                                                                  | Renders                                          |
-| ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Hero, v1 search, recent + popular pasco sections |
-| `/pascos`                | [`src/app/pascos/page.tsx`](../src/app/pascos/page.tsx)                               | URL-filtered browse grid with pagination         |
-| `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | Create form behind contributor gate              |
-| `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | Pasco detail                                     |
-| `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | Edit form behind permission gate                 |
-| `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Credits and contributors list from `siteCredits` |
-| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsorship stub + optional BMC CTA              |
-| `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                 |
-| `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                          |
-| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub with anchor sections                |
+| Route                    | File                                                                                  | Renders                                           |
+| ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Hero, v1 search, recent + popular pasco sections  |
+| `/pascos`                | [`src/app/pascos/page.tsx`](../src/app/pascos/page.tsx)                               | URL-filtered browse grid with pagination          |
+| `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | `PageHeader`, create form behind contributor gate |
+| `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | `PascoDetailPage` with enriched title, back nav   |
+| `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | `PageHeader`, cancel/back nav, edit form + gate   |
+| `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Credits and contributors list from `siteCredits`  |
+| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsorship stub + optional BMC CTA               |
+| `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                  |
+| `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                           |
+| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub with anchor sections                 |
 
 Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
 
@@ -47,21 +48,23 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 
 ### Layout and list components
 
-| Component            | File                                                                       | Purpose                                                       |
-| -------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `PageContainer`      | [`layout/page-container.tsx`](../src/components/layout/page-container.tsx) | Width-tiered `<main>` wrapper (`narrow` / `default` / `wide`) |
-| `PageHeader`         | [`layout/page-header.tsx`](../src/components/layout/page-header.tsx)       | Page title, description, optional actions                     |
-| `Section`            | [`layout/section.tsx`](../src/components/layout/section.tsx)               | Titled content section                                        |
-| `PascoCard`          | [`pasco-card.tsx`](../src/components/pasco-card.tsx)                       | Linked card for pasco list grids                              |
-| `PascoListSection`   | [`pasco-list-section.tsx`](../src/components/pasco-list-section.tsx)       | Async list section with skeleton/error/empty states           |
-| `PascoListSkeleton`  | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx)     | Grid of card skeletons                                        |
-| `EmptyState`         | [`empty-state.tsx`](../src/components/empty-state.tsx)                     | shadcn Empty wrapper with optional CTA                        |
-| `ProseContent`       | [`layout/prose-content.tsx`](../src/components/layout/prose-content.tsx)   | Lightweight wrapper for static copy pages                     |
-| `HomeHero`           | [`home-hero.tsx`](../src/components/home-hero.tsx)                         | Homepage marketing hero with CTAs                             |
-| `HeroSearch`         | [`hero-search.tsx`](../src/components/hero-search.tsx)                     | Decorative v1 search with typing placeholder                  |
-| `RevealOnScroll`     | [`reveal-on-scroll.tsx`](../src/components/reveal-on-scroll.tsx)           | Motion wrapper for section reveal on scroll                   |
-| `PascoBrowsePage`    | [`pasco-browse-page.tsx`](../src/components/pasco-browse-page.tsx)         | Browse orchestrator (URL sync, results, pagination)           |
-| `PascoBrowseFilters` | [`pasco-browse-filters.tsx`](../src/components/pasco-browse-filters.tsx)   | Catalog cascade filter panel for browse                       |
+| Component             | File                                                                       | Purpose                                                       |
+| --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `PageContainer`       | [`layout/page-container.tsx`](../src/components/layout/page-container.tsx) | Width-tiered `<main>` wrapper (`narrow` / `default` / `wide`) |
+| `PageHeader`          | [`layout/page-header.tsx`](../src/components/layout/page-header.tsx)       | Page title, description, optional actions                     |
+| `Section`             | [`layout/section.tsx`](../src/components/layout/section.tsx)               | Titled content section                                        |
+| `PascoCard`           | [`pasco-card.tsx`](../src/components/pasco-card.tsx)                       | Linked card for pasco list grids                              |
+| `PascoListSection`    | [`pasco-list-section.tsx`](../src/components/pasco-list-section.tsx)       | Async list section with skeleton/error/empty states           |
+| `PascoListSkeleton`   | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx)     | Grid of card skeletons                                        |
+| `EmptyState`          | [`empty-state.tsx`](../src/components/empty-state.tsx)                     | shadcn Empty wrapper with optional CTA                        |
+| `ProseContent`        | [`layout/prose-content.tsx`](../src/components/layout/prose-content.tsx)   | Lightweight wrapper for static copy pages                     |
+| `HomeHero`            | [`home-hero.tsx`](../src/components/home-hero.tsx)                         | Homepage marketing hero with CTAs                             |
+| `HeroSearch`          | [`hero-search.tsx`](../src/components/hero-search.tsx)                     | Decorative v1 search with typing placeholder                  |
+| `RevealOnScroll`      | [`reveal-on-scroll.tsx`](../src/components/reveal-on-scroll.tsx)           | Motion wrapper for section reveal on scroll                   |
+| `PascoBrowsePage`     | [`pasco-browse-page.tsx`](../src/components/pasco-browse-page.tsx)         | Browse orchestrator (URL sync, results, pagination)           |
+| `PascoBrowseFilters`  | [`pasco-browse-filters.tsx`](../src/components/pasco-browse-filters.tsx)   | Catalog cascade filter panel for browse                       |
+| `PascoPageNav`        | [`pasco-page-nav.tsx`](../src/components/pasco-page-nav.tsx)               | Back link for pasco sub-routes                                |
+| `PascoDetailSkeleton` | [`pasco-detail-skeleton.tsx`](../src/components/pasco-detail-skeleton.tsx) | Block skeleton for detail/edit loading                        |
 
 ## Component layers
 
@@ -86,16 +89,17 @@ layout.tsx
 
 ### Domain components
 
-| Component                           | Purpose                                          |
-| ----------------------------------- | ------------------------------------------------ |
-| `PascoDetail`                       | Detail view, metadata, files, engagement, delete |
-| `PascoCreateForm` / `PascoEditForm` | Full pasco forms with catalog pickers            |
-| `PascoCloudinaryUpload`             | File upload widget and validation                |
-| `PascoEngagementBar`                | Like/dislike, view/download counts               |
-| `PascoFileView`                     | Modal viewer for PDFs and images                 |
-| `PascoEmbedPdfViewer`               | PDF embed using `@embedpdf/react-pdf-viewer`     |
-| `PascoFileActions`                  | View/download buttons per file                   |
-| `PascoDeleteDialog`                 | Delete confirmation                              |
+| Component                           | Purpose                                                            |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `PascoDetailPage`                   | Detail view with `PageHeader`, sections, files, engagement, delete |
+| `PascoDetail`                       | Re-export alias for `PascoDetailPage`                              |
+| `PascoCreateForm` / `PascoEditForm` | Full pasco forms with catalog pickers                              |
+| `PascoCloudinaryUpload`             | File upload widget and validation                                  |
+| `PascoEngagementBar`                | Like/dislike, view/download counts                                 |
+| `PascoFileView`                     | Modal viewer for PDFs and images                                   |
+| `PascoEmbedPdfViewer`               | PDF embed using `@embedpdf/react-pdf-viewer`                       |
+| `PascoFileActions`                  | View/download buttons per file                                     |
+| `PascoDeleteDialog`                 | Delete confirmation                                                |
 
 ### UI primitives
 
@@ -145,7 +149,7 @@ Zod schemas with react-hook-form:
 These are the main frontend items not yet built:
 
 1. **Enriched display** — show course code/title on list cards when not filtered by course
-2. **Navigation** — logo/home link, breadcrumbs (institution → program → course)
+2. **Navigation** — full breadcrumbs (institution → program → course); back links on pasco pages are done
 3. **Admin dashboard** — UI for orphan cleanup and storage failure inspection
 4. **Responsive polish** — mobile header polish, additional empty states
 
