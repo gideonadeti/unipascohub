@@ -61,6 +61,12 @@ enum PascoReactionType {
   DISLIKE
 }
 
+enum StorageCleanupSource {
+  PASCO_SYNC
+  PASCO_DELETE
+  ORPHAN_BATCH
+}
+
 model User {
   id        String   @id
   name      String
@@ -69,9 +75,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  pascos          Pasco[]
-  pascoReactions  PascoReaction[]
-  pascoDownloads  PascoDownload[]
+  pascos                    Pasco[]
+  pascoReactions            PascoReaction[]
+  pascoDownloads            PascoDownload[]
+  storageCleanupFailures    StorageCleanupFailure[]
+  storageCleanupRuns        StorageCleanupRun[]
 }
 
 model Institution {
@@ -137,9 +145,10 @@ model Pasco {
 
   course    Course          @relation(fields: [courseId], references: [id], onDelete: Restrict)
   uploader  User?           @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
-  files     PascoFile[]
-  reactions PascoReaction[]
-  downloads PascoDownload[]
+  files                    PascoFile[]
+  reactions                PascoReaction[]
+  downloads                PascoDownload[]
+  storageCleanupFailures   StorageCleanupFailure[]
 
   @@index([courseId, educationLevel, academicYear])
   @@index([uploaderId])
@@ -198,4 +207,39 @@ model PascoDownload {
 
   @@index([pascoId, createdAt])
   @@index([userId, pascoId])
+}
+
+model StorageCleanupFailure {
+  id            String                 @id @default(cuid())
+  publicId      String                 @unique
+  resourceType  CloudinaryResourceType
+  source        StorageCleanupSource
+  pascoId       String?
+  triggeredById String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  resolvedAt    DateTime?
+
+  pasco       Pasco? @relation(fields: [pascoId], references: [id], onDelete: SetNull)
+  triggeredBy User?  @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([resolvedAt, createdAt])
+}
+
+model StorageCleanupRun {
+  id            String   @id @default(cuid())
+  dryRun        Boolean
+  courseId      String?
+  scanned       Int
+  orphanCount   Int
+  deletedCount  Int
+  failureCount  Int
+  triggeredById String?
+  details       Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  triggeredBy User? @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
 }
