@@ -221,7 +221,7 @@ Always use `formatEnumLabel` from [catalog-labels.ts](../src/lib/catalog-labels.
 | **2** | `PageContainer`, `PascoCard`, skeletons, `formatEnumLabel` fix            | Done    |
 | **3** | Stub pages: contributors, sponsors, privacy, terms, feedback              | Done    |
 | **4** | Homepage: hero, search UI, recent/popular sections                        | Done    |
-| **5** | Browse page with URL filters                                              | Planned |
+| **5** | Browse page with URL filters                                              | Done    |
 | **6** | Align existing pasco pages to new shell                                   | Planned |
 | **7** | A11y polish, docs update                                                  | Planned |
 
