@@ -8,6 +8,7 @@ import {
 import { isValidContentHash, normalizeContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
 import { findDuplicatePascoFiles } from "@/lib/pasco-file-hash";
+import type { PascoListQuery } from "@/lib/pasco-list-query";
 import type { PascoFileDuplicate } from "@/types/api/pascos";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
@@ -32,24 +33,8 @@ const MAX_DESCRIPTION_LENGTH = 1000;
 const MAX_FILE_NAME_LENGTH = 255;
 const MAX_PUBLIC_ID_LENGTH = 500;
 const MAX_FILE_URL_LENGTH = 2000;
-const DEFAULT_LIST_PAGE = 1;
-const DEFAULT_LIST_LIMIT = 20;
-const MAX_LIST_LIMIT = 100;
 
 const EXISTING_FILE_SYNC_KEYS = new Set(["id", "order"]);
-const LIST_SORT_FIELDS = [
-  "createdAt",
-  "updatedAt",
-  "academicYear",
-  "likeCount",
-  "dislikeCount",
-  "downloadCount",
-  "viewCount",
-] as const;
-
-type PascoListSortBy = (typeof LIST_SORT_FIELDS)[number];
-type PascoListSortOrder = "asc" | "desc";
-
 const EDUCATION_LEVELS = new Set<string>(Object.values(EducationLevel));
 const SEMESTER_TYPES = new Set<string>(Object.values(SemesterType));
 const PASCO_TYPES = new Set<string>(Object.values(PascoType));
@@ -110,31 +95,11 @@ export type PascoUpdateInput = {
 
 export type PascoWithFiles = Pasco & { files: PascoFile[] };
 
-export type PascoListQuery = {
-  courseId?: string;
-  educationLevel?: EducationLevelType;
-  academicYear?: string;
-  semesterType?: SemesterTypeType;
-  type?: PascoTypeType;
-  contentType?: PascoContentTypeType;
-  isComplete?: boolean;
-  page: number;
-  limit: number;
-  sortBy: PascoListSortBy;
-  sortOrder: PascoListSortOrder;
-};
-
-export type PascoListParseError =
-  | "invalid_education_level"
-  | "invalid_semester_type"
-  | "invalid_type"
-  | "invalid_content_type"
-  | "invalid_academic_year"
-  | "invalid_is_complete"
-  | "invalid_page"
-  | "invalid_limit"
-  | "invalid_sort_by"
-  | "invalid_sort_order";
+export type {
+  PascoListParseError,
+  PascoListQuery,
+} from "@/lib/pasco-list-query";
+export { parseListPascosQuery } from "@/lib/pasco-list-query";
 
 type PascoError = "not_found" | "course_not_found" | "duplicate_public_id";
 
@@ -289,125 +254,6 @@ export async function checkPascoFileDuplicates(
 
 function isFileSizeWithinPolicy(fileSize: number): boolean {
   return fileSize <= getPascoMaxFileSizeBytes();
-}
-
-function isPascoListSortBy(value: string): value is PascoListSortBy {
-  return (LIST_SORT_FIELDS as readonly string[]).includes(value);
-}
-
-function isPascoListSortOrder(value: string): value is PascoListSortOrder {
-  return value === "asc" || value === "desc";
-}
-
-export function parseListPascosQuery(
-  searchParams: URLSearchParams,
-):
-  | { success: true; data: PascoListQuery }
-  | { success: false; error: PascoListParseError } {
-  const courseIdParam = searchParams.get("courseId");
-  const educationLevelParam = searchParams.get("educationLevel");
-  const academicYearParam = searchParams.get("academicYear");
-  const semesterTypeParam = searchParams.get("semesterType");
-  const typeParam = searchParams.get("type");
-  const contentTypeParam = searchParams.get("contentType");
-  const isCompleteParam = searchParams.get("isComplete");
-  const pageParam = searchParams.get("page");
-  const limitParam = searchParams.get("limit");
-  const sortByParam = searchParams.get("sortBy");
-  const sortOrderParam = searchParams.get("sortOrder");
-
-  if (
-    educationLevelParam !== null &&
-    !EDUCATION_LEVELS.has(educationLevelParam)
-  ) {
-    return { success: false, error: "invalid_education_level" };
-  }
-
-  if (semesterTypeParam !== null && !SEMESTER_TYPES.has(semesterTypeParam)) {
-    return { success: false, error: "invalid_semester_type" };
-  }
-
-  if (typeParam !== null && !PASCO_TYPES.has(typeParam)) {
-    return { success: false, error: "invalid_type" };
-  }
-
-  if (contentTypeParam !== null && !PASCO_CONTENT_TYPES.has(contentTypeParam)) {
-    return { success: false, error: "invalid_content_type" };
-  }
-
-  let academicYear: string | undefined;
-  if (academicYearParam !== null) {
-    const parsedAcademicYear = parseAcademicYear(academicYearParam);
-    if (parsedAcademicYear === null) {
-      return { success: false, error: "invalid_academic_year" };
-    }
-    academicYear = parsedAcademicYear;
-  }
-
-  let isComplete: boolean | undefined;
-  if (isCompleteParam !== null) {
-    if (isCompleteParam === "true") {
-      isComplete = true;
-    } else if (isCompleteParam === "false") {
-      isComplete = false;
-    } else {
-      return { success: false, error: "invalid_is_complete" };
-    }
-  }
-
-  const page =
-    pageParam === null ? DEFAULT_LIST_PAGE : Number.parseInt(pageParam, 10);
-  if (!Number.isInteger(page) || page < 1) {
-    return { success: false, error: "invalid_page" };
-  }
-
-  const limit =
-    limitParam === null ? DEFAULT_LIST_LIMIT : Number.parseInt(limitParam, 10);
-  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIST_LIMIT) {
-    return { success: false, error: "invalid_limit" };
-  }
-
-  const sortBy =
-    sortByParam === null || sortByParam.length === 0
-      ? "createdAt"
-      : sortByParam;
-  if (!isPascoListSortBy(sortBy)) {
-    return { success: false, error: "invalid_sort_by" };
-  }
-
-  const sortOrder =
-    sortOrderParam === null || sortOrderParam.length === 0
-      ? "desc"
-      : sortOrderParam;
-  if (!isPascoListSortOrder(sortOrder)) {
-    return { success: false, error: "invalid_sort_order" };
-  }
-
-  return {
-    success: true,
-    data: {
-      courseId: courseIdParam?.trim() || undefined,
-      educationLevel:
-        educationLevelParam !== null
-          ? (educationLevelParam as EducationLevelType)
-          : undefined,
-      academicYear,
-      semesterType:
-        semesterTypeParam !== null
-          ? (semesterTypeParam as SemesterTypeType)
-          : undefined,
-      type: typeParam !== null ? (typeParam as PascoTypeType) : undefined,
-      contentType:
-        contentTypeParam !== null
-          ? (contentTypeParam as PascoContentTypeType)
-          : undefined,
-      isComplete,
-      page,
-      limit,
-      sortBy,
-      sortOrder,
-    },
-  };
 }
 
 function parseCourseId(value: unknown): string | null {
