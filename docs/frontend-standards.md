@@ -183,9 +183,14 @@ Minimum tap target: ~44px height for primary actions.
 
 - Interactive elements are `Button` or `Link`, not styled `<div>`
 - Focus visible on all controls (shadcn defaults)
-- Link cards: entire card is one focusable link
+- Link cards: entire card is one focusable link with descriptive `aria-label`
 - Images and icons decorative unless they convey meaning (`aria-hidden` when decorative)
-- Loading: provide text for screen readers where spinners are used alone
+- Loading: skeleton blocks use `role="status"`, `aria-busy`, and sr-only text; spinners inside labeled buttons use `aria-hidden` on the spinner
+- Skip link: [`SkipToContent`](../src/components/skip-to-content.tsx) targets `#main-content` on [`PageContainer`](../src/components/layout/page-container.tsx)
+- Landmarks: label footer nav groups and back-navigation `<nav>` elements; native `<header>` / `<footer>` rely on visible branding
+- Live regions: browse result summary uses `aria-live="polite"` on [`pasco-browse-page.tsx`](../src/components/pasco-browse-page.tsx)
+- Mobile browse: filter panel collapses below `lg` behind a toggle with `aria-expanded` / `aria-controls`
+- Destructive confirms: use `AlertDialogAction` (not a plain `Button`) for correct focus semantics
 
 ---
 
@@ -223,7 +228,7 @@ Always use `formatEnumLabel` from [catalog-labels.ts](../src/lib/catalog-labels.
 | **4** | Homepage: hero, search UI, recent/popular sections                        | Done    |
 | **5** | Browse page with URL filters                                              | Done    |
 | **6** | Align existing pasco pages to new shell                                   | Done    |
-| **7** | A11y polish, docs update                                                  | Planned |
+| **7** | A11y polish, docs update                                                  | Done    |
 
 ---
 

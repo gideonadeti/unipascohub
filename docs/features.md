@@ -123,7 +123,7 @@ See [frontend.md](frontend.md) for component structure and planned UI work.
 These are the main gaps before a student-facing product launch:
 
 - **Enriched pasco display** — course code/title on list cards when not filtered by course
-- **Navigation polish** — logo, breadcrumbs, mobile layout
+- **Navigation polish** — full breadcrumbs (institution → program → course)
 - **Admin dashboard UI** — orphan cleanup and failure inspection in the browser
 - **Automated tests** — no test suite yet
 - **Seed data** — no `prisma db seed` script

@@ -15,7 +15,7 @@ Current UI structure, conventions, and planned work.
 | 4     | Homepage                                                | Done    |
 | 5     | Browse with URL filters                                 | Done    |
 | 6     | Pasco page shell alignment                              | Done    |
-| 7     | A11y polish, docs update                                | Planned |
+| 7     | A11y polish, docs update                                | Done    |
 
 See [frontend-standards.md](frontend-standards.md) for full conventions.
 
@@ -41,6 +41,7 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 | Component       | File                                                                             | Purpose                              |
 | --------------- | -------------------------------------------------------------------------------- | ------------------------------------ |
 | `SiteHeader`    | [`site-header.tsx`](../src/components/site-header.tsx)                           | Brand link, theme toggle, Clerk auth |
+| `SkipToContent` | [`skip-to-content.tsx`](../src/components/skip-to-content.tsx)                   | Skip link to main content landmark   |
 | `SiteFooter`    | [`site-footer.tsx`](../src/components/site-footer.tsx)                           | Nav groups, credits, social links    |
 | `ThemeToggle`   | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx)                         | Light / dark / system picker         |
 | `ScrollToTop`   | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx)                       | Fixed scroll-to-top button           |
@@ -144,14 +145,14 @@ Zod schemas with react-hook-form:
 - `cn()` utility: [`src/lib/utils.ts`](../src/lib/utils.ts)
 - Toast notifications via Sonner
 
-## Known gaps (next UI phase)
+## Known gaps (post-launch)
 
-These are the main frontend items not yet built:
+These items remain after the frontend roadmap (Phases 0–7):
 
 1. **Enriched display** — show course code/title on list cards when not filtered by course
-2. **Navigation** — full breadcrumbs (institution → program → course); back links on pasco pages are done
+2. **Navigation** — full breadcrumbs (institution → program → course)
 3. **Admin dashboard** — UI for orphan cleanup and storage failure inspection
-4. **Responsive polish** — mobile header polish, additional empty states
+4. **Automated a11y tests** — no Lighthouse CI or axe suite yet
 
 See [features.md](features.md) for the full implemented vs planned breakdown.
 
