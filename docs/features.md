@@ -1,0 +1,130 @@
+# Features
+
+Retrospective of what has been built, organized by user-facing capability. Cross-links point to implementation files.
+
+## Auth and users
+
+| Capability                                       | Status | Key files                                                                                                                                                                                      |
+| ------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign in / sign up via Clerk                      | Done   | [`src/app/layout.tsx`](../src/app/layout.tsx)                                                                                                                                                  |
+| User sync to PostgreSQL (webhook)                | Done   | [`src/app/api/webhooks/route.ts`](../src/app/api/webhooks/route.ts), [`src/lib/user-sync.ts`](../src/lib/user-sync.ts)                                                                         |
+| SSR user sync fallback                           | Done   | [`src/components/ensure-user-synced.tsx`](../src/components/ensure-user-synced.tsx)                                                                                                            |
+| Current user profile (`GET/PATCH /api/users/me`) | Done   | [`src/app/api/users/me/route.ts`](../src/app/api/users/me/route.ts)                                                                                                                            |
+| Self-upgrade to contributor                      | Done   | [`src/app/api/users/upgrade-to-contributor/route.ts`](../src/app/api/users/upgrade-to-contributor/route.ts), [`src/components/pasco-create-gate.tsx`](../src/components/pasco-create-gate.tsx) |
+| Admin promote to moderator                       | Done   | [`src/app/api/users/[userId]/promote-to-moderator/route.ts`](../src/app/api/users/[userId]/promote-to-moderator/route.ts)                                                                      |
+
+## Academic catalog
+
+| Capability                                               | Status        | Key files                                                   |
+| -------------------------------------------------------- | ------------- | ----------------------------------------------------------- |
+| List institutions                                        | Done          | [`src/lib/institutions.ts`](../src/lib/institutions.ts)     |
+| CRUD institutions (admin)                                | Done          | [`src/app/api/institutions/`](../src/app/api/institutions/) |
+| List programs (filter by institution)                    | Done          | [`src/lib/programs.ts`](../src/lib/programs.ts)             |
+| CRUD programs (admin)                                    | Done          | [`src/app/api/programs/`](../src/app/api/programs/)         |
+| List courses (filter by institution/program)             | Done          | [`src/lib/courses.ts`](../src/lib/courses.ts)               |
+| CRUD courses (admin)                                     | Done          | [`src/app/api/courses/`](../src/app/api/courses/)           |
+| Program label disambiguation (same name, different type) | Done          | [`src/lib/catalog-labels.ts`](../src/lib/catalog-labels.ts) |
+| Seed data script                                         | **Not built** | —                                                           |
+
+Catalog mutations require `ADMIN` role. Reads are public.
+
+## Pasco lifecycle
+
+| Capability                              | Status | Key files                                                                                                                      |
+| --------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Create pasco (multi-file)               | Done   | [`src/components/pasco-create-form.tsx`](../src/components/pasco-create-form.tsx), [`src/lib/pascos.ts`](../src/lib/pascos.ts) |
+| List pascos (filters, pagination, sort) | Done   | [`src/lib/pascos.ts`](../src/lib/pascos.ts), [`src/app/api/pascos/route.ts`](../src/app/api/pascos/route.ts)                   |
+| Get pasco detail                        | Done   | [`src/app/api/pascos/[pascoId]/route.ts`](../src/app/api/pascos/[pascoId]/route.ts)                                            |
+| Edit pasco                              | Done   | [`src/components/pasco-edit-form.tsx`](../src/components/pasco-edit-form.tsx)                                                  |
+| Delete pasco                            | Done   | [`src/components/pasco-delete-dialog.tsx`](../src/components/pasco-delete-dialog.tsx)                                          |
+| Academic year validation (`YYYY/YYYY`)  | Done   | [`src/lib/academic-year.ts`](../src/lib/academic-year.ts)                                                                      |
+| Incomplete upload flag (`isComplete`)   | Done   | Prisma `Pasco.isComplete`                                                                                                      |
+
+### List filters
+
+`courseId`, `educationLevel`, `academicYear`, `semesterType`, `type`, `contentType`, `isComplete`, `page`, `limit`, `sortBy`, `sortOrder`.
+
+### Sort fields
+
+`createdAt`, `updatedAt`, `academicYear`, `likeCount`, `dislikeCount`, `downloadCount`, `viewCount`.
+
+## File handling
+
+| Capability                     | Status | Key files                                                                                                                                                      |
+| ------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cloudinary widget upload       | Done   | [`src/components/pasco-cloudinary-upload.tsx`](../src/components/pasco-cloudinary-upload.tsx)                                                                  |
+| Upload signing                 | Done   | [`src/app/api/cloudinary/sign/route.ts`](../src/app/api/cloudinary/sign/route.ts)                                                                              |
+| Content hash computation       | Done   | [`src/app/api/pascos/files/compute-hash/route.ts`](../src/app/api/pascos/files/compute-hash/route.ts), [`src/lib/content-hash.ts`](../src/lib/content-hash.ts) |
+| Duplicate file detection       | Done   | [`src/app/api/pascos/files/check-duplicates/route.ts`](../src/app/api/pascos/files/check-duplicates/route.ts)                                                  |
+| In-app PDF viewer              | Done   | [`src/components/pasco-embed-pdf-viewer.tsx`](../src/components/pasco-embed-pdf-viewer.tsx)                                                                    |
+| In-app image viewer            | Done   | [`src/components/pasco-file-view.tsx`](../src/components/pasco-file-view.tsx)                                                                                  |
+| Signed file download           | Done   | [`src/components/pasco-file-download.tsx`](../src/components/pasco-file-download.tsx)                                                                          |
+| Allowed file types enforcement | Done   | [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts)                                                                                                |
+
+See [file-uploads.md](file-uploads.md) for the end-to-end upload pipeline.
+
+## Engagement
+
+| Capability                                 | Status | Key files                                                                                                                                                |
+| ------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Like / dislike (toggle)                    | Done   | [`src/components/pasco-engagement-bar.tsx`](../src/components/pasco-engagement-bar.tsx), [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts) |
+| View counting (deduped per viewer)         | Done   | [`src/app/api/pascos/[pascoId]/view/route.ts`](../src/app/api/pascos/[pascoId]/view/route.ts)                                                            |
+| Download counting                          | Done   | [`src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts`](../src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts)                      |
+| Viewer reaction on list/detail (signed-in) | Done   | [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts)                                                                                          |
+
+## Permissions
+
+| Role          | Capabilities                                                    |
+| ------------- | --------------------------------------------------------------- |
+| `NORMAL_USER` | Browse, react, download (signed-in), view files                 |
+| `CONTRIBUTOR` | Upload/create pascos; edit/delete own pascos                    |
+| `MODERATOR`   | Edit/delete any pasco                                           |
+| `ADMIN`       | Catalog CRUD, promote moderators, orphan cleanup, storage admin |
+
+Server gates: [`src/lib/require-contributor.ts`](../src/lib/require-contributor.ts), [`src/lib/require-admin.ts`](../src/lib/require-admin.ts).
+
+Client gates: [`src/components/pasco-create-gate.tsx`](../src/components/pasco-create-gate.tsx), [`src/components/pasco-edit-gate.tsx`](../src/components/pasco-edit-gate.tsx).
+
+See [authentication.md](authentication.md) for the full matrix.
+
+## Admin and operations
+
+| Capability                      | Status        | Key files                                                                                                           |
+| ------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Orphan Cloudinary cleanup (API) | Done          | [`src/app/api/admin/cloudinary/cleanup-orphans/route.ts`](../src/app/api/admin/cloudinary/cleanup-orphans/route.ts) |
+| Orphan cleanup CLI              | Done          | [`scripts/cleanup-cloudinary-orphans.ts`](../scripts/cleanup-cloudinary-orphans.ts)                                 |
+| Storage cleanup run logs        | Done          | [`src/app/api/admin/storage-cleanup/runs/route.ts`](../src/app/api/admin/storage-cleanup/runs/route.ts)             |
+| Storage cleanup failure logs    | Done          | [`src/app/api/admin/storage-cleanup/failures/route.ts`](../src/app/api/admin/storage-cleanup/failures/route.ts)     |
+| Admin dashboard UI              | **Not built** | —                                                                                                                   |
+
+See [operations.md](operations.md) for maintenance workflows.
+
+## Frontend (current state)
+
+| Page                  | Path                     | Status                                                                                    |
+| --------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
+| Home (API smoke test) | `/`                      | Placeholder — [`src/components/api-smoke-test.tsx`](../src/components/api-smoke-test.tsx) |
+| Create pasco          | `/pascos/new`            | Functional                                                                                |
+| Pasco detail          | `/pascos/[pascoId]`      | Functional (shows `courseId`, not course name)                                            |
+| Edit pasco            | `/pascos/[pascoId]/edit` | Functional                                                                                |
+
+Infrastructure in place: TanStack Query, shadcn/ui components, toast notifications, basic header with auth.
+
+See [frontend.md](frontend.md) for component structure and planned UI work.
+
+## Not yet built
+
+These are the main gaps before a student-facing product launch:
+
+- **Browse / discovery UI** — filtered pasco list, catalog navigation (institution → program → course)
+- **Production homepage** — landing page, recent/popular pascos
+- **Enriched pasco display** — course code/title on cards and detail (API currently returns `courseId` only)
+- **Navigation polish** — logo, breadcrumbs, mobile layout
+- **Admin dashboard UI** — orphan cleanup and failure inspection in the browser
+- **Automated tests** — no test suite yet
+- **Seed data** — no `prisma db seed` script
+- **Text search** — list API supports filters only, not free-text search
+
+## When you ship a feature, update this doc
+
+Add a row to the relevant table and move items from "Not yet built" when complete. Also update [CHANGELOG.md](../CHANGELOG.md).
