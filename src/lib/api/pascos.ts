@@ -4,6 +4,8 @@ import type {
   PascoCreateInput,
   PascoCreateResponse,
   PascoDetailResponse,
+  PascoFileDuplicate,
+  PascoFileDuplicateCheckResponse,
   PascoListFilters,
   PascoListResponse,
 } from "@/types/api/pascos";
@@ -24,6 +26,21 @@ export function getPasco(id: string) {
 export function createPasco(input: PascoCreateInput) {
   return apiClient
     .post<PascoCreateResponse>("/api/pascos", input)
+    .then((response) => response.data);
+}
+
+export function checkPascoFileDuplicates(
+  courseId: string,
+  contentHashes: string[],
+) {
+  return apiClient
+    .post<PascoFileDuplicateCheckResponse>(
+      "/api/pascos/files/check-duplicates",
+      {
+        courseId,
+        contentHashes,
+      },
+    )
     .then((response) => response.data);
 }
 

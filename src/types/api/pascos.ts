@@ -99,6 +99,24 @@ export type PascoFileCreateInput = {
   fileSize: number;
   fileUrl: string;
   resourceType: CloudinaryResourceType;
+  contentHash: string;
+};
+
+export type PascoFileDuplicate = {
+  contentHash: string;
+  fileName: string;
+  pascoId: string;
+};
+
+export type PascoFileDuplicateCheckResponse = {
+  duplicates: PascoFileDuplicate[];
+  message?: string;
+};
+
+export type PascoCreateDuplicateErrorResponse = {
+  error: "duplicate_file_content";
+  message: string;
+  duplicates: PascoFileDuplicate[];
 };
 
 export type PascoCreateInput = {

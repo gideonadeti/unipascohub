@@ -2,6 +2,7 @@
 
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { PascoCloudinaryUpload } from "@/components/pasco-cloudinary-upload";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -45,6 +46,10 @@ import { coursesListOptions } from "@/lib/api/courses";
 import { institutionsListOptions } from "@/lib/api/institutions";
 import { programsListOptions } from "@/lib/api/programs";
 import { formatEnumLabel } from "@/lib/catalog-labels";
+import {
+  getPascoCreateErrorMessage,
+  getPascoFileDuplicatesFromError,
+} from "@/lib/pasco-duplicate-error";
 import {
   EDUCATION_LEVELS,
   PASCO_CONTENT_TYPES,
@@ -94,6 +99,9 @@ export function PascoCreateForm() {
 
   const createPasco = useSubmitPascoCreate();
   const isSubmitting = createPasco.isPending || createPasco.isSuccess;
+  const submitDuplicates = createPasco.error
+    ? getPascoFileDuplicatesFromError(createPasco.error)
+    : null;
 
   async function onSubmit(values: PascoCreateFormValues) {
     await createPasco.submit(values);
@@ -535,7 +543,19 @@ export function PascoCreateForm() {
             {createPasco.error && (
               <Alert variant="destructive">
                 <AlertTitle>Could not add pasco</AlertTitle>
-                <AlertDescription>{createPasco.error.message}</AlertDescription>
+                <AlertDescription>
+                  {getPascoCreateErrorMessage(createPasco.error)}
+                  {submitDuplicates?.map((duplicate) => (
+                    <span key={duplicate.contentHash} className="mt-2 block">
+                      <Link
+                        href={`/pascos/${duplicate.pascoId}`}
+                        className="font-medium underline underline-offset-3"
+                      >
+                        View existing pasco ({duplicate.fileName})
+                      </Link>
+                    </span>
+                  ))}
+                </AlertDescription>
               </Alert>
             )}
           </fieldset>

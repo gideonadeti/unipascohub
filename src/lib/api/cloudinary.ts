@@ -47,7 +47,9 @@ function fromCloudinaryApiResourceType(
   return value === "raw" ? "RAW" : "IMAGE";
 }
 
-function resolveUploadedFileName(info: CloudinaryWidgetUploadInfo): string {
+export function resolveUploadedFileName(
+  info: CloudinaryWidgetUploadInfo,
+): string {
   const baseName =
     info.display_name ??
     info.original_filename ??
@@ -159,6 +161,7 @@ export function extractWidgetSignParams(
 export function cloudinaryUploadInfoToPascoFile(
   info: CloudinaryWidgetUploadInfo,
   order: number,
+  contentHash: string,
 ): PascoFileCreateInput {
   const fileName = resolveUploadedFileName(info);
 
@@ -175,5 +178,6 @@ export function cloudinaryUploadInfoToPascoFile(
     fileSize: info.bytes,
     fileUrl: info.secure_url,
     resourceType: fromCloudinaryApiResourceType(info.resource_type),
+    contentHash,
   };
 }

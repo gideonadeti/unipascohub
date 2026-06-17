@@ -6,6 +6,12 @@ import {
   verifyCloudinaryFile,
 } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
+import {
+  findDuplicatePascoFiles,
+  isValidContentHash,
+  normalizeContentHash,
+  type PascoFileDuplicate,
+} from "@/lib/pasco-file-hash";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import {
@@ -70,6 +76,8 @@ export type PascoCreateInput = {
   isComplete?: boolean;
 };
 
+export type { PascoFileDuplicate } from "@/lib/pasco-file-hash";
+
 export type PascoFileCreateInput = {
   order: number;
   publicId: string;
@@ -77,6 +85,7 @@ export type PascoFileCreateInput = {
   fileSize: number;
   fileUrl: string;
   resourceType: CloudinaryResourceTypeType;
+  contentHash: string;
 };
 
 export type PascoFileExistingSyncInput = {
@@ -151,6 +160,8 @@ type PascoCreateParseError =
   | "invalid_solution_completeness"
   | "invalid_solution_completeness_for_content_type"
   | "duplicate_order_in_files"
+  | "duplicate_content_hash_in_files"
+  | "invalid_content_hash"
   | "too_many_files"
   | "file_size_exceeded";
 
@@ -173,6 +184,8 @@ type PascoUpdateParseError =
   | "invalid_resource_type"
   | "invalid_pdf_resource_type"
   | "duplicate_order_in_files"
+  | "duplicate_content_hash_in_files"
+  | "invalid_content_hash"
   | "conflicting_file_update"
   | "invalid_file_id"
   | "duplicate_file_id_in_payload"
@@ -184,6 +197,7 @@ type PascoFileSyncError =
   | "unknown_file_id"
   | VerifyFileError
   | "duplicate_public_id"
+  | "duplicate_file_content"
   | "too_many_files";
 
 const pascoInclude = {
@@ -210,6 +224,67 @@ export function getPascoMaxFilesPerPasco(): number {
 
 export function getPascoMaxFileSizeBytes(): number {
   return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 10_485_760);
+}
+
+export function parsePascoFileDuplicateCheck(body: unknown):
+  | { success: true; data: { courseId: string; contentHashes: string[] } }
+  | {
+      success: false;
+      error:
+        | "invalid_body"
+        | "invalid_course_id"
+        | "invalid_content_hashes"
+        | "too_many_hashes";
+    } {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return { success: false, error: "invalid_body" };
+  }
+
+  const record = body as Record<string, unknown>;
+  const courseId = parseCourseId(record.courseId);
+
+  if (courseId === null) {
+    return { success: false, error: "invalid_course_id" };
+  }
+
+  if (
+    !Array.isArray(record.contentHashes) ||
+    record.contentHashes.length === 0
+  ) {
+    return { success: false, error: "invalid_content_hashes" };
+  }
+
+  if (record.contentHashes.length > getPascoMaxFilesPerPasco()) {
+    return { success: false, error: "too_many_hashes" };
+  }
+
+  const contentHashes: string[] = [];
+
+  for (const value of record.contentHashes) {
+    if (
+      typeof value !== "string" ||
+      !isValidContentHash(normalizeContentHash(value))
+    ) {
+      return { success: false, error: "invalid_content_hashes" };
+    }
+
+    contentHashes.push(normalizeContentHash(value));
+  }
+
+  return {
+    success: true,
+    data: {
+      courseId,
+      contentHashes: [...new Set(contentHashes)],
+    },
+  };
+}
+
+export async function checkPascoFileDuplicates(
+  contentHashes: string[],
+  excludePascoId?: string,
+): Promise<PascoFileDuplicate[]> {
+  return findExternalDuplicatePascoFiles(contentHashes, excludePascoId);
 }
 
 function isFileSizeWithinPolicy(fileSize: number): boolean {
@@ -391,6 +466,19 @@ function isPascoFileExistingSyncInput(
   return "id" in file;
 }
 
+async function findExternalDuplicatePascoFiles(
+  contentHashes: string[],
+  excludePascoId?: string,
+): Promise<PascoFileDuplicate[]> {
+  const duplicates = await findDuplicatePascoFiles(contentHashes);
+
+  if (excludePascoId === undefined) {
+    return duplicates;
+  }
+
+  return duplicates.filter((duplicate) => duplicate.pascoId !== excludePascoId);
+}
+
 function parsePascoFileCreate(value: unknown):
   | { success: true; data: PascoFileCreateInput }
   | {
@@ -403,7 +491,8 @@ function parsePascoFileCreate(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
-        | "file_size_exceeded";
+        | "file_size_exceeded"
+        | "invalid_content_hash";
     } {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return { success: false, error: "invalid_public_id" };
@@ -418,6 +507,7 @@ function parsePascoFileCreate(value: unknown):
     "fileSize",
     "fileUrl",
     "resourceType",
+    "contentHash",
   ] as const;
 
   if (!requiredFields.every((field) => field in record)) {
@@ -465,6 +555,13 @@ function parsePascoFileCreate(value: unknown):
     return { success: false, error: "invalid_pdf_resource_type" };
   }
 
+  if (
+    typeof record.contentHash !== "string" ||
+    !isValidContentHash(normalizeContentHash(record.contentHash))
+  ) {
+    return { success: false, error: "invalid_content_hash" };
+  }
+
   return {
     success: true,
     data: {
@@ -474,6 +571,7 @@ function parsePascoFileCreate(value: unknown):
       fileSize,
       fileUrl,
       resourceType: record.resourceType,
+      contentHash: normalizeContentHash(record.contentHash),
     },
   };
 }
@@ -492,6 +590,8 @@ function parsePascoFiles(value: unknown):
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
         | "duplicate_order_in_files"
+        | "duplicate_content_hash_in_files"
+        | "invalid_content_hash"
         | "too_many_files"
         | "file_size_exceeded";
     } {
@@ -505,6 +605,7 @@ function parsePascoFiles(value: unknown):
 
   const files: PascoFileCreateInput[] = [];
   const seenOrders = new Set<number>();
+  const seenContentHashes = new Set<string>();
 
   for (const file of value) {
     const parsed = parsePascoFileCreate(file);
@@ -517,7 +618,12 @@ function parsePascoFiles(value: unknown):
       return { success: false, error: "duplicate_order_in_files" };
     }
 
+    if (seenContentHashes.has(parsed.data.contentHash)) {
+      return { success: false, error: "duplicate_content_hash_in_files" };
+    }
+
     seenOrders.add(parsed.data.order);
+    seenContentHashes.add(parsed.data.contentHash);
     files.push(parsed.data);
   }
 
@@ -552,6 +658,7 @@ function parsePascoFileSync(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "invalid_content_hash"
         | "file_size_exceeded";
     } {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -607,6 +714,8 @@ function parsePascoFilesSync(value: unknown):
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
         | "duplicate_order_in_files"
+        | "duplicate_content_hash_in_files"
+        | "invalid_content_hash"
         | "duplicate_file_id_in_payload"
         | "too_many_files"
         | "file_size_exceeded";
@@ -622,6 +731,7 @@ function parsePascoFilesSync(value: unknown):
   const files: PascoFileSyncInput[] = [];
   const seenOrders = new Set<number>();
   const seenIds = new Set<string>();
+  const seenContentHashes = new Set<string>();
 
   for (const file of value) {
     const parsed = parsePascoFileSync(file);
@@ -642,6 +752,10 @@ function parsePascoFilesSync(value: unknown):
       }
 
       seenIds.add(parsed.data.id);
+    } else if (seenContentHashes.has(parsed.data.contentHash)) {
+      return { success: false, error: "duplicate_content_hash_in_files" };
+    } else {
+      seenContentHashes.add(parsed.data.contentHash);
     }
 
     files.push(parsed.data);
@@ -1097,6 +1211,7 @@ async function syncPascoFiles(
   | {
       success: false;
       error: PascoFileSyncError;
+      duplicates?: PascoFileDuplicate[];
     }
 > {
   const existingById = new Map(existing.files.map((file) => [file.id, file]));
@@ -1118,6 +1233,28 @@ async function syncPascoFiles(
 
   if (inputFiles.length > getPascoMaxFilesPerPasco()) {
     return { success: false, error: "too_many_files" };
+  }
+
+  const duplicateContentHashes = new Set<string>();
+  for (const file of toAdd) {
+    if (duplicateContentHashes.has(file.contentHash)) {
+      return { success: false, error: "duplicate_file_content" };
+    }
+
+    duplicateContentHashes.add(file.contentHash);
+  }
+
+  const externalDuplicates = await findExternalDuplicatePascoFiles(
+    toAdd.map((file) => file.contentHash),
+    pascoId,
+  );
+
+  if (externalDuplicates.length > 0) {
+    return {
+      success: false,
+      error: "duplicate_file_content",
+      duplicates: externalDuplicates,
+    };
   }
 
   const keptIds = new Set(toKeep.map((file) => file.id));
@@ -1180,6 +1317,7 @@ async function syncPascoFiles(
             fileSize: file.fileSize,
             fileUrl: file.fileUrl,
             resourceType: file.resourceType,
+            contentHash: file.contentHash,
           })),
         });
       }
@@ -1286,7 +1424,12 @@ export async function createPasco(
   | { success: true; pasco: PascoWithFiles }
   | {
       success: false;
-      error: "course_not_found" | "duplicate_public_id" | VerifyFileError;
+      error:
+        | "course_not_found"
+        | "duplicate_public_id"
+        | "duplicate_file_content"
+        | VerifyFileError;
+      duplicates?: PascoFileDuplicate[];
     }
 > {
   const course = await prisma.course.findUnique({
@@ -1295,6 +1438,18 @@ export async function createPasco(
 
   if (!course) {
     return { success: false, error: "course_not_found" };
+  }
+
+  const externalDuplicates = await findExternalDuplicatePascoFiles(
+    input.files.map((file) => file.contentHash),
+  );
+
+  if (externalDuplicates.length > 0) {
+    return {
+      success: false,
+      error: "duplicate_file_content",
+      duplicates: externalDuplicates,
+    };
   }
 
   const expectedAssetFolder = `pascos/${input.courseId}`;
@@ -1337,6 +1492,7 @@ export async function createPasco(
             fileSize: file.fileSize,
             fileUrl: file.fileUrl,
             resourceType: file.resourceType,
+            contentHash: file.contentHash,
           })),
         },
       },
@@ -1364,6 +1520,7 @@ export async function updatePasco(
         | "not_found"
         | "invalid_solution_completeness_for_content_type"
         | PascoFileSyncError;
+      duplicates?: PascoFileDuplicate[];
     }
 > {
   const existing = await prisma.pasco.findUnique({
@@ -1424,7 +1581,13 @@ export async function updatePasco(
     const syncResult = await syncPascoFiles(pascoId, existing, input.files);
 
     if (!syncResult.success) {
-      return { success: false, error: syncResult.error };
+      return {
+        success: false,
+        error: syncResult.error,
+        ...(syncResult.duplicates !== undefined && {
+          duplicates: syncResult.duplicates,
+        }),
+      };
     }
 
     return {

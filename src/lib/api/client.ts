@@ -4,6 +4,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly data?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
@@ -13,13 +14,16 @@ export class ApiError extends Error {
 function toApiError(error: unknown): ApiError {
   if (isAxiosError(error)) {
     if (error.response) {
-      const data = error.response.data as { error?: string } | undefined;
+      const data = error.response.data;
       const message =
-        typeof data?.error === "string"
+        typeof data === "object" &&
+        data !== null &&
+        "error" in data &&
+        typeof data.error === "string"
           ? data.error
           : error.response.statusText;
 
-      return new ApiError(message, error.response.status);
+      return new ApiError(message, error.response.status, data);
     }
 
     if (error.code === "ECONNABORTED") {

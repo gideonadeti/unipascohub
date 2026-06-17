@@ -191,6 +191,13 @@ export async function PATCH(
           },
           { status: 400 },
         );
+      case "invalid_content_hash":
+        return Response.json({ error: "Invalid contentHash" }, { status: 400 });
+      case "duplicate_content_hash_in_files":
+        return Response.json(
+          { error: "Duplicate contentHash values in files" },
+          { status: 400 },
+        );
     }
   }
 
@@ -224,6 +231,15 @@ export async function PATCH(
         case "duplicate_public_id":
           return Response.json(
             { error: "A pasco file with this publicId already exists" },
+            { status: 409 },
+          );
+        case "duplicate_file_content":
+          return Response.json(
+            {
+              error: "duplicate_file_content",
+              message: "This exact file already exists.",
+              duplicates: result.duplicates ?? [],
+            },
             { status: 409 },
           );
         case "asset_not_found":

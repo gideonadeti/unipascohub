@@ -3,6 +3,7 @@ import {
   ACADEMIC_YEAR_OPTIONS,
   academicYearValidationMessage,
 } from "@/lib/academic-year";
+import { CONTENT_HASH_REGEX } from "@/lib/pasco-file-hash";
 import { getPascoFileTooLargeMessage } from "@/lib/pasco-file-types";
 import type {
   CloudinaryResourceType,
@@ -65,6 +66,7 @@ export const pascoFileCreateSchema = z.object({
     ),
   fileUrl: z.string().min(1).max(2000),
   resourceType: z.enum(CLOUDINARY_RESOURCE_TYPES),
+  contentHash: z.string().regex(CONTENT_HASH_REGEX, "Invalid file fingerprint"),
 });
 
 export const pascoCreateFormSchema = z
@@ -121,6 +123,15 @@ export const pascoCreateFormSchema = z
       ctx.addIssue({
         code: "custom",
         message: "File orders must be unique",
+        path: ["files"],
+      });
+    }
+
+    const contentHashes = data.files.map((file) => file.contentHash);
+    if (new Set(contentHashes).size !== contentHashes.length) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Duplicate files detected in this upload",
         path: ["files"],
       });
     }
