@@ -7,14 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { PascoCloudinaryUpload } from "@/components/pasco-cloudinary-upload";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Combobox,
@@ -108,15 +101,8 @@ export function PascoCreateForm() {
   }
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Add pasco</CardTitle>
-        <CardDescription>
-          Add exam papers for a course. Files are uploaded to Cloudinary before
-          submission.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className="w-full">
+      <CardContent className="pt-6">
         <form
           id="pasco-create-form"
           className="space-y-6"

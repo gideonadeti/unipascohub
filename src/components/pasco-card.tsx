@@ -4,12 +4,15 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatEnumLabel } from "@/lib/catalog-labels";
+import { getPascoDisplayTitle, pascoOverviewBadges } from "@/lib/pasco-display";
 import { cn } from "@/lib/utils";
+import type { Course } from "@/types/api/catalog";
 import type { Pasco } from "@/types/api/pascos";
 
 type PascoCardProps = {
   pasco: Pasco;
   title?: string;
+  course?: Pick<Course, "code" | "title"> | null;
   className?: string;
 };
 
@@ -17,16 +20,8 @@ function formatCount(count: number): string {
   return count.toLocaleString();
 }
 
-export function PascoCard({ pasco, title, className }: PascoCardProps) {
-  const displayTitle =
-    title ?? `${pasco.academicYear} · ${formatEnumLabel(pasco.educationLevel)}`;
-
-  const badges = [
-    pasco.type,
-    pasco.educationLevel,
-    pasco.semesterType,
-    pasco.contentType,
-  ] as const;
+export function PascoCard({ pasco, title, course, className }: PascoCardProps) {
+  const displayTitle = title ?? getPascoDisplayTitle(pasco, course);
 
   return (
     <Link
@@ -39,9 +34,9 @@ export function PascoCard({ pasco, title, className }: PascoCardProps) {
             {displayTitle}
           </CardTitle>
           <div className="flex flex-wrap gap-1.5">
-            {badges.map((value) => (
-              <Badge key={value} variant="secondary">
-                {formatEnumLabel(value)}
+            {pascoOverviewBadges.map((key) => (
+              <Badge key={key} variant="secondary">
+                {formatEnumLabel(pasco[key])}
               </Badge>
             ))}
           </div>

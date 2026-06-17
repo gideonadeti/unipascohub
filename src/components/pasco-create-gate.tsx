@@ -42,7 +42,7 @@ export function PascoCreateGate({ children }: PascoCreateGateProps) {
 
   if (isSignedIn !== true) {
     return (
-      <Card className="mx-auto w-full max-w-lg">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Sign in required</CardTitle>
           <CardDescription>
@@ -80,7 +80,7 @@ export function PascoCreateGate({ children }: PascoCreateGateProps) {
 
   if (!role || !CONTRIBUTOR_ROLES.has(role)) {
     return (
-      <Card className="mx-auto w-full max-w-lg">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Contributor access required</CardTitle>
           <CardDescription>

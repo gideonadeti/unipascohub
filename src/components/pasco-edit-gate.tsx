@@ -28,7 +28,7 @@ export function PascoEditGate({ pascoId, children }: PascoEditGateProps) {
 
   if (isSignedIn !== true) {
     return (
-      <Card className="mx-auto w-full max-w-lg">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Sign in required</CardTitle>
           <CardDescription>
@@ -76,7 +76,7 @@ export function PascoEditGate({ pascoId, children }: PascoEditGateProps) {
 
   if (!user || !canUserModifyPasco(user, pasco)) {
     return (
-      <Card className="mx-auto w-full max-w-lg">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Not allowed</CardTitle>
           <CardDescription>

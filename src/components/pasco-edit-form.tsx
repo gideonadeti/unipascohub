@@ -7,16 +7,10 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { PascoCloudinaryUpload } from "@/components/pasco-cloudinary-upload";
+import { PascoDetailSkeleton } from "@/components/pasco-detail-skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Combobox,
@@ -115,12 +109,7 @@ export function PascoEditForm({ pascoId }: PascoEditFormProps) {
   });
 
   if (pascoQuery.isPending || (pasco && courseQuery.isPending)) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Spinner />
-        Loading pasco…
-      </div>
-    );
+    return <PascoDetailSkeleton />;
   }
 
   if (pascoQuery.error || !pasco) {
@@ -149,12 +138,7 @@ export function PascoEditForm({ pascoId }: PascoEditFormProps) {
     !programs.data ||
     !courses.data
   ) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Spinner />
-        Loading course details…
-      </div>
-    );
+    return <PascoDetailSkeleton />;
   }
 
   return (
@@ -276,14 +260,8 @@ function PascoEditFormFields({
   }
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Edit pasco</CardTitle>
-        <CardDescription>
-          Update metadata or manage files for this pasco.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className="w-full">
+      <CardContent className="pt-6">
         <form
           id="pasco-edit-form"
           className="space-y-6"
