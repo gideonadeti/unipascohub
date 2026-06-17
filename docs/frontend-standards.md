@@ -216,9 +216,9 @@ Always use `formatEnumLabel` from [catalog-labels.ts](../src/lib/catalog-labels.
 
 | Phase | Deliverables                                                              | Status  |
 | ----- | ------------------------------------------------------------------------- | ------- |
-| **0** | Standards doc, `site.ts`, Motion, shadcn `empty`/`skeleton`, env docs     | Current |
-| **1** | ThemeProvider, `SiteHeader`, `SiteFooter`, favicon, remove purple Sign Up | Next    |
-| **2** | `PageContainer`, `PascoCard`, skeletons, `formatEnumLabel` fix            | Planned |
+| **0** | Standards doc, `site.ts`, Motion, shadcn `empty`/`skeleton`, env docs     | Done    |
+| **1** | ThemeProvider, `SiteHeader`, `SiteFooter`, favicon, remove purple Sign Up | Done    |
+| **2** | `PageContainer`, `PascoCard`, skeletons, `formatEnumLabel` fix            | Next    |
 | **3** | Stub pages: contributors, sponsors, privacy, terms, feedback              | Planned |
 | **4** | Homepage: hero, search UI, recent/popular sections                        | Planned |
 | **5** | Browse page with URL filters                                              | Planned |

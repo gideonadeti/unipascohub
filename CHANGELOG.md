@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Frontend standards doc, site config module, Motion, shadcn `empty`/`skeleton`
+- App shell: `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme toggle (system/light/dark)
+- Dynamic favicon (`src/app/icon.tsx`) and metadata from site config
+
 ### Planned
 
 - Browse/discovery UI for pascos

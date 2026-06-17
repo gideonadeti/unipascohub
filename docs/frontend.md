@@ -9,7 +9,7 @@ Current UI structure, conventions, and planned work.
 | Phase | Focus                                                   | Status  |
 | ----- | ------------------------------------------------------- | ------- |
 | 0     | Standards, `site.ts`, Motion, shadcn `empty`/`skeleton` | Done    |
-| 1     | Theme, header, footer, favicon                          | Next    |
+| 1     | Theme, header, footer, favicon                          | Done    |
 | 2     | Shared primitives, `PascoCard`, skeletons               | Planned |
 | 3     | Stub pages (contributors, legal, feedback)              | Planned |
 | 4     | Homepage                                                | Planned |
@@ -27,7 +27,17 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 | `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | Pasco detail                                                             |
 | `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | Edit form behind permission gate                                         |
 
-Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — Clerk provider, header with "Add pasco" link (signed-in), auth buttons, toast container.
+Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
+
+### Shell components
+
+| Component | File | Purpose |
+| --------- | ---- | ------- |
+| `SiteHeader` | [`site-header.tsx`](../src/components/site-header.tsx) | Brand link, theme toggle, Clerk auth |
+| `SiteFooter` | [`site-footer.tsx`](../src/components/site-footer.tsx) | Nav groups, credits, social links |
+| `ThemeToggle` | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx) | Light / dark / system picker |
+| `ScrollToTop` | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx) | Fixed scroll-to-top button |
+| `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper |
 
 ## Component layers
 
