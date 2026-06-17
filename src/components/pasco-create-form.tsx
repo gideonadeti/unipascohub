@@ -93,6 +93,7 @@ export function PascoCreateForm() {
   });
 
   const createPasco = useSubmitPascoCreate();
+  const isSubmitting = createPasco.isPending || createPasco.isSuccess;
 
   async function onSubmit(values: PascoCreateFormValues) {
     await createPasco.submit(values);
@@ -113,336 +114,308 @@ export function PascoCreateForm() {
           className="space-y-6"
           onSubmit={form.handleSubmit(onSubmit)}
         >
-          <FieldGroup>
-            <Controller
-              name="institutionId"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-institution">
-                    Institution
-                  </FieldLabel>
-                  <Select
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      form.setValue("programId", "");
-                      form.setValue("courseId", "");
-                    }}
-                  >
-                    <SelectTrigger
-                      id="pasco-institution"
-                      className="w-full"
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <SelectValue placeholder="Select institution" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {institutions.data?.institutions.map((institution) => (
-                        <SelectItem key={institution.id} value={institution.id}>
-                          {institution.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="programId"
-              control={form.control}
-              render={({ field, fieldState }) => {
-                const programItems = programs.data?.programs ?? [];
-                const selectedProgram =
-                  programItems.find((program) => program.id === field.value) ??
-                  null;
-
-                return (
+          <fieldset
+            disabled={isSubmitting}
+            className="space-y-6 border-0 p-0 m-0 min-w-0"
+          >
+            <FieldGroup>
+              <Controller
+                name="institutionId"
+                control={form.control}
+                render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="pasco-program">Program</FieldLabel>
-                    <Combobox
-                      items={programItems}
-                      value={selectedProgram}
-                      onValueChange={(program) => {
-                        field.onChange(program?.id ?? "");
+                    <FieldLabel htmlFor="pasco-institution">
+                      Institution
+                    </FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue("programId", "");
                         form.setValue("courseId", "");
                       }}
-                      itemToStringLabel={(program) => program.label}
-                      itemToStringValue={(program) => program.label}
-                      isItemEqualToValue={(a: Program, b: Program) =>
-                        a.id === b.id
-                      }
                     >
-                      <ComboboxInput
-                        id="pasco-program"
+                      <SelectTrigger
+                        id="pasco-institution"
                         className="w-full"
-                        placeholder={
-                          institutionId
-                            ? "Search programs..."
-                            : "Select institution first"
-                        }
-                        disabled={!institutionId}
                         aria-invalid={fieldState.invalid}
-                      />
-                      <ComboboxContent>
-                        <ComboboxEmpty>No programs found.</ComboboxEmpty>
-                        <ComboboxList>
-                          {(program) => (
-                            <ComboboxItem key={program.id} value={program}>
-                              <span className="line-clamp-2 text-left">
-                                {program.label}
-                              </span>
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
+                      >
+                        <SelectValue placeholder="Select institution" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {institutions.data?.institutions.map((institution) => (
+                          <SelectItem
+                            key={institution.id}
+                            value={institution.id}
+                          >
+                            {institution.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
                   </Field>
-                );
-              }}
-            />
+                )}
+              />
 
-            <Controller
-              name="courseId"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-course">Course</FieldLabel>
-                  <Select
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={!programId}
-                  >
-                    <SelectTrigger
-                      id="pasco-course"
-                      className="w-full"
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <SelectValue placeholder="Select course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {courses.data?.courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.code} — {course.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="academicYear"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-academic-year">
-                    Academic year
-                  </FieldLabel>
-                  <Select
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger
-                      id="pasco-academic-year"
-                      className="w-full"
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <SelectValue placeholder="Select academic year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ACADEMIC_YEAR_OPTIONS.map((year) => (
-                        <SelectItem key={year} value={year}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="educationLevel"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-education-level">
-                    Education level
-                  </FieldLabel>
-                  <Select
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger
-                      id="pasco-education-level"
-                      className="w-full"
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EDUCATION_LEVELS.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {formatEnumLabel(level)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="semesterType"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-semester">Semester</FieldLabel>
-                  <Select
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger
-                      id="pasco-semester"
-                      className="w-full"
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SEMESTER_TYPES.map((semester) => (
-                        <SelectItem key={semester} value={semester}>
-                          {formatEnumLabel(semester)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="type"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-type">Exam type</FieldLabel>
-                  <Select
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger
-                      id="pasco-type"
-                      className="w-full"
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PASCO_TYPES.map((pascoType) => (
-                        <SelectItem key={pascoType} value={pascoType}>
-                          {formatEnumLabel(pascoType)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="contentType"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-content-type">
-                    Content type
-                  </FieldLabel>
-                  <Select
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      if (value === "QUESTIONS_ONLY") {
-                        form.setValue("solutionCompleteness", null);
-                      }
-                    }}
-                  >
-                    <SelectTrigger
-                      id="pasco-content-type"
-                      className="w-full"
-                      aria-invalid={fieldState.invalid}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PASCO_CONTENT_TYPES.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {formatEnumLabel(item)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            {contentType !== "QUESTIONS_ONLY" && (
               <Controller
-                name="solutionCompleteness"
+                name="programId"
+                control={form.control}
+                render={({ field, fieldState }) => {
+                  const programItems = programs.data?.programs ?? [];
+                  const selectedProgram =
+                    programItems.find(
+                      (program) => program.id === field.value,
+                    ) ?? null;
+
+                  return (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="pasco-program">Program</FieldLabel>
+                      <Combobox
+                        items={programItems}
+                        value={selectedProgram}
+                        onValueChange={(program) => {
+                          field.onChange(program?.id ?? "");
+                          form.setValue("courseId", "");
+                        }}
+                        itemToStringLabel={(program) => program.label}
+                        itemToStringValue={(program) => program.label}
+                        isItemEqualToValue={(a: Program, b: Program) =>
+                          a.id === b.id
+                        }
+                      >
+                        <ComboboxInput
+                          id="pasco-program"
+                          className="w-full"
+                          placeholder={
+                            institutionId
+                              ? "Search programs..."
+                              : "Select institution first"
+                          }
+                          disabled={!institutionId}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No programs found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(program) => (
+                              <ComboboxItem key={program.id} value={program}>
+                                <span className="line-clamp-2 text-left">
+                                  {program.label}
+                                </span>
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  );
+                }}
+              />
+
+              <Controller
+                name="courseId"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="pasco-solution-completeness">
-                      Solution completeness
-                    </FieldLabel>
+                    <FieldLabel htmlFor="pasco-course">Course</FieldLabel>
                     <Select
                       name={field.name}
-                      value={field.value ?? undefined}
+                      value={field.value}
                       onValueChange={field.onChange}
+                      disabled={!programId}
                     >
                       <SelectTrigger
-                        id="pasco-solution-completeness"
+                        id="pasco-course"
                         className="w-full"
                         aria-invalid={fieldState.invalid}
                       >
-                        <SelectValue placeholder="Select completeness" />
+                        <SelectValue placeholder="Select course" />
                       </SelectTrigger>
                       <SelectContent>
-                        {SOLUTION_COMPLETENESS_VALUES.map((item) => (
+                        {courses.data?.courses.map((course) => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.code} — {course.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="academicYear"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="pasco-academic-year">
+                      Academic year
+                    </FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="pasco-academic-year"
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue placeholder="Select academic year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ACADEMIC_YEAR_OPTIONS.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="educationLevel"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="pasco-education-level">
+                      Education level
+                    </FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="pasco-education-level"
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EDUCATION_LEVELS.map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {formatEnumLabel(level)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="semesterType"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="pasco-semester">Semester</FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="pasco-semester"
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SEMESTER_TYPES.map((semester) => (
+                          <SelectItem key={semester} value={semester}>
+                            {formatEnumLabel(semester)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="type"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="pasco-type">Exam type</FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="pasco-type"
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PASCO_TYPES.map((pascoType) => (
+                          <SelectItem key={pascoType} value={pascoType}>
+                            {formatEnumLabel(pascoType)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="contentType"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="pasco-content-type">
+                      Content type
+                    </FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        if (value === "QUESTIONS_ONLY") {
+                          form.setValue("solutionCompleteness", null);
+                        }
+                      }}
+                    >
+                      <SelectTrigger
+                        id="pasco-content-type"
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PASCO_CONTENT_TYPES.map((item) => (
                           <SelectItem key={item} value={item}>
                             {formatEnumLabel(item)}
                           </SelectItem>
@@ -455,95 +428,133 @@ export function PascoCreateForm() {
                   </Field>
                 )}
               />
-            )}
 
-            <Controller
-              name="description"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="pasco-description">
-                    Description (optional)
-                  </FieldLabel>
-                  <Textarea
-                    {...field}
-                    id="pasco-description"
-                    rows={4}
-                    aria-invalid={fieldState.invalid}
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
+              {contentType !== "QUESTIONS_ONLY" && (
+                <Controller
+                  name="solutionCompleteness"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="pasco-solution-completeness">
+                        Solution completeness
+                      </FieldLabel>
+                      <Select
+                        name={field.name}
+                        value={field.value ?? undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger
+                          id="pasco-solution-completeness"
+                          className="w-full"
+                          aria-invalid={fieldState.invalid}
+                        >
+                          <SelectValue placeholder="Select completeness" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SOLUTION_COMPLETENESS_VALUES.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {formatEnumLabel(item)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
-                </Field>
+                />
               )}
-            />
 
-            <Controller
-              name="isComplete"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field
-                  orientation="horizontal"
-                  data-invalid={fieldState.invalid}
-                >
-                  <Checkbox
-                    id="pasco-is-complete"
-                    checked={field.value}
-                    onCheckedChange={(checked) =>
-                      field.onChange(checked === true)
-                    }
-                    aria-invalid={fieldState.invalid}
-                  />
-                  <FieldLabel
-                    htmlFor="pasco-is-complete"
-                    className="font-normal"
+              <Controller
+                name="description"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="pasco-description">
+                      Description (optional)
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      id="pasco-description"
+                      rows={4}
+                      aria-invalid={fieldState.invalid}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="isComplete"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field
+                    orientation="horizontal"
+                    data-invalid={fieldState.invalid}
                   >
-                    This upload is complete (all pages included)
-                  </FieldLabel>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
+                    <Checkbox
+                      id="pasco-is-complete"
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                      aria-invalid={fieldState.invalid}
+                    />
+                    <FieldLabel
+                      htmlFor="pasco-is-complete"
+                      className="font-normal"
+                    >
+                      This upload is complete (all pages included)
+                    </FieldLabel>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <Separator />
+
+            <PascoCloudinaryUpload
+              courseId={courseId}
+              files={files}
+              filesError={form.formState.errors.files}
+              disabled={isSubmitting}
+              onFilesChange={(nextFiles) => {
+                form.setValue("files", nextFiles, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+              }}
             />
-          </FieldGroup>
 
-          <Separator />
-
-          <PascoCloudinaryUpload
-            courseId={courseId}
-            files={files}
-            filesError={form.formState.errors.files}
-            disabled={createPasco.isPending}
-            onFilesChange={(nextFiles) => {
-              form.setValue("files", nextFiles, {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
-            }}
-          />
-
-          {createPasco.error && (
-            <Alert variant="destructive">
-              <AlertTitle>Could not create pasco</AlertTitle>
-              <AlertDescription>{createPasco.error.message}</AlertDescription>
-            </Alert>
-          )}
+            {createPasco.error && (
+              <Alert variant="destructive">
+                <AlertTitle>Could not add pasco</AlertTitle>
+                <AlertDescription>{createPasco.error.message}</AlertDescription>
+              </Alert>
+            )}
+          </fieldset>
         </form>
       </CardContent>
       <CardFooter>
-        <Button
-          type="submit"
-          form="pasco-create-form"
-          disabled={createPasco.isPending}
-        >
-          {createPasco.isPending ? (
+        <Button type="submit" form="pasco-create-form" disabled={isSubmitting}>
+          {createPasco.isSuccess ? (
             <>
               <Spinner />
-              Creating…
+              Redirecting…
+            </>
+          ) : createPasco.isPending ? (
+            <>
+              <Spinner />
+              Adding…
             </>
           ) : (
-            "Create pasco"
+            "Add pasco"
           )}
         </Button>
       </CardFooter>

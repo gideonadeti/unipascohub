@@ -146,11 +146,42 @@ export function PascoCloudinaryUpload({
   const filesRef = useRef(files);
   const courseIdRef = useRef(courseId);
   const preBatchFileNamesRef = useRef<string[]>([]);
+  const isOpeningRef = useRef(false);
+  const openingFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const [isScriptReady, setIsScriptReady] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
+  const [isWidgetOpen, setIsWidgetOpen] = useState(false);
 
   filesRef.current = files;
   courseIdRef.current = courseId;
+
+  const clearOpeningFallbackTimer = useCallback(() => {
+    if (openingFallbackTimerRef.current !== null) {
+      clearTimeout(openingFallbackTimerRef.current);
+      openingFallbackTimerRef.current = null;
+    }
+  }, []);
+
+  const finishOpening = useCallback(() => {
+    clearOpeningFallbackTimer();
+    isOpeningRef.current = false;
+    setIsOpening(false);
+  }, [clearOpeningFallbackTimer]);
+
+  const startOpeningFallbackTimer = useCallback(() => {
+    clearOpeningFallbackTimer();
+    openingFallbackTimerRef.current = setTimeout(() => {
+      finishOpening();
+    }, 15_000);
+  }, [clearOpeningFallbackTimer, finishOpening]);
+
+  useEffect(() => {
+    return () => {
+      clearOpeningFallbackTimer();
+    };
+  }, [clearOpeningFallbackTimer]);
 
   useEffect(() => {
     let cancelled = false;
@@ -181,11 +212,33 @@ export function PascoCloudinaryUpload({
   const handleWidgetResult = useCallback(
     (error: unknown, result: CloudinaryWidgetResult) => {
       if (error) {
+        finishOpening();
+        setIsWidgetOpen(false);
         showUploadError(extractCloudinaryWidgetErrorMessage(error));
         return;
       }
 
-      if (result.event === "success" && result.info) {
+      if (result.event === "display-changed") {
+        if (result.info === "shown") {
+          finishOpening();
+          setIsWidgetOpen(true);
+        } else if (result.info === "hidden") {
+          setIsWidgetOpen(false);
+        }
+        return;
+      }
+
+      if (result.event === "close" || result.event === "abort") {
+        finishOpening();
+        setIsWidgetOpen(false);
+        return;
+      }
+
+      if (
+        result.event === "success" &&
+        result.info &&
+        typeof result.info === "object"
+      ) {
         try {
           const currentFiles = filesRef.current;
           const nextOrder =
@@ -209,10 +262,14 @@ export function PascoCloudinaryUpload({
         }
       }
     },
-    [onFilesChange],
+    [finishOpening, onFilesChange],
   );
 
   const openUploadWidget = useCallback(async () => {
+    if (isOpeningRef.current || isWidgetOpen) {
+      return;
+    }
+
     if (!courseId) {
       showUploadError("Select a course before uploading files.");
       return;
@@ -230,6 +287,7 @@ export function PascoCloudinaryUpload({
       return;
     }
 
+    isOpeningRef.current = true;
     setIsOpening(true);
 
     try {
@@ -359,20 +417,28 @@ export function PascoCloudinaryUpload({
 
       widgetRef.current = widget;
       widget.open();
+      startOpeningFallbackTimer();
     } catch (error) {
+      finishOpening();
       const message =
         error instanceof Error ? error.message : "Could not open upload widget";
       showUploadError(message);
-    } finally {
-      setIsOpening(false);
     }
-  }, [courseId, handleWidgetResult, isScriptReady]);
+  }, [
+    courseId,
+    finishOpening,
+    handleWidgetResult,
+    isScriptReady,
+    isWidgetOpen,
+    startOpeningFallbackTimer,
+  ]);
+
+  const uploadDisabled =
+    disabled || !courseId || isOpening || isWidgetOpen || !isScriptReady;
 
   function removeFile(order: number) {
     onFilesChange(files.filter((file) => file.order !== order));
   }
-
-  const uploadDisabled = disabled || !courseId || isOpening || !isScriptReady;
 
   return (
     <Field data-invalid={!!filesError}>

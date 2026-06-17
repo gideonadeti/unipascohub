@@ -10,7 +10,7 @@ export type CloudinaryWidgetUploadInfo = {
 
 export type CloudinaryWidgetResult = {
   event: string;
-  info?: CloudinaryWidgetUploadInfo;
+  info?: CloudinaryWidgetUploadInfo | string;
 };
 
 export type CloudinaryPrepareUploadParams = {
