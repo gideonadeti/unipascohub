@@ -1,17 +1,15 @@
-import {
-  ClerkProvider,
-  Show,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 
 import { EnsureUserSynced } from "@/components/ensure-user-synced";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { ScrollToTop } from "@/components/scroll-to-top";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { Toaster } from "@/components/ui/sonner";
+import { siteDescription, siteName } from "@/config/site";
 
 import "./globals.css";
 
@@ -26,8 +24,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Uni Pasco Hub",
-  description: "A hub to share pasco and better prepare for exams",
+  title: {
+    default: siteName,
+    template: `%s | ${siteName}`,
+  },
+  description: siteDescription,
 };
 
 export default function RootLayout({
@@ -39,40 +40,20 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <ClerkProvider>
-          <QueryProvider>
-            <EnsureUserSynced />
-            <header className="flex items-center justify-between gap-4 p-4 h-16">
-              <Show when="signed-in">
-                <Link
-                  href="/pascos/new"
-                  className="text-sm font-medium hover:underline"
-                >
-                  Add pasco
-                </Link>
-              </Show>
-              <div className="ml-auto flex items-center gap-4">
-                <Show when="signed-out">
-                  <SignInButton />
-                  <SignUpButton>
-                    <button
-                      type="button"
-                      className="bg-purple-700 text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer"
-                    >
-                      Sign Up
-                    </button>
-                  </SignUpButton>
-                </Show>
-                <Show when="signed-in">
-                  <UserButton />
-                </Show>
-              </div>
-            </header>
-            {children}
-            <Toaster richColors closeButton position="top-center" />
-          </QueryProvider>
+          <ThemeProvider>
+            <QueryProvider>
+              <EnsureUserSynced />
+              <SiteHeader />
+              <div className="flex flex-1 flex-col">{children}</div>
+              <SiteFooter />
+              <ScrollToTop />
+              <Toaster richColors closeButton position="top-center" />
+            </QueryProvider>
+          </ThemeProvider>
         </ClerkProvider>
       </body>
     </html>
