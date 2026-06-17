@@ -23,8 +23,8 @@ import {
   signCloudinaryUpload,
 } from "@/lib/api/cloudinary";
 import { checkPascoFileDuplicates } from "@/lib/api/pascos";
+import { formatDuplicateFileMessage } from "@/lib/content-hash";
 import { asHashableFile, hashFile } from "@/lib/file-hash";
-import { formatDuplicateFileMessage } from "@/lib/pasco-file-hash";
 import {
   extractCloudinaryWidgetErrorMessage,
   getPascoFileTooLargeMessage,

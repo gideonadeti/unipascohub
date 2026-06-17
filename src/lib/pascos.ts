@@ -5,13 +5,10 @@ import {
   validatePdfResourceType,
   verifyCloudinaryFile,
 } from "@/lib/cloudinary";
+import { isValidContentHash, normalizeContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
-import {
-  findDuplicatePascoFiles,
-  isValidContentHash,
-  normalizeContentHash,
-  type PascoFileDuplicate,
-} from "@/lib/pasco-file-hash";
+import { findDuplicatePascoFiles } from "@/lib/pasco-file-hash";
+import type { PascoFileDuplicate } from "@/types/api/pascos";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import {
@@ -76,7 +73,7 @@ export type PascoCreateInput = {
   isComplete?: boolean;
 };
 
-export type { PascoFileDuplicate } from "@/lib/pasco-file-hash";
+export type { PascoFileDuplicate } from "@/types/api/pascos";
 
 export type PascoFileCreateInput = {
   order: number;

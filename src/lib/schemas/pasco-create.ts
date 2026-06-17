@@ -3,7 +3,7 @@ import {
   ACADEMIC_YEAR_OPTIONS,
   academicYearValidationMessage,
 } from "@/lib/academic-year";
-import { CONTENT_HASH_REGEX } from "@/lib/pasco-file-hash";
+import { CONTENT_HASH_REGEX } from "@/lib/content-hash";
 import { getPascoFileTooLargeMessage } from "@/lib/pasco-file-types";
 import type {
   CloudinaryResourceType,
