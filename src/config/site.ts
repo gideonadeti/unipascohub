@@ -69,9 +69,9 @@ export const footerNav: FooterNavGroup[] = [
   {
     title: "Community",
     links: [
-      { label: "Feedback", href: "/feedback" },
-      { label: "Report an issue", href: "/feedback" },
-      { label: "Testimonials", href: "/feedback" },
+      { label: "Feedback", href: "/feedback#feedback" },
+      { label: "Report an issue", href: "/feedback#report" },
+      { label: "Testimonials", href: "/feedback#testimonials" },
     ],
   },
 ];
