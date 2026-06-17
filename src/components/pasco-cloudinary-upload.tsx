@@ -66,6 +66,7 @@ type PascoCloudinaryUploadProps = {
   files: PascoFileCreateInput[];
   filesError?: { message?: string };
   disabled?: boolean;
+  maxFiles?: number;
   onFilesChange: (files: PascoFileCreateInput[]) => void;
 };
 
@@ -161,6 +162,7 @@ export function PascoCloudinaryUpload({
   files,
   filesError,
   disabled = false,
+  maxFiles = PASCO_MAX_FILES,
   onFilesChange,
 }: PascoCloudinaryUploadProps) {
   const widgetRef = useRef<CloudinaryUploadWidget | null>(null);
@@ -356,10 +358,10 @@ export function PascoCloudinaryUpload({
       return;
     }
 
-    const remainingSlots = PASCO_MAX_FILES - filesRef.current.length;
+    const remainingSlots = maxFiles - filesRef.current.length;
 
     if (remainingSlots <= 0) {
-      showUploadError(`You can upload up to ${PASCO_MAX_FILES} files.`);
+      showUploadError(`You can upload up to ${maxFiles} files.`);
       return;
     }
 
@@ -518,6 +520,7 @@ export function PascoCloudinaryUpload({
     handleWidgetResult,
     isScriptReady,
     isWidgetOpen,
+    maxFiles,
     startOpeningFallbackTimer,
   ]);
 
@@ -532,7 +535,7 @@ export function PascoCloudinaryUpload({
     <Field data-invalid={!!filesError}>
       <FieldLabel>Files</FieldLabel>
       <FieldDescription>
-        {PASCO_UPLOAD_ACCEPT_DESCRIPTION} Max {PASCO_MAX_FILES} files,{" "}
+        {PASCO_UPLOAD_ACCEPT_DESCRIPTION} Max {maxFiles} files,{" "}
         {Math.floor(PASCO_MAX_FILE_SIZE_BYTES / 1_048_576)} MB each. Select a
         course first.
       </FieldDescription>

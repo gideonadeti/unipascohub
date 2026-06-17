@@ -148,3 +148,30 @@ export type PascoCreateInput = {
 export type PascoCreateResponse = {
   pasco: Pasco;
 };
+
+export type PascoFileExistingSyncInput = {
+  id: string;
+  order: number;
+};
+
+export type PascoFileSyncInput =
+  | PascoFileCreateInput
+  | PascoFileExistingSyncInput;
+
+export type PascoUpdateInput = {
+  courseId?: string;
+  academicYear?: string;
+  description?: string | null;
+  educationLevel?: EducationLevel;
+  semesterType?: SemesterType;
+  type?: PascoType;
+  contentType?: PascoContentType;
+  solutionCompleteness?: SolutionCompleteness | null;
+  isComplete?: boolean;
+  files?: PascoFileSyncInput[];
+};
+
+export type PascoUpdateResponse = {
+  pasco: Pasco;
+  storageCleanupFailures?: string[];
+};

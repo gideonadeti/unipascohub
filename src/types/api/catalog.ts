@@ -51,6 +51,10 @@ export type Course = {
   updatedAt: string;
 };
 
+export type CourseDetail = Course & {
+  programIds: string[];
+};
+
 export type CourseListFilters = {
   institutionId?: string;
   programId?: string;
@@ -61,5 +65,5 @@ export type CourseListResponse = {
 };
 
 export type CourseDetailResponse = {
-  course: Course;
+  course: CourseDetail;
 };

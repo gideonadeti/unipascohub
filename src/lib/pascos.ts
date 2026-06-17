@@ -95,6 +95,7 @@ export type PascoFileSyncInput =
   | PascoFileExistingSyncInput;
 
 export type PascoUpdateInput = {
+  courseId?: string;
   academicYear?: string;
   description?: string | null;
   educationLevel?: EducationLevelType;
@@ -164,6 +165,7 @@ type PascoCreateParseError =
 
 type PascoUpdateParseError =
   | "invalid_body"
+  | "invalid_course_id"
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
@@ -1004,6 +1006,17 @@ export function parsePascoUpdate(
   const data: PascoUpdateInput = {};
   let hasUpdate = false;
 
+  if ("courseId" in record) {
+    hasUpdate = true;
+
+    const courseId = parseCourseId(record.courseId);
+    if (courseId === null) {
+      return { success: false, error: "invalid_course_id" };
+    }
+
+    data.courseId = courseId;
+  }
+
   if ("academicYear" in record) {
     hasUpdate = true;
 
@@ -1203,6 +1216,7 @@ async function syncPascoFiles(
   pascoId: string,
   existing: PascoWithFiles,
   inputFiles: PascoFileSyncInput[],
+  courseId: string,
 ): Promise<
   | { success: true; pasco: PascoWithFiles; storageCleanupFailures?: string[] }
   | {
@@ -1261,7 +1275,7 @@ async function syncPascoFiles(
     resourceType: file.resourceType,
   }));
 
-  const expectedAssetFolder = `pascos/${existing.courseId}`;
+  const expectedAssetFolder = `pascos/${courseId}`;
   const verificationResults = await Promise.all(
     toAdd.map((file) =>
       verifyCloudinaryFile({
@@ -1515,6 +1529,7 @@ export async function updatePasco(
       success: false;
       error:
         | "not_found"
+        | "course_not_found"
         | "invalid_solution_completeness_for_content_type"
         | PascoFileSyncError;
       duplicates?: PascoFileDuplicate[];
@@ -1536,7 +1551,20 @@ export async function updatePasco(
     };
   }
 
+  const effectiveCourseId = input.courseId ?? existing.courseId;
+
+  if (input.courseId !== undefined) {
+    const course = await prisma.course.findUnique({
+      where: { id: input.courseId },
+    });
+
+    if (!course) {
+      return { success: false, error: "course_not_found" };
+    }
+  }
+
   const hasMetadataUpdate =
+    input.courseId !== undefined ||
     input.academicYear !== undefined ||
     input.description !== undefined ||
     input.educationLevel !== undefined ||
@@ -1550,6 +1578,7 @@ export async function updatePasco(
     await prisma.pasco.update({
       where: { id: pascoId },
       data: {
+        ...(input.courseId !== undefined && { courseId: input.courseId }),
         ...(input.academicYear !== undefined && {
           academicYear: input.academicYear,
         }),
@@ -1575,7 +1604,12 @@ export async function updatePasco(
   }
 
   if (input.files !== undefined) {
-    const syncResult = await syncPascoFiles(pascoId, existing, input.files);
+    const syncResult = await syncPascoFiles(
+      pascoId,
+      existing,
+      input.files,
+      effectiveCourseId,
+    );
 
     if (!syncResult.success) {
       return {

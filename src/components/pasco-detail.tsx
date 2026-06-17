@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,7 +13,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { usePasco } from "@/hooks/api/use-pascos";
+import { canUserModifyPasco } from "@/lib/pasco-permissions";
 
 function formatLabel(value: string) {
   return value
@@ -24,6 +28,7 @@ export function PascoDetail() {
   const params = useParams<{ pascoId: string }>();
   const pascoId = params.pascoId ?? "";
   const pascoQuery = usePasco(pascoId);
+  const currentUser = useCurrentUser();
 
   if (pascoQuery.isPending) {
     return (
@@ -44,12 +49,21 @@ export function PascoDetail() {
   }
 
   const pasco = pascoQuery.data.pasco;
+  const canEdit =
+    currentUser.data?.user && canUserModifyPasco(currentUser.data.user, pasco);
 
   return (
     <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Pasco details</CardTitle>
-        <CardDescription>ID: {pasco.id}</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div>
+          <CardTitle>Pasco details</CardTitle>
+          <CardDescription>ID: {pasco.id}</CardDescription>
+        </div>
+        {canEdit && (
+          <Button type="button" variant="outline" size="sm" asChild>
+            <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         <dl className="grid gap-3 text-sm sm:grid-cols-2">

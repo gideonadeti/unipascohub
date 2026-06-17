@@ -7,13 +7,22 @@ import {
   createPasco,
   pascoDetailOptions,
   pascosListOptions,
+  updatePasco,
 } from "@/lib/api/pascos";
 import { queryKeys } from "@/lib/api/query-keys";
 import {
   type PascoCreateFormValues,
   toPascoCreateInput,
 } from "@/lib/schemas/pasco-create";
-import type { PascoCreateInput, PascoListFilters } from "@/types/api/pascos";
+import {
+  type PascoEditFormValues,
+  toPascoUpdateInput,
+} from "@/lib/schemas/pasco-update";
+import type {
+  PascoCreateInput,
+  PascoListFilters,
+  PascoUpdateInput,
+} from "@/types/api/pascos";
 
 export function usePascosList(filters: PascoListFilters = {}) {
   return useQuery(pascosListOptions(filters));
@@ -46,5 +55,31 @@ export function useSubmitPascoCreate() {
     ...createPascoMutation,
     submit: (values: PascoCreateFormValues) =>
       createPascoMutation.mutateAsync(toPascoCreateInput(values)),
+  };
+}
+
+export function useUpdatePasco(pascoId: string) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (input: PascoUpdateInput) => updatePasco(pascoId, input),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.pascos.all });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.pascos.detail(pascoId),
+      });
+      router.push(`/pascos/${data.pasco.id}`);
+    },
+  });
+}
+
+export function useSubmitPascoEdit(pascoId: string) {
+  const updatePascoMutation = useUpdatePasco(pascoId);
+
+  return {
+    ...updatePascoMutation,
+    submit: (values: PascoEditFormValues) =>
+      updatePascoMutation.mutateAsync(toPascoUpdateInput(values)),
   };
 }

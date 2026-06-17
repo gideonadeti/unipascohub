@@ -9,6 +9,8 @@ import type {
   PascoFileDuplicateCheckResponse,
   PascoListFilters,
   PascoListResponse,
+  PascoUpdateInput,
+  PascoUpdateResponse,
 } from "@/types/api/pascos";
 
 import { apiClient, apiFetch } from "./client";
@@ -27,6 +29,12 @@ export function getPasco(id: string) {
 export function createPasco(input: PascoCreateInput) {
   return apiClient
     .post<PascoCreateResponse>("/api/pascos", input)
+    .then((response) => response.data);
+}
+
+export function updatePasco(id: string, input: PascoUpdateInput) {
+  return apiClient
+    .patch<PascoUpdateResponse>(`/api/pascos/${id}`, input)
     .then((response) => response.data);
 }
 

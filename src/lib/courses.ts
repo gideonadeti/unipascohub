@@ -213,6 +213,17 @@ export function serializeCourse(course: Course) {
   };
 }
 
+type CourseWithPrograms = Course & {
+  programs: { id: string }[];
+};
+
+export function serializeCourseDetail(course: CourseWithPrograms) {
+  return {
+    ...serializeCourse(course),
+    programIds: course.programs.map((program) => program.id),
+  };
+}
+
 function isDuplicateCodeError(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -274,6 +285,29 @@ export async function getCourseById(
   { success: true; course: Course } | { success: false; error: CourseError }
 > {
   const course = await prisma.course.findUnique({ where: { id: courseId } });
+
+  if (!course) {
+    return { success: false, error: "not_found" };
+  }
+
+  return { success: true, course };
+}
+
+export async function getCourseDetailById(
+  courseId: string,
+): Promise<
+  | { success: true; course: CourseWithPrograms }
+  | { success: false; error: CourseError }
+> {
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: {
+      programs: {
+        select: { id: true },
+        orderBy: [{ name: "asc" }, { type: "asc" }],
+      },
+    },
+  });
 
   if (!course) {
     return { success: false, error: "not_found" };

@@ -95,10 +95,12 @@ export async function PATCH(
         return Response.json(
           {
             error:
-              "Request must include at least one of: academicYear, description, educationLevel, semesterType, type, contentType, solutionCompleteness, isComplete, files",
+              "Request must include at least one of: courseId, academicYear, description, educationLevel, semesterType, type, contentType, solutionCompleteness, isComplete, files",
           },
           { status: 400 },
         );
+      case "invalid_course_id":
+        return Response.json({ error: "Invalid courseId" }, { status: 400 });
       case "invalid_academic_year":
         return Response.json(
           { error: "Invalid academicYear (expected format YYYY/YYYY)" },
@@ -208,6 +210,8 @@ export async function PATCH(
       switch (result.error) {
         case "not_found":
           return Response.json({ error: "Pasco not found" }, { status: 404 });
+        case "course_not_found":
+          return Response.json({ error: "Course not found" }, { status: 400 });
         case "invalid_solution_completeness_for_content_type":
           return Response.json(
             {

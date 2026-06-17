@@ -20,7 +20,10 @@ export function getPascoFileDuplicatesFromError(
   return data.duplicates;
 }
 
-export function getPascoCreateErrorMessage(error: unknown): string {
+export function getPascoMutationErrorMessage(
+  error: unknown,
+  action: "create" | "update",
+): string {
   if (error instanceof ApiError) {
     const data = error.data as { message?: string } | undefined;
 
@@ -35,5 +38,14 @@ export function getPascoCreateErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return "Could not add pasco";
+  return action === "create" ? "Could not add pasco" : "Could not update pasco";
+}
+
+/** @deprecated Use getPascoMutationErrorMessage(error, "create") */
+export function getPascoCreateErrorMessage(error: unknown): string {
+  return getPascoMutationErrorMessage(error, "create");
+}
+
+export function getPascoUpdateErrorMessage(error: unknown): string {
+  return getPascoMutationErrorMessage(error, "update");
 }

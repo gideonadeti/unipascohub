@@ -2,9 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 
 import {
   deleteCourse,
-  getCourseById,
+  getCourseDetailById,
   parseCourseUpdate,
   serializeCourse,
+  serializeCourseDetail,
   updateCourse,
 } from "@/lib/courses";
 import { requireAdmin } from "@/lib/require-admin";
@@ -18,14 +19,14 @@ export async function GET(
   const { courseId } = await params;
 
   try {
-    const result = await getCourseById(courseId);
+    const result = await getCourseDetailById(courseId);
 
     if (!result.success) {
       return Response.json({ error: "Course not found" }, { status: 404 });
     }
 
     return Response.json({
-      course: serializeCourse(result.course),
+      course: serializeCourseDetail(result.course),
     });
   } catch (err) {
     console.error("Course fetch failed:", err);
