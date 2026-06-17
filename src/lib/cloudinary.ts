@@ -522,6 +522,89 @@ export async function verifyCloudinaryFile(
   return { success: true };
 }
 
+export type SignedCloudinaryDownloadUrlInput = {
+  publicId: string;
+  fileName: string;
+  resourceType: CloudinaryResourceTypeType;
+};
+
+export type SignedCloudinaryDownloadUrlError =
+  | "asset_not_found"
+  | "missing_config"
+  | "signed_url_failed";
+
+function getPascoDownloadUrlTtlSeconds(): number {
+  const raw = process.env.PASCO_DOWNLOAD_URL_TTL_SECONDS;
+  const parsed = raw ? Number.parseInt(raw, 10) : 300;
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 300;
+}
+
+function buildSignedDownloadUrl(
+  asset: CloudinaryResourceResponse,
+  publicId: string,
+  fileName: string,
+  apiResourceType: "image" | "raw",
+): string {
+  const downloadFormat = resolveAssetDownloadFormat(asset, fileName);
+  const deliveryType = asset.type ?? "upload";
+
+  return cloudinary.utils.private_download_url(publicId, downloadFormat, {
+    resource_type: apiResourceType,
+    type: deliveryType,
+    expires_at: Math.floor(Date.now() / 1000) + getPascoDownloadUrlTtlSeconds(),
+  });
+}
+
+export async function createSignedCloudinaryDownloadUrl(
+  input: SignedCloudinaryDownloadUrlInput,
+): Promise<
+  | { success: true; url: string }
+  | { success: false; error: SignedCloudinaryDownloadUrlError }
+> {
+  const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
+
+  let asset: CloudinaryResourceResponse;
+
+  try {
+    asset = (await cloudinary.api.resource(input.publicId, {
+      resource_type: apiResourceType,
+    })) as CloudinaryResourceResponse;
+  } catch (error) {
+    if (isCloudinaryNotFoundError(error)) {
+      return { success: false, error: "asset_not_found" };
+    }
+
+    throw error;
+  }
+
+  const apiSecret = cloudinary.config().api_secret;
+  const cloudName = cloudinary.config().cloud_name;
+
+  if (!apiSecret || !cloudName) {
+    return { success: false, error: "missing_config" };
+  }
+
+  try {
+    return {
+      success: true,
+      url: buildSignedDownloadUrl(
+        asset,
+        input.publicId,
+        input.fileName,
+        apiResourceType,
+      ),
+    };
+  } catch (error) {
+    console.error("Cloudinary signed download URL failed:", {
+      publicId: input.publicId,
+      error,
+    });
+
+    return { success: false, error: "signed_url_failed" };
+  }
+}
+
 export type HashCloudinaryFileError =
   | VerifyFileError
   | "missing_config"
@@ -592,16 +675,11 @@ export async function hashCloudinaryFile(
     return { success: false, error: "missing_config" };
   }
 
-  const downloadFormat = resolveAssetDownloadFormat(asset, input.fileName);
-  const deliveryType = asset.type ?? "upload";
-  const downloadUrl = cloudinary.utils.private_download_url(
+  const downloadUrl = buildSignedDownloadUrl(
+    asset,
     input.publicId,
-    downloadFormat,
-    {
-      resource_type: apiResourceType,
-      type: deliveryType,
-      expires_at: Math.floor(Date.now() / 1000) + 300,
-    },
+    input.fileName,
+    apiResourceType,
   );
 
   const response = await fetch(downloadUrl);

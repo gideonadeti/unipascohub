@@ -1,3 +1,4 @@
+import { createSignedCloudinaryDownloadUrl } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
 import {
   PascoReactionType,
@@ -13,7 +14,10 @@ type SetPascoReactionError = "pasco_not_found" | "user_not_found";
 type RecordPascoDownloadError =
   | "pasco_not_found"
   | "user_not_found"
-  | "file_not_found";
+  | "file_not_found"
+  | "asset_not_found"
+  | "missing_config"
+  | "signed_url_failed";
 
 type RecordPascoViewError = "pasco_not_found";
 
@@ -309,8 +313,9 @@ export async function recordPascoDownload(
       },
       select: {
         id: true,
-        fileUrl: true,
+        publicId: true,
         fileName: true,
+        resourceType: true,
       },
     }),
   ]);
@@ -347,10 +352,20 @@ export async function recordPascoDownload(
     });
   });
 
+  const signedUrlResult = await createSignedCloudinaryDownloadUrl({
+    publicId: file.publicId,
+    fileName: file.fileName,
+    resourceType: file.resourceType,
+  });
+
+  if (!signedUrlResult.success) {
+    return { success: false, error: signedUrlResult.error };
+  }
+
   return {
     success: true,
     downloadCount: updated.downloadCount,
-    fileUrl: file.fileUrl,
+    fileUrl: signedUrlResult.url,
     fileName: file.fileName,
   };
 }

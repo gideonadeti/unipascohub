@@ -29,6 +29,18 @@ export function getPascoEngagementErrorMessage(
       return "Too many requests. Please wait a moment and try again.";
     }
 
+    if (error.status === 500 && action === "download") {
+      const data = error.data as { error?: string } | undefined;
+
+      if (data?.error === "Cloudinary is not configured") {
+        return "Downloads are temporarily unavailable. Please try again later.";
+      }
+    }
+
+    if (error.status === 502 && action === "download") {
+      return "Could not prepare download. Please try again.";
+    }
+
     const data = error.data as { error?: string; message?: string } | undefined;
 
     if (typeof data?.message === "string" && data.message.length > 0) {

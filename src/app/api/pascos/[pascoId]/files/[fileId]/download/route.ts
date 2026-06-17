@@ -48,7 +48,18 @@ export async function POST(
         case "user_not_found":
           return Response.json({ error: "User not found" }, { status: 404 });
         case "file_not_found":
+        case "asset_not_found":
           return Response.json({ error: "File not found" }, { status: 404 });
+        case "missing_config":
+          return Response.json(
+            { error: "Cloudinary is not configured" },
+            { status: 500 },
+          );
+        case "signed_url_failed":
+          return Response.json(
+            { error: "Could not prepare download" },
+            { status: 502 },
+          );
       }
     }
 
