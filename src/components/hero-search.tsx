@@ -1,8 +1,8 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,14 +13,8 @@ const STATIC_PLACEHOLDER = "Search by course, level, year…";
 const TYPING_INTERVAL_MS = 80;
 const PAUSE_AFTER_WORD_MS = 2000;
 
-function scrollToDiscover(smooth: boolean) {
-  document.getElementById("discover")?.scrollIntoView({
-    behavior: smooth ? "smooth" : "auto",
-    block: "start",
-  });
-}
-
 export function HeroSearch() {
+  const router = useRouter();
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const [displayText, setDisplayText] = useState("");
@@ -78,10 +72,7 @@ export function HeroSearch() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    toast.info(
-      "Search is coming soon. Browse recent and popular pascos below.",
-    );
-    scrollToDiscover(!reducedMotion);
+    router.push("/pascos");
   };
 
   return (

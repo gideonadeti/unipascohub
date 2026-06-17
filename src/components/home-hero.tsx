@@ -9,13 +9,6 @@ import { heroCopy } from "@/config/site";
 import { typography } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
-function scrollToDiscover(smooth: boolean) {
-  document.getElementById("discover")?.scrollIntoView({
-    behavior: smooth ? "smooth" : "auto",
-    block: "start",
-  });
-}
-
 export function HomeHero() {
   const shouldReduceMotion = useReducedMotion();
 
@@ -44,12 +37,8 @@ export function HomeHero() {
         <HeroSearch />
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button
-            type="button"
-            className="h-11"
-            onClick={() => scrollToDiscover(!shouldReduceMotion)}
-          >
-            Browse pascos
+          <Button asChild className="h-11">
+            <Link href="/pascos">Browse pascos</Link>
           </Button>
           <Button variant="outline" asChild className="h-11">
             <Link href="/pascos/new">Upload pasco</Link>

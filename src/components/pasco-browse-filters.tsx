@@ -1,0 +1,421 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCourse } from "@/hooks/api/use-courses";
+import { ACADEMIC_YEAR_OPTIONS } from "@/lib/academic-year";
+import { coursesListOptions } from "@/lib/api/courses";
+import { institutionsListOptions } from "@/lib/api/institutions";
+import { programsListOptions } from "@/lib/api/programs";
+import { formatEnumLabel } from "@/lib/catalog-labels";
+import { BROWSE_DEFAULT_LIMIT } from "@/lib/pasco-list-query";
+import {
+  EDUCATION_LEVELS,
+  PASCO_CONTENT_TYPES,
+  PASCO_TYPES,
+  SEMESTER_TYPES,
+} from "@/lib/schemas/pasco-create";
+import type { Program } from "@/types/api/catalog";
+import type { PascoListFilters } from "@/types/api/pascos";
+
+const ANY_VALUE = "__any__";
+
+type PascoBrowseFiltersProps = {
+  appliedFilters: PascoListFilters;
+  onApply: (filters: PascoListFilters) => void;
+  onClear: () => void;
+};
+
+type DraftFilters = {
+  institutionId: string;
+  programId: string;
+  courseId: string;
+  academicYear: string;
+  educationLevel: string;
+  semesterType: string;
+  type: string;
+  contentType: string;
+  isComplete: string;
+};
+
+function filtersToDraft(filters: PascoListFilters): DraftFilters {
+  return {
+    institutionId: "",
+    programId: "",
+    courseId: filters.courseId ?? "",
+    academicYear: filters.academicYear ?? "",
+    educationLevel: filters.educationLevel ?? ANY_VALUE,
+    semesterType: filters.semesterType ?? ANY_VALUE,
+    type: filters.type ?? ANY_VALUE,
+    contentType: filters.contentType ?? ANY_VALUE,
+    isComplete:
+      filters.isComplete === undefined
+        ? ANY_VALUE
+        : filters.isComplete
+          ? "true"
+          : "false",
+  };
+}
+
+function draftToFilters(
+  draft: DraftFilters,
+  appliedFilters: PascoListFilters,
+): PascoListFilters {
+  return {
+    courseId: draft.courseId || undefined,
+    academicYear: draft.academicYear || undefined,
+    educationLevel:
+      draft.educationLevel === ANY_VALUE
+        ? undefined
+        : (draft.educationLevel as PascoListFilters["educationLevel"]),
+    semesterType:
+      draft.semesterType === ANY_VALUE
+        ? undefined
+        : (draft.semesterType as PascoListFilters["semesterType"]),
+    type:
+      draft.type === ANY_VALUE
+        ? undefined
+        : (draft.type as PascoListFilters["type"]),
+    contentType:
+      draft.contentType === ANY_VALUE
+        ? undefined
+        : (draft.contentType as PascoListFilters["contentType"]),
+    isComplete:
+      draft.isComplete === ANY_VALUE ? undefined : draft.isComplete === "true",
+    page: 1,
+    limit: appliedFilters.limit ?? BROWSE_DEFAULT_LIMIT,
+    sortBy: appliedFilters.sortBy,
+    sortOrder: appliedFilters.sortOrder,
+  };
+}
+
+export function PascoBrowseFilters({
+  appliedFilters,
+  onApply,
+  onClear,
+}: PascoBrowseFiltersProps) {
+  const [draft, setDraft] = useState<DraftFilters>(() =>
+    filtersToDraft(appliedFilters),
+  );
+
+  const courseIdFromUrl = appliedFilters.courseId ?? "";
+  const courseQuery = useCourse(courseIdFromUrl);
+
+  useEffect(() => {
+    setDraft(filtersToDraft(appliedFilters));
+  }, [appliedFilters]);
+
+  useEffect(() => {
+    const course = courseQuery.data?.course;
+    if (!course) {
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      institutionId: course.institutionId,
+      programId: course.programIds[0] ?? "",
+      courseId: course.id,
+    }));
+  }, [courseQuery.data?.course]);
+
+  const institutions = useQuery(institutionsListOptions());
+  const programs = useQuery({
+    ...programsListOptions({ institutionId: draft.institutionId }),
+    enabled: draft.institutionId.length > 0,
+  });
+  const courses = useQuery({
+    ...coursesListOptions({
+      institutionId: draft.institutionId,
+      programId: draft.programId,
+    }),
+    enabled: draft.institutionId.length > 0 && draft.programId.length > 0,
+  });
+
+  const programItems = programs.data?.programs ?? [];
+  const selectedProgram =
+    programItems.find((program) => program.id === draft.programId) ?? null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Filters</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Field>
+            <FieldLabel htmlFor="browse-institution">Institution</FieldLabel>
+            <Select
+              value={draft.institutionId || ANY_VALUE}
+              onValueChange={(value) => {
+                setDraft((current) => ({
+                  ...current,
+                  institutionId: value === ANY_VALUE ? "" : value,
+                  programId: "",
+                  courseId: "",
+                }));
+              }}
+            >
+              <SelectTrigger id="browse-institution" className="w-full">
+                <SelectValue placeholder="Any institution" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any institution</SelectItem>
+                {institutions.data?.institutions.map((institution) => (
+                  <SelectItem key={institution.id} value={institution.id}>
+                    {institution.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-program">Program</FieldLabel>
+            <Combobox
+              items={programItems}
+              value={selectedProgram}
+              onValueChange={(program) => {
+                setDraft((current) => ({
+                  ...current,
+                  programId: program?.id ?? "",
+                  courseId: "",
+                }));
+              }}
+              itemToStringLabel={(program) => program.label}
+              itemToStringValue={(program) => program.label}
+              isItemEqualToValue={(a: Program, b: Program) => a.id === b.id}
+            >
+              <ComboboxInput
+                id="browse-program"
+                className="w-full"
+                placeholder={
+                  draft.institutionId
+                    ? "Search programs..."
+                    : "Select institution first"
+                }
+                disabled={!draft.institutionId}
+              />
+              <ComboboxContent>
+                <ComboboxEmpty>No programs found.</ComboboxEmpty>
+                <ComboboxList>
+                  {(program) => (
+                    <ComboboxItem key={program.id} value={program}>
+                      <span className="line-clamp-2 text-left">
+                        {program.label}
+                      </span>
+                    </ComboboxItem>
+                  )}
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-course">Course</FieldLabel>
+            <Select
+              value={draft.courseId || ANY_VALUE}
+              onValueChange={(value) => {
+                setDraft((current) => ({
+                  ...current,
+                  courseId: value === ANY_VALUE ? "" : value,
+                }));
+              }}
+              disabled={!draft.programId}
+            >
+              <SelectTrigger id="browse-course" className="w-full">
+                <SelectValue placeholder="Any course" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any course</SelectItem>
+                {courses.data?.courses.map((course) => (
+                  <SelectItem key={course.id} value={course.id}>
+                    {course.code} — {course.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-academic-year">
+              Academic year
+            </FieldLabel>
+            <Select
+              value={draft.academicYear || ANY_VALUE}
+              onValueChange={(value) => {
+                setDraft((current) => ({
+                  ...current,
+                  academicYear: value === ANY_VALUE ? "" : value,
+                }));
+              }}
+            >
+              <SelectTrigger id="browse-academic-year" className="w-full">
+                <SelectValue placeholder="Any year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any year</SelectItem>
+                {ACADEMIC_YEAR_OPTIONS.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-education-level">
+              Education level
+            </FieldLabel>
+            <Select
+              value={draft.educationLevel}
+              onValueChange={(value) => {
+                setDraft((current) => ({ ...current, educationLevel: value }));
+              }}
+            >
+              <SelectTrigger id="browse-education-level" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any level</SelectItem>
+                {EDUCATION_LEVELS.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {formatEnumLabel(level)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-semester">Semester</FieldLabel>
+            <Select
+              value={draft.semesterType}
+              onValueChange={(value) => {
+                setDraft((current) => ({ ...current, semesterType: value }));
+              }}
+            >
+              <SelectTrigger id="browse-semester" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any semester</SelectItem>
+                {SEMESTER_TYPES.map((semester) => (
+                  <SelectItem key={semester} value={semester}>
+                    {formatEnumLabel(semester)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-type">Pasco type</FieldLabel>
+            <Select
+              value={draft.type}
+              onValueChange={(value) => {
+                setDraft((current) => ({ ...current, type: value }));
+              }}
+            >
+              <SelectTrigger id="browse-type" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any type</SelectItem>
+                {PASCO_TYPES.map((pascoType) => (
+                  <SelectItem key={pascoType} value={pascoType}>
+                    {formatEnumLabel(pascoType)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-content-type">Content type</FieldLabel>
+            <Select
+              value={draft.contentType}
+              onValueChange={(value) => {
+                setDraft((current) => ({ ...current, contentType: value }));
+              }}
+            >
+              <SelectTrigger id="browse-content-type" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any content</SelectItem>
+                {PASCO_CONTENT_TYPES.map((contentType) => (
+                  <SelectItem key={contentType} value={contentType}>
+                    {formatEnumLabel(contentType)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="browse-complete">Complete upload</FieldLabel>
+            <Select
+              value={draft.isComplete}
+              onValueChange={(value) => {
+                setDraft((current) => ({ ...current, isComplete: value }));
+              }}
+            >
+              <SelectTrigger id="browse-complete" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>Any</SelectItem>
+                <SelectItem value="true">Yes</SelectItem>
+                <SelectItem value="false">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+        </FieldGroup>
+      </CardContent>
+      <CardFooter className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          type="button"
+          className="w-full sm:w-auto"
+          onClick={() => onApply(draftToFilters(draft, appliedFilters))}
+        >
+          Apply filters
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full sm:w-auto"
+          onClick={onClear}
+        >
+          Clear all
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
