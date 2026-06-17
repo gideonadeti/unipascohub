@@ -209,7 +209,7 @@ export function getPascoMaxFilesPerPasco(): number {
 }
 
 export function getPascoMaxFileSizeBytes(): number {
-  return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 20_971_520);
+  return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 10_485_760);
 }
 
 function isFileSizeWithinPolicy(fileSize: number): boolean {

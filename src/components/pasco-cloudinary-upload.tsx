@@ -21,10 +21,14 @@ import {
   signCloudinaryUpload,
 } from "@/lib/api/cloudinary";
 import {
+  extractCloudinaryWidgetErrorMessage,
+  getPascoFileTooLargeMessage,
+  getPreBatchFileSize,
   isAllowedPascoFileName,
   PASCO_UPLOAD_ACCEPT_DESCRIPTION,
   PASCO_UPLOAD_REJECTED_MESSAGE,
   PASCO_WIDGET_ALLOWED_FORMATS,
+  resolvePascoFileSizeErrorMessage,
 } from "@/lib/pasco-file-types";
 import {
   PASCO_MAX_FILE_SIZE_BYTES,
@@ -50,8 +54,17 @@ type PascoCloudinaryUploadProps = {
   onFilesChange: (files: PascoFileCreateInput[]) => void;
 };
 
+const UPLOAD_ERROR_TOAST_ID = "pasco-upload-error";
+const UPLOAD_ERROR_TOAST_DURATION_MS = 30_000;
+
 function showUploadError(message: string) {
-  toast.error(message);
+  toast.error(
+    resolvePascoFileSizeErrorMessage(message, PASCO_MAX_FILE_SIZE_BYTES),
+    {
+      id: UPLOAD_ERROR_TOAST_ID,
+      duration: UPLOAD_ERROR_TOAST_DURATION_MS,
+    },
+  );
 }
 
 function formatFileSize(bytes: number): string {
@@ -168,9 +181,7 @@ export function PascoCloudinaryUpload({
   const handleWidgetResult = useCallback(
     (error: unknown, result: CloudinaryWidgetResult) => {
       if (error) {
-        showUploadError(
-          error instanceof Error ? error.message : "Cloudinary upload failed",
-        );
+        showUploadError(extractCloudinaryWidgetErrorMessage(error));
         return;
       }
 
@@ -269,6 +280,22 @@ export function PascoCloudinaryUpload({
 
             if (invalidFile) {
               rejectPreBatchUpload(callback, PASCO_UPLOAD_REJECTED_MESSAGE);
+              return;
+            }
+
+            const tooLargeFile = preBatchCandidates.find((file) => {
+              const size = getPreBatchFileSize(file);
+
+              return (
+                typeof size === "number" && size > PASCO_MAX_FILE_SIZE_BYTES
+              );
+            });
+
+            if (tooLargeFile) {
+              rejectPreBatchUpload(
+                callback,
+                getPascoFileTooLargeMessage(PASCO_MAX_FILE_SIZE_BYTES),
+              );
               return;
             }
 

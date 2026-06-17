@@ -1,9 +1,9 @@
 import * as z from "zod";
-
 import {
   ACADEMIC_YEAR_OPTIONS,
   academicYearValidationMessage,
 } from "@/lib/academic-year";
+import { getPascoFileTooLargeMessage } from "@/lib/pasco-file-types";
 import type {
   CloudinaryResourceType,
   EducationLevel,
@@ -49,7 +49,7 @@ export const CLOUDINARY_RESOURCE_TYPES = [
 ] as const satisfies readonly CloudinaryResourceType[];
 
 export const PASCO_MAX_FILES = 20;
-export const PASCO_MAX_FILE_SIZE_BYTES = 20_971_520;
+export const PASCO_MAX_FILE_SIZE_BYTES = 10_485_760;
 
 export const pascoFileCreateSchema = z.object({
   order: z.number().int().positive(),
@@ -61,7 +61,7 @@ export const pascoFileCreateSchema = z.object({
     .positive()
     .max(
       PASCO_MAX_FILE_SIZE_BYTES,
-      `File must be ${Math.floor(PASCO_MAX_FILE_SIZE_BYTES / 1_048_576)} MB or less`,
+      getPascoFileTooLargeMessage(PASCO_MAX_FILE_SIZE_BYTES),
     ),
   fileUrl: z.string().min(1).max(2000),
   resourceType: z.enum(CLOUDINARY_RESOURCE_TYPES),

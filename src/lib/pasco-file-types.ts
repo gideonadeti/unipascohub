@@ -41,6 +41,109 @@ export const PASCO_UPLOAD_ACCEPT_DESCRIPTION =
 export const PASCO_UPLOAD_REJECTED_MESSAGE =
   "Only PDF, image, and document files are allowed. Spreadsheets are not supported.";
 
+export const PASCO_FILE_COMPRESSOR_NAME = "iLovePDF";
+export const PASCO_FILE_COMPRESSOR_URL =
+  "https://www.ilovepdf.com/compress_pdf";
+
+export function getPascoFileTooLargeMessage(maxBytes: number): string {
+  const maxMb =
+    maxBytes % 1_048_576 === 0
+      ? String(maxBytes / 1_048_576)
+      : (maxBytes / 1_048_576).toFixed(1);
+
+  return `This file is too large (max ${maxMb} MB per file). Compress it for free with ${PASCO_FILE_COMPRESSOR_NAME} (${PASCO_FILE_COMPRESSOR_URL}) and try again.`;
+}
+
+export function isPascoFileSizeError(message: string): boolean {
+  return /file size|too large|too big|exceeds|maximum allowed|larger than|max(?:imum)?\s+(?:allowed|file\s+size|size)/i.test(
+    message,
+  );
+}
+
+export function parseMaxFileSizeBytesFromError(message: string): number | null {
+  const patterns = [
+    /maximum allowed \((\d+) bytes\)/i,
+    /maximum allowed[:\s]+(\d+)/i,
+    /max(?:imum)? file size(?: is)?[:\s]+(\d+)/i,
+    /Max file size is (\d+)/i,
+    /larger than (\d+) bytes/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(message);
+
+    if (match) {
+      return Number.parseInt(match[1], 10);
+    }
+  }
+
+  return null;
+}
+
+export function extractCloudinaryWidgetErrorMessage(error: unknown): string {
+  if (error == null) {
+    return "Cloudinary upload failed";
+  }
+
+  if (typeof error === "string") {
+    const trimmed = error.trim();
+
+    return trimmed || "Cloudinary upload failed";
+  }
+
+  if (error instanceof Error) {
+    const trimmed = error.message.trim();
+
+    return trimmed || "Cloudinary upload failed";
+  }
+
+  if (typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    const fields = ["message", "error", "statusText", "reason"];
+
+    for (const field of fields) {
+      const value = record[field];
+
+      if (typeof value === "string" && value.trim()) {
+        return value;
+      }
+    }
+
+    if (record.error != null && record.error !== error) {
+      const nested = extractCloudinaryWidgetErrorMessage(record.error);
+
+      if (nested !== "Cloudinary upload failed") {
+        return nested;
+      }
+    }
+  }
+
+  return "Cloudinary upload failed";
+}
+
+export function resolvePascoFileSizeErrorMessage(
+  message: string,
+  fallbackMaxBytes: number,
+): string {
+  if (!isPascoFileSizeError(message)) {
+    return message;
+  }
+
+  return getPascoFileTooLargeMessage(
+    parseMaxFileSizeBytesFromError(message) ?? fallbackMaxBytes,
+  );
+}
+
+export function getPreBatchFileSize(
+  file: File | { name?: string; size?: number },
+): number | undefined {
+  if (file instanceof File) {
+    return file.size;
+  }
+
+  return typeof file.size === "number" ? file.size : undefined;
+}
+
 export function getFileExtension(fileName: string): string {
   const trimmed = fileName.trim().toLowerCase();
   const dotIndex = trimmed.lastIndexOf(".");

@@ -27,7 +27,7 @@ export type CloudinaryPrepareUploadParams = {
 };
 
 export type CloudinaryPreBatchData = {
-  files?: Array<{ name: string }>;
+  files?: Array<{ name: string; size?: number }>;
 };
 
 export type CloudinaryPreBatchCallbackResult = {
