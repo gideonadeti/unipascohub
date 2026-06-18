@@ -1,8 +1,9 @@
 "use client";
 
-import { FileQuestion, X } from "lucide-react";
+import { FileQuestion, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { PascoBrowseFilters } from "@/components/pasco-browse-filters";
@@ -13,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -29,8 +31,10 @@ import {
   type PascoListParseError,
   searchParamsToFilters,
 } from "@/lib/pasco-list-query";
+import { buildBrowseHref } from "@/lib/search/build-browse-href";
 import type {
   PascoListFilters,
+  PascoListSearchMeta,
   PascoListSortBy,
   PascoListSortOrder,
 } from "@/types/api/pascos";
@@ -46,6 +50,7 @@ const PARSE_ERROR_MESSAGES: Record<PascoListParseError, string> = {
   invalid_limit: "Invalid page size in the URL.",
   invalid_sort_by: "Invalid sort field in the URL.",
   invalid_sort_order: "Invalid sort order in the URL.",
+  invalid_search_query: "Search query is too long (max 200 characters).",
 };
 
 const SORT_OPTIONS: { value: PascoListSortBy; label: string }[] = [
@@ -69,31 +74,65 @@ function pushFilters(
 }
 
 type ActiveChip = {
-  key: keyof PascoListFilters;
+  key: keyof PascoListFilters | "q";
   label: string;
+  removable: boolean;
 };
 
 function buildActiveChips(
   filters: PascoListFilters,
   courseLabel?: string,
+  searchMeta?: PascoListSearchMeta,
 ): ActiveChip[] {
   const chips: ActiveChip[] = [];
+
+  if (filters.q) {
+    chips.push({ key: "q", label: `"${filters.q}"`, removable: true });
+  }
 
   if (filters.courseId) {
     chips.push({
       key: "courseId",
       label: courseLabel ?? filters.courseId,
+      removable: true,
+    });
+  } else if (
+    searchMeta?.matchedCourseCount === 1 &&
+    searchMeta.matchedCourses[0]
+  ) {
+    const course = searchMeta.matchedCourses[0];
+    chips.push({
+      key: "courseId",
+      label: `${course.code} — ${course.title}`,
+      removable: false,
     });
   }
 
   if (filters.academicYear) {
-    chips.push({ key: "academicYear", label: filters.academicYear });
+    chips.push({
+      key: "academicYear",
+      label: filters.academicYear,
+      removable: true,
+    });
+  } else if (searchMeta?.parsedFilters.academicYear) {
+    chips.push({
+      key: "academicYear",
+      label: searchMeta.parsedFilters.academicYear,
+      removable: false,
+    });
   }
 
   if (filters.educationLevel) {
     chips.push({
       key: "educationLevel",
       label: formatEnumLabel(filters.educationLevel),
+      removable: true,
+    });
+  } else if (searchMeta?.parsedFilters.educationLevel) {
+    chips.push({
+      key: "educationLevel",
+      label: formatEnumLabel(searchMeta.parsedFilters.educationLevel),
+      removable: false,
     });
   }
 
@@ -101,17 +140,35 @@ function buildActiveChips(
     chips.push({
       key: "semesterType",
       label: formatEnumLabel(filters.semesterType),
+      removable: true,
+    });
+  } else if (searchMeta?.parsedFilters.semesterType) {
+    chips.push({
+      key: "semesterType",
+      label: formatEnumLabel(searchMeta.parsedFilters.semesterType),
+      removable: false,
     });
   }
 
   if (filters.type) {
-    chips.push({ key: "type", label: formatEnumLabel(filters.type) });
+    chips.push({
+      key: "type",
+      label: formatEnumLabel(filters.type),
+      removable: true,
+    });
+  } else if (searchMeta?.parsedFilters.type) {
+    chips.push({
+      key: "type",
+      label: formatEnumLabel(searchMeta.parsedFilters.type),
+      removable: false,
+    });
   }
 
   if (filters.contentType) {
     chips.push({
       key: "contentType",
       label: formatEnumLabel(filters.contentType),
+      removable: true,
     });
   }
 
@@ -119,6 +176,7 @@ function buildActiveChips(
     chips.push({
       key: "isComplete",
       label: filters.isComplete ? "Complete upload" : "Incomplete upload",
+      removable: true,
     });
   }
 
@@ -129,23 +187,82 @@ type PascoBrowsePageContentProps = {
   filters: PascoListFilters;
 };
 
+function PascoBrowseSearchBar({
+  initialQuery,
+  onSearch,
+}: {
+  initialQuery: string;
+  onSearch: (query: string) => void;
+}) {
+  const [query, setQuery] = useState(initialQuery);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
+
+  return (
+    <form
+      className="flex flex-col gap-2 sm:flex-row"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSearch(query.trim());
+      }}
+    >
+      <div className="relative flex-1">
+        <Search
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
+        <Input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search by course, level, year…"
+          className="h-11 pl-9"
+          aria-label="Search pascos"
+        />
+      </div>
+      <Button type="submit" className="h-11 min-w-28">
+        Search
+      </Button>
+    </form>
+  );
+}
+
 function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const pascosQuery = usePascosList(filters);
+  const searchMeta = pascosQuery.data?.search;
   const courseQuery = useCourse(filters.courseId ?? "");
   const courseLabel = courseQuery.data?.course
     ? `${courseQuery.data.course.code} — ${courseQuery.data.course.title}`
     : undefined;
 
-  const activeChips = buildActiveChips(filters, courseLabel);
+  const activeChips = buildActiveChips(filters, courseLabel, searchMeta);
 
   const updateFilters = (next: PascoListFilters) => {
     pushFilters(router, pathname, next);
   };
 
-  const clearFilter = (key: keyof PascoListFilters) => {
+  const clearFilter = (key: ActiveChip["key"]) => {
+    if (key === "q") {
+      const { q: _q, ...rest } = filters;
+      updateFilters({ ...rest, page: 1 });
+      return;
+    }
+
     updateFilters({ ...filters, [key]: undefined, page: 1 });
+  };
+
+  const handleSearch = (query: string) => {
+    if (!query) {
+      const { q: _q, ...rest } = filters;
+      updateFilters({ ...rest, page: 1 });
+      return;
+    }
+
+    updateFilters({ ...filters, q: query, page: 1 });
   };
 
   const handleSortByChange = (sortBy: PascoListSortBy) => {
@@ -173,27 +290,94 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
         : `Showing ${(page - 1) * limit + 1}–${Math.min(page * limit, total)} of ${total}`;
   }
 
+  const emptyTitle = filters.q
+    ? `No pascos match "${filters.q}"`
+    : "No pascos match these filters";
+
+  const emptyDescription = filters.q
+    ? "Try removing the year or level from your search, or upload a new pasco."
+    : "Try clearing a filter or upload a new pasco.";
+
   return (
     <div className="space-y-8">
+      <PascoBrowseSearchBar
+        initialQuery={filters.q ?? ""}
+        onSearch={handleSearch}
+      />
+
       <PascoBrowseFilters
         appliedFilters={filters}
-        onApply={updateFilters}
+        onApply={(next) => updateFilters({ ...next, q: filters.q })}
         onClear={() => router.replace("/pascos")}
       />
+
+      {searchMeta?.ambiguous && searchMeta.matchedCourses.length > 0 ? (
+        <Alert>
+          <AlertTitle>Multiple courses match</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>Pick a course to narrow your search:</p>
+            <div className="flex flex-wrap gap-2">
+              {searchMeta.matchedCourses.map((course) => (
+                <Button key={course.id} variant="outline" size="sm" asChild>
+                  <Link
+                    href={buildBrowseHref({
+                      courseId: course.id,
+                      academicYear:
+                        filters.academicYear ??
+                        searchMeta.parsedFilters.academicYear,
+                      educationLevel:
+                        filters.educationLevel ??
+                        searchMeta.parsedFilters.educationLevel,
+                      semesterType:
+                        filters.semesterType ??
+                        searchMeta.parsedFilters.semesterType,
+                      type: filters.type ?? searchMeta.parsedFilters.type,
+                      contentType:
+                        filters.contentType ??
+                        searchMeta.parsedFilters.contentType,
+                      isComplete:
+                        filters.isComplete ??
+                        searchMeta.parsedFilters.isComplete,
+                    })}
+                  >
+                    {course.code} ({course.institutionName})
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {searchMeta?.noCourseMatch && searchMeta.q ? (
+        <Alert>
+          <AlertTitle>No matching course</AlertTitle>
+          <AlertDescription>
+            We could not find a course matching your search. Try a course code
+            like DCIT 101 or browse all pascos below.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {activeChips.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {activeChips.map((chip) => (
-            <Badge key={chip.key} variant="secondary" className="gap-1 pr-1">
+            <Badge
+              key={`${chip.key}-${chip.label}`}
+              variant="secondary"
+              className="gap-1 pr-1"
+            >
               {chip.label}
-              <button
-                type="button"
-                className="inline-flex size-5 items-center justify-center rounded-full hover:bg-muted"
-                aria-label={`Remove ${chip.label} filter`}
-                onClick={() => clearFilter(chip.key)}
-              >
-                <X className="size-3" aria-hidden />
-              </button>
+              {chip.removable ? (
+                <button
+                  type="button"
+                  className="inline-flex size-5 items-center justify-center rounded-full hover:bg-muted"
+                  aria-label={`Remove ${chip.label} filter`}
+                  onClick={() => clearFilter(chip.key)}
+                >
+                  <X className="size-3" aria-hidden />
+                </button>
+              ) : null}
             </Badge>
           ))}
         </div>
@@ -256,8 +440,8 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
 
         {pascosQuery.isSuccess && pascosQuery.data.pascos.length === 0 ? (
           <EmptyState
-            title="No pascos match these filters"
-            description="Try clearing a filter or upload a new pasco."
+            title={emptyTitle}
+            description={emptyDescription}
             icon={FileQuestion}
             action={{ label: "Upload a pasco", href: "/pascos/new" }}
           />
