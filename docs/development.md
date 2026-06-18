@@ -60,6 +60,7 @@ pnpm prisma generate
 - Migrations live in [`prisma/migrations/`](../prisma/migrations/)
 - Generated client output: `generated/prisma/`
 - Config: [`prisma.config.ts`](../prisma.config.ts)
+- Search requires the `pg_trgm` extension (applied by migration `20260618100000_add_pg_trgm_course_search_indexes`). Most managed Postgres providers support `CREATE EXTENSION pg_trgm`; confirm before production deploy.
 
 ### 5. Clerk configuration
 

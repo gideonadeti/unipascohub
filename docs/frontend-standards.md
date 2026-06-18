@@ -148,6 +148,8 @@ Smart search parses free-text queries into structured browse filters and course 
 
 **API:** `GET /api/pascos` accepts `q` plus existing filter params; response may include optional `search` metadata (`parsedFilters`, `ambiguous`, `matchedCourses`).
 
+**Typo-tolerant matching:** Postgres `pg_trgm` GIN indexes on `Course.code`, `Course.title`, and `Institution.name` (migration `20260618100000_add_pg_trgm_course_search_indexes`). Ranking prefers exact code, then prefix, then fuzzy title/code, then institution name. Trigram similarity is skipped for queries shorter than 3 characters. Thresholds live in [`search-constants.ts`](../src/lib/search/search-constants.ts).
+
 Hero search input must have a static `aria-label` (e.g. `"Search pascos"`) regardless of animated placeholder.
 
 ---
