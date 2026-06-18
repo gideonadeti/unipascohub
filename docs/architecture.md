@@ -96,7 +96,7 @@ unipascohub/
 
 ## Middleware and public routes
 
-[`src/proxy.ts`](../src/proxy.ts) runs Clerk middleware on all routes except Next.js internals and static files.
+[`src/proxy.ts`](../src/proxy.ts) runs Clerk middleware on all routes except Next.js internals and static files. All page routes are public at the proxy layer; sign-in is enforced in UI gates and API handlers where needed.
 
 **Public at the edge** (no `auth.protect()`):
 
