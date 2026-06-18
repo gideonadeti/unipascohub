@@ -214,12 +214,13 @@ function PascoBrowseSearchBar({
           aria-hidden
         />
         <Input
-          type="search"
+          type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by course, level, year…"
           className="h-11 pl-9"
           aria-label="Search pascos"
+          autoComplete="off"
         />
       </div>
       <Button type="submit" className="h-11 min-w-28">

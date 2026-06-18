@@ -167,7 +167,7 @@ export function HeroSearch() {
           aria-hidden
         />
         <Input
-          type="search"
+          type="text"
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onFocus={() => setFocused(true)}
