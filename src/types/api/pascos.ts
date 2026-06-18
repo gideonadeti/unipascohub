@@ -31,6 +31,7 @@ export type PascoListSortBy =
 export type PascoListSortOrder = "asc" | "desc";
 
 export type PascoListFilters = {
+  q?: string;
   courseId?: string;
   educationLevel?: EducationLevel;
   academicYear?: string;
@@ -42,6 +43,21 @@ export type PascoListFilters = {
   limit?: number;
   sortBy?: PascoListSortBy;
   sortOrder?: PascoListSortOrder;
+};
+
+export type PascoListSearchMeta = {
+  q?: string;
+  parsedFilters: Partial<PascoListFilters>;
+  ambiguous: boolean;
+  matchedCourseCount: number;
+  noCourseMatch: boolean;
+  matchedCourses: Array<{
+    id: string;
+    code: string;
+    title: string;
+    institutionName: string;
+    pascoCount: number;
+  }>;
 };
 
 export type PascoFile = {
@@ -86,6 +102,7 @@ export type PascoListResponse = {
     total: number;
     totalPages: number;
   };
+  search?: PascoListSearchMeta;
 };
 
 export type PascoDetailResponse = {
