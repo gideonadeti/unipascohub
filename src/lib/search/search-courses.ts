@@ -1,4 +1,19 @@
 import { prisma } from "@/lib/db";
+import { Prisma } from "../../../generated/prisma/client";
+
+import {
+  CODE_SIMILARITY_THRESHOLD,
+  INSTITUTION_SIMILARITY_THRESHOLD,
+  TITLE_SIMILARITY_THRESHOLD,
+  TRGM_MIN_QUERY_LENGTH,
+} from "./search-constants";
+
+export type CourseSearchMatchKind =
+  | "exact"
+  | "prefix"
+  | "title"
+  | "institution"
+  | "fuzzy";
 
 export type CourseSearchResult = {
   id: string;
@@ -7,7 +22,17 @@ export type CourseSearchResult = {
   institutionId: string;
   institutionName: string;
   pascoCount: number;
-  matchKind: "exact" | "prefix" | "title";
+  matchKind: CourseSearchMatchKind;
+};
+
+type RawCourseSearchRow = {
+  id: string;
+  code: string;
+  title: string;
+  institutionId: string;
+  institutionName: string;
+  pascoCount: number;
+  matchKind: CourseSearchMatchKind;
 };
 
 type RankedCourse = CourseSearchResult & { rank: number };
@@ -27,11 +52,11 @@ function rankCourses(
   const queryWithoutSpace = normalizedQuery.replace(/\s+/g, "");
 
   return courses
-    .map((course) => {
+    .map((course): RankedCourse | null => {
       const codeUpper = course.code.toUpperCase();
       const codeCompact = codeUpper.replace(/\s+/g, "");
 
-      let matchKind: CourseSearchResult["matchKind"] | null = null;
+      let matchKind: CourseSearchMatchKind | null = null;
       let rank = 0;
 
       if (codeUpper === normalizedQuery || codeCompact === queryWithoutSpace) {
@@ -75,16 +100,10 @@ function rankCourses(
     });
 }
 
-export async function searchCourses(
-  courseQuery: string,
-  limit = 8,
+async function searchCoursesWithPrisma(
+  trimmed: string,
+  limit: number,
 ): Promise<CourseSearchResult[]> {
-  const trimmed = courseQuery.trim();
-
-  if (trimmed.length === 0) {
-    return [];
-  }
-
   const normalized = trimmed.toUpperCase();
   const compact = normalized.replace(/\s+/g, "");
 
@@ -107,6 +126,111 @@ export async function searchCourses(
   });
 
   return rankCourses(courses, trimmed).slice(0, limit);
+}
+
+async function searchCoursesWithTrigram(
+  trimmed: string,
+  limit: number,
+): Promise<CourseSearchResult[]> {
+  const useTrgm = trimmed.length >= TRGM_MIN_QUERY_LENGTH;
+
+  const rows = await prisma.$queryRaw<RawCourseSearchRow[]>`
+    SELECT
+      c.id,
+      c.code,
+      c.title,
+      c."institutionId",
+      i.name AS "institutionName",
+      COUNT(p.id)::int AS "pascoCount",
+      CASE
+        WHEN upper(replace(c.code, ' ', '')) = upper(replace(${trimmed}, ' ', '')) THEN 'exact'
+        WHEN upper(c.code) LIKE upper(${trimmed}) || '%' THEN 'prefix'
+        WHEN ${useTrgm} AND similarity(i.name, ${trimmed}) >= ${INSTITUTION_SIMILARITY_THRESHOLD} THEN 'institution'
+        WHEN c.title ILIKE '%' || ${trimmed} || '%' THEN 'title'
+        WHEN ${useTrgm} AND similarity(c.title, ${trimmed}) >= ${TITLE_SIMILARITY_THRESHOLD} THEN 'fuzzy'
+        WHEN ${useTrgm} AND similarity(c.code, ${trimmed}) >= ${CODE_SIMILARITY_THRESHOLD} THEN 'fuzzy'
+        ELSE 'fuzzy'
+      END AS "matchKind",
+      (
+        CASE
+          WHEN upper(replace(c.code, ' ', '')) = upper(replace(${trimmed}, ' ', '')) THEN 300
+          ELSE 0
+        END
+        + CASE WHEN upper(c.code) LIKE upper(${trimmed}) || '%' THEN 200 ELSE 0 END
+        + CASE
+          WHEN ${useTrgm} THEN (similarity(c.code, ${trimmed}) * 120)::int
+          ELSE 0
+        END
+        + CASE
+          WHEN ${useTrgm} THEN (similarity(c.title, ${trimmed}) * 100)::int
+          ELSE 0
+        END
+        + CASE
+          WHEN ${useTrgm} THEN (similarity(i.name, ${trimmed}) * 60)::int
+          ELSE 0
+        END
+        + LEAST(COUNT(p.id), 50)
+      ) AS rank
+    FROM "Course" c
+    INNER JOIN "Institution" i ON i.id = c."institutionId"
+    LEFT JOIN "Pasco" p ON p."courseId" = c.id
+    WHERE
+      upper(replace(c.code, ' ', '')) = upper(replace(${trimmed}, ' ', ''))
+      OR upper(c.code) LIKE upper(${trimmed}) || '%'
+      OR c.title ILIKE '%' || ${trimmed} || '%'
+      OR (
+        ${useTrgm}
+        AND similarity(c.code, ${trimmed}) >= ${CODE_SIMILARITY_THRESHOLD}
+      )
+      OR (
+        ${useTrgm}
+        AND similarity(c.title, ${trimmed}) >= ${TITLE_SIMILARITY_THRESHOLD}
+      )
+      OR (
+        ${useTrgm}
+        AND similarity(i.name, ${trimmed}) >= ${INSTITUTION_SIMILARITY_THRESHOLD}
+      )
+    GROUP BY c.id, c.code, c.title, c."institutionId", i.name
+    ORDER BY rank DESC, c.code ASC
+    LIMIT ${limit}
+  `;
+
+  return rows.map((row) => ({
+    id: row.id,
+    code: row.code,
+    title: row.title,
+    institutionId: row.institutionId,
+    institutionName: row.institutionName,
+    pascoCount: row.pascoCount,
+    matchKind: row.matchKind,
+  }));
+}
+
+export async function searchCourses(
+  courseQuery: string,
+  limit = 8,
+): Promise<CourseSearchResult[]> {
+  const trimmed = courseQuery.trim();
+
+  if (trimmed.length === 0) {
+    return [];
+  }
+
+  try {
+    return await searchCoursesWithTrigram(trimmed, limit);
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError ||
+      error instanceof Error
+    ) {
+      console.error(
+        "Trigram course search failed, falling back to Prisma findMany:",
+        error,
+      );
+    }
+
+    return searchCoursesWithPrisma(trimmed, limit);
+  }
 }
 
 export function isExactCourseMatch(
