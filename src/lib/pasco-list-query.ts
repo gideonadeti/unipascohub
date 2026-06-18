@@ -15,6 +15,7 @@ export const DEFAULT_LIST_PAGE = 1;
 export const DEFAULT_LIST_LIMIT = 20;
 export const BROWSE_DEFAULT_LIMIT = 12;
 export const MAX_LIST_LIMIT = 100;
+export const MAX_SEARCH_QUERY_LENGTH = 200;
 
 const LIST_SORT_FIELDS: readonly PascoListSortBy[] = [
   "createdAt",
@@ -32,7 +33,9 @@ const PASCO_TYPE_SET = new Set<string>(PASCO_TYPES);
 const PASCO_CONTENT_TYPE_SET = new Set<string>(PASCO_CONTENT_TYPES);
 
 export type PascoListQuery = {
+  q?: string;
   courseId?: string;
+  courseIds?: string[];
   educationLevel?: PascoListFilters["educationLevel"];
   academicYear?: string;
   semesterType?: PascoListFilters["semesterType"];
@@ -55,7 +58,8 @@ export type PascoListParseError =
   | "invalid_page"
   | "invalid_limit"
   | "invalid_sort_by"
-  | "invalid_sort_order";
+  | "invalid_sort_order"
+  | "invalid_search_query";
 
 type ParseOptions = {
   defaultLimit?: number;
@@ -79,6 +83,26 @@ function isPascoListSortOrder(value: string): value is PascoListSortOrder {
   return value === "asc" || value === "desc";
 }
 
+function parseSearchQueryParam(
+  value: string | null,
+): { ok: true; q?: string } | { ok: false } {
+  if (value === null) {
+    return { ok: true };
+  }
+
+  const trimmed = value.trim();
+
+  if (trimmed.length === 0) {
+    return { ok: true };
+  }
+
+  if (trimmed.length > MAX_SEARCH_QUERY_LENGTH) {
+    return { ok: false };
+  }
+
+  return { ok: true, q: trimmed };
+}
+
 export function parseListPascosQuery(
   searchParams: URLSearchParams,
   options: ParseOptions = {},
@@ -86,6 +110,7 @@ export function parseListPascosQuery(
   | { success: true; data: PascoListQuery }
   | { success: false; error: PascoListParseError } {
   const defaultLimit = options.defaultLimit ?? DEFAULT_LIST_LIMIT;
+  const qParam = searchParams.get("q");
   const courseIdParam = searchParams.get("courseId");
   const educationLevelParam = searchParams.get("educationLevel");
   const academicYearParam = searchParams.get("academicYear");
@@ -97,6 +122,15 @@ export function parseListPascosQuery(
   const limitParam = searchParams.get("limit");
   const sortByParam = searchParams.get("sortBy");
   const sortOrderParam = searchParams.get("sortOrder");
+
+  let q: string | undefined;
+  if (qParam !== null) {
+    const parsedQ = parseSearchQueryParam(qParam);
+    if (!parsedQ.ok) {
+      return { success: false, error: "invalid_search_query" };
+    }
+    q = parsedQ.q;
+  }
 
   if (
     educationLevelParam !== null &&
@@ -171,6 +205,7 @@ export function parseListPascosQuery(
   return {
     success: true,
     data: {
+      q,
       courseId: courseIdParam?.trim() || undefined,
       educationLevel:
         educationLevelParam !== null
@@ -200,6 +235,7 @@ export function parseListPascosQuery(
 
 export function queryToFilters(query: PascoListQuery): PascoListFilters {
   return {
+    q: query.q,
     courseId: query.courseId,
     educationLevel: query.educationLevel,
     academicYear: query.academicYear,
@@ -235,6 +271,10 @@ export function filtersToSearchParams(
 ): URLSearchParams {
   const defaultLimit = options.defaultLimit ?? DEFAULT_LIST_LIMIT;
   const params = new URLSearchParams();
+
+  if (filters.q) {
+    params.set("q", filters.q);
+  }
 
   if (filters.courseId) {
     params.set("courseId", filters.courseId);

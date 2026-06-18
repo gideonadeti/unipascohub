@@ -1225,8 +1225,21 @@ export async function listPascos(params: PascoListQuery): Promise<
     }
   | { success: false }
 > {
+  if (params.courseIds && params.courseIds.length === 0) {
+    return {
+      success: true,
+      pascos: [],
+      total: 0,
+      page: params.page,
+      limit: params.limit,
+    };
+  }
+
   const where = {
     ...(params.courseId ? { courseId: params.courseId } : {}),
+    ...(params.courseIds && params.courseIds.length > 0
+      ? { courseId: { in: params.courseIds } }
+      : {}),
     ...(params.educationLevel ? { educationLevel: params.educationLevel } : {}),
     ...(params.academicYear ? { academicYear: params.academicYear } : {}),
     ...(params.semesterType ? { semesterType: params.semesterType } : {}),

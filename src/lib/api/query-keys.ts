@@ -32,4 +32,9 @@ export const queryKeys = {
   users: {
     me: ["users", "me"] as const,
   },
+  search: {
+    all: ["search"] as const,
+    suggest: (q: string, limit = 8) =>
+      [...queryKeys.search.all, "suggest", q, limit] as const,
+  },
 } as const;
