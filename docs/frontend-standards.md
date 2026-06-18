@@ -142,15 +142,19 @@ Smart search parses free-text queries into structured browse filters and course 
 | ------- | -------- |
 | **Hero search** | Debounced autocomplete via `GET /api/search/suggest`; course pick navigates to structured `/pascos?courseId=...` URL; Enter submits `/pascos?q=...` |
 | **Browse search** | URL param `q` (max 200 chars); server resolves year, level, type, semester, and course code/title |
-| **Explicit filters** | URL params (`courseId`, `academicYear`, etc.) override values parsed from `q` |
+| **Explicit filters** | URL params (`courseId`, `academicYear`, etc.) override values parsed from `q` when present |
+
+**Bare shortcuts:** A query that is only a four-digit year (e.g. `2024`) expands to that academic year (`2024/2025`). A query that is only `100`, `200`, `300`, or `400` maps to the matching education level. Leftover tokens after course-code extraction follow the same rules (e.g. `DCIT 101 2024`).
+
+**Institution synonyms:** Course search expands whole-word abbreviations before SQL (e.g. `UG`, `Legon` → University of Ghana; `KNUST` → Kwame Nkrumah University of Science and Technology). See [`institution-synonyms.ts`](../src/lib/search/institution-synonyms.ts).
 
 **Shareable URLs:** `/pascos?q=DCIT+101+2024%2F2025` or `/pascos?courseId=...&academicYear=2024/2025`
 
-**API:** `GET /api/pascos` accepts `q` plus existing filter params; response may include optional `search` metadata (`parsedFilters`, `ambiguous`, `matchedCourses`).
+**API:** `GET /api/pascos` accepts `q` plus existing filter params; response may include optional `search` metadata (`parsedFilters`, `ambiguous`, `matchedCourses`). Parsed filters from `q` are preserved when URL filter params are omitted (undefined keys do not wipe parsed values).
 
-**Typo-tolerant matching:** Postgres `pg_trgm` GIN indexes on `Course.code`, `Course.title`, and `Institution.name` (migration `20260618100000_add_pg_trgm_course_search_indexes`). Ranking prefers exact code, then prefix, then fuzzy title/code, then institution name. Trigram similarity is skipped for queries shorter than 3 characters. Thresholds live in [`search-constants.ts`](../src/lib/search/search-constants.ts).
+**Typo-tolerant matching:** Postgres `pg_trgm` GIN indexes on `Course.code`, `Course.title`, and `Institution.name` (migration `20260618100000_add_pg_trgm_course_search_indexes`). Ranking prefers exact code, then prefix, then fuzzy title/code, then institution name, then program name, then pasco description (course search only). Match kinds: `exact`, `prefix`, `title`, `institution`, `program`, `description`, `fuzzy`. Trigram similarity is skipped for queries shorter than 3 characters. Thresholds live in [`search-constants.ts`](../src/lib/search/search-constants.ts).
 
-Hero search input must have a static `aria-label` (e.g. `"Search pascos"`) regardless of animated placeholder.
+Hero and browse search inputs use `type="text"` (not `type="search"`) to avoid browser in-page text highlighting. Browse uses `aria-label`; hero autocomplete keeps `role="combobox"`. Hero search input must have a static `aria-label` (e.g. `"Search pascos"`) regardless of animated placeholder.
 
 ---
 
