@@ -5,10 +5,13 @@ import type { PascoListFilters } from "@/types/api/pascos";
 import {
   ACADEMIC_YEAR_PATTERN,
   COURSE_CODE_PATTERN,
+  EDUCATION_LEVEL_BY_NUMBER,
   EDUCATION_LEVEL_PATTERNS,
   PASCO_TYPE_SYNONYMS,
   SEMESTER_TYPE_SYNONYMS,
 } from "./search-synonyms";
+
+const BARE_LEVEL_PATTERN = /^(100|200|300|400)$/;
 
 export type ParsedToken = {
   key: keyof PascoListFilters | "courseQuery";
@@ -151,16 +154,58 @@ function parseSemesterType(
   return working;
 }
 
+function consumeBareLeftoverFilters(
+  text: string,
+  filters: Partial<PascoListFilters>,
+  tokens: ParsedToken[],
+): string {
+  const collapsed = collapseWhitespace(text);
+
+  const bareYear = tryExpandSingleYear(collapsed);
+  if (bareYear) {
+    if (!filters.academicYear) {
+      filters.academicYear = bareYear;
+      tokens.push({
+        key: "academicYear",
+        value: bareYear,
+        label: bareYear,
+      });
+    }
+
+    return "";
+  }
+
+  const bareLevelMatch = BARE_LEVEL_PATTERN.exec(collapsed);
+  if (bareLevelMatch && collapsed === bareLevelMatch[0]) {
+    const levelNumber = Number.parseInt(bareLevelMatch[1], 10);
+    const educationLevel = EDUCATION_LEVEL_BY_NUMBER[levelNumber];
+
+    if (educationLevel && !filters.educationLevel) {
+      filters.educationLevel = educationLevel;
+      tokens.push({
+        key: "educationLevel",
+        value: educationLevel,
+        label: `Level ${levelNumber}`,
+      });
+    }
+
+    return "";
+  }
+
+  return collapsed;
+}
+
 function extractCourseQuery(
   text: string,
   tokens: ParsedToken[],
+  filters: Partial<PascoListFilters>,
 ): string | undefined {
   const matches = [...text.matchAll(COURSE_CODE_PATTERN)];
 
   if (matches.length === 0) {
-    const leftover = collapseWhitespace(text);
+    const consumed = consumeBareLeftoverFilters(text, filters, tokens);
 
-    return leftover.length > 0 ? leftover : undefined;
+    return consumed.length > 0 ? consumed : undefined;
   }
 
   const lastMatch = matches.at(-1);
@@ -180,9 +225,14 @@ function extractCourseQuery(
   const withoutCode = collapseWhitespace(
     text.replace(COURSE_CODE_PATTERN, " "),
   );
+  const consumedLeftover = consumeBareLeftoverFilters(
+    withoutCode,
+    filters,
+    tokens,
+  );
 
-  if (withoutCode.length > 0 && withoutCode !== courseQuery) {
-    return `${courseQuery} ${withoutCode}`.trim();
+  if (consumedLeftover.length > 0 && consumedLeftover !== courseQuery) {
+    return `${courseQuery} ${consumedLeftover}`.trim();
   }
 
   return courseQuery;
@@ -198,13 +248,42 @@ export function parseSearchQuery(raw: string): ParseSearchQueryResult {
   const filters: Partial<PascoListFilters> = {};
   const tokens: ParsedToken[] = [];
 
+  const bareYear = tryExpandSingleYear(trimmed);
+  if (bareYear) {
+    filters.academicYear = bareYear;
+    tokens.push({
+      key: "academicYear",
+      value: bareYear,
+      label: bareYear,
+    });
+
+    return { filters, tokens };
+  }
+
+  const bareLevelMatch = BARE_LEVEL_PATTERN.exec(trimmed);
+  if (bareLevelMatch) {
+    const levelNumber = Number.parseInt(bareLevelMatch[1], 10);
+    const educationLevel = EDUCATION_LEVEL_BY_NUMBER[levelNumber];
+
+    if (educationLevel) {
+      filters.educationLevel = educationLevel;
+      tokens.push({
+        key: "educationLevel",
+        value: educationLevel,
+        label: `Level ${levelNumber}`,
+      });
+
+      return { filters, tokens };
+    }
+  }
+
   let working = trimmed;
   working = parseAcademicYearToken(working, filters, tokens);
   working = parseEducationLevel(working, filters, tokens);
   working = parsePascoType(working, filters, tokens);
   working = parseSemesterType(working, filters, tokens);
 
-  const courseQuery = extractCourseQuery(working, tokens);
+  const courseQuery = extractCourseQuery(working, tokens, filters);
 
   return {
     filters,

@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/db";
 import { Prisma } from "../../../generated/prisma/client";
 
+import { expandInstitutionSynonyms } from "./institution-synonyms";
 import {
   CODE_SIMILARITY_THRESHOLD,
+  DESCRIPTION_SIMILARITY_THRESHOLD,
   INSTITUTION_SIMILARITY_THRESHOLD,
   TITLE_SIMILARITY_THRESHOLD,
   TRGM_MIN_QUERY_LENGTH,
@@ -13,6 +15,8 @@ export type CourseSearchMatchKind =
   | "prefix"
   | "title"
   | "institution"
+  | "program"
+  | "description"
   | "fuzzy";
 
 export type CourseSearchResult = {
@@ -116,6 +120,16 @@ async function searchCoursesWithPrisma(
         { code: { startsWith: normalized, mode: "insensitive" } },
         { code: { startsWith: compact, mode: "insensitive" } },
         { title: { contains: trimmed, mode: "insensitive" } },
+        {
+          programs: {
+            some: { name: { contains: trimmed, mode: "insensitive" } },
+          },
+        },
+        {
+          pascos: {
+            some: { description: { contains: trimmed, mode: "insensitive" } },
+          },
+        },
       ],
     },
     include: {
@@ -141,12 +155,30 @@ async function searchCoursesWithTrigram(
       c.title,
       c."institutionId",
       i.name AS "institutionName",
-      COUNT(p.id)::int AS "pascoCount",
+      COUNT(DISTINCT p.id)::int AS "pascoCount",
       CASE
         WHEN upper(replace(c.code, ' ', '')) = upper(replace(${trimmed}, ' ', '')) THEN 'exact'
         WHEN upper(c.code) LIKE upper(${trimmed}) || '%' THEN 'prefix'
         WHEN ${useTrgm} AND similarity(i.name, ${trimmed}) >= ${INSTITUTION_SIMILARITY_THRESHOLD} THEN 'institution'
         WHEN c.title ILIKE '%' || ${trimmed} || '%' THEN 'title'
+        WHEN MAX(
+          CASE
+            WHEN pr.name ILIKE '%' || ${trimmed} || '%' THEN 1
+            ELSE 0
+          END
+        ) > 0 THEN 'program'
+        WHEN ${useTrgm}
+          AND MAX(similarity(coalesce(pr.name, ''), ${trimmed})) >= ${TITLE_SIMILARITY_THRESHOLD}
+          THEN 'program'
+        WHEN MAX(
+          CASE
+            WHEN p.description IS NOT NULL AND p.description ILIKE '%' || ${trimmed} || '%' THEN 1
+            ELSE 0
+          END
+        ) > 0 THEN 'description'
+        WHEN ${useTrgm}
+          AND MAX(similarity(coalesce(p.description, ''), ${trimmed})) >= ${DESCRIPTION_SIMILARITY_THRESHOLD}
+          THEN 'description'
         WHEN ${useTrgm} AND similarity(c.title, ${trimmed}) >= ${TITLE_SIMILARITY_THRESHOLD} THEN 'fuzzy'
         WHEN ${useTrgm} AND similarity(c.code, ${trimmed}) >= ${CODE_SIMILARITY_THRESHOLD} THEN 'fuzzy'
         ELSE 'fuzzy'
@@ -169,15 +201,30 @@ async function searchCoursesWithTrigram(
           WHEN ${useTrgm} THEN (similarity(i.name, ${trimmed}) * 60)::int
           ELSE 0
         END
-        + LEAST(COUNT(p.id), 50)
+        + CASE
+          WHEN ${useTrgm} THEN (MAX(similarity(coalesce(pr.name, ''), ${trimmed})) * 50)::int
+          ELSE 0
+        END
+        + CASE
+          WHEN ${useTrgm} THEN (MAX(similarity(coalesce(p.description, ''), ${trimmed})) * 40)::int
+          ELSE 0
+        END
+        + LEAST(COUNT(DISTINCT p.id), 50)
       ) AS rank
     FROM "Course" c
     INNER JOIN "Institution" i ON i.id = c."institutionId"
     LEFT JOIN "Pasco" p ON p."courseId" = c.id
+    LEFT JOIN "_CourseToProgram" cp ON cp."A" = c.id
+    LEFT JOIN "Program" pr ON pr.id = cp."B"
     WHERE
       upper(replace(c.code, ' ', '')) = upper(replace(${trimmed}, ' ', ''))
       OR upper(c.code) LIKE upper(${trimmed}) || '%'
       OR c.title ILIKE '%' || ${trimmed} || '%'
+      OR pr.name ILIKE '%' || ${trimmed} || '%'
+      OR (
+        p.description IS NOT NULL
+        AND p.description ILIKE '%' || ${trimmed} || '%'
+      )
       OR (
         ${useTrgm}
         AND similarity(c.code, ${trimmed}) >= ${CODE_SIMILARITY_THRESHOLD}
@@ -189,6 +236,15 @@ async function searchCoursesWithTrigram(
       OR (
         ${useTrgm}
         AND similarity(i.name, ${trimmed}) >= ${INSTITUTION_SIMILARITY_THRESHOLD}
+      )
+      OR (
+        ${useTrgm}
+        AND similarity(pr.name, ${trimmed}) >= ${TITLE_SIMILARITY_THRESHOLD}
+      )
+      OR (
+        ${useTrgm}
+        AND p.description IS NOT NULL
+        AND similarity(p.description, ${trimmed}) >= ${DESCRIPTION_SIMILARITY_THRESHOLD}
       )
     GROUP BY c.id, c.code, c.title, c."institutionId", i.name
     ORDER BY rank DESC, c.code ASC
@@ -210,7 +266,7 @@ export async function searchCourses(
   courseQuery: string,
   limit = 8,
 ): Promise<CourseSearchResult[]> {
-  const trimmed = courseQuery.trim();
+  const trimmed = expandInstitutionSynonyms(courseQuery.trim());
 
   if (trimmed.length === 0) {
     return [];

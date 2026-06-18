@@ -234,20 +234,46 @@ export function parseListPascosQuery(
 }
 
 export function queryToFilters(query: PascoListQuery): PascoListFilters {
-  return {
-    q: query.q,
-    courseId: query.courseId,
-    educationLevel: query.educationLevel,
-    academicYear: query.academicYear,
-    semesterType: query.semesterType,
-    type: query.type,
-    contentType: query.contentType,
-    isComplete: query.isComplete,
+  const filters: PascoListFilters = {
     page: query.page,
     limit: query.limit,
     sortBy: query.sortBy,
     sortOrder: query.sortOrder,
   };
+
+  if (query.q !== undefined) {
+    filters.q = query.q;
+  }
+
+  if (query.courseId !== undefined) {
+    filters.courseId = query.courseId;
+  }
+
+  if (query.educationLevel !== undefined) {
+    filters.educationLevel = query.educationLevel;
+  }
+
+  if (query.academicYear !== undefined) {
+    filters.academicYear = query.academicYear;
+  }
+
+  if (query.semesterType !== undefined) {
+    filters.semesterType = query.semesterType;
+  }
+
+  if (query.type !== undefined) {
+    filters.type = query.type;
+  }
+
+  if (query.contentType !== undefined) {
+    filters.contentType = query.contentType;
+  }
+
+  if (query.isComplete !== undefined) {
+    filters.isComplete = query.isComplete;
+  }
+
+  return filters;
 }
 
 export function searchParamsToFilters(

@@ -1,5 +1,6 @@
 import type { PascoListFilters } from "@/types/api/pascos";
 
+import { mergePascoListFilters } from "./merge-filters";
 import { parseSearchQuery } from "./parse-search-query";
 import {
   type CourseSearchResult,
@@ -25,9 +26,10 @@ function mergeExplicitFilters(
   parsed: Partial<PascoListFilters>,
   explicit: PascoListFilters,
 ): PascoListFilters {
+  const merged = mergePascoListFilters(parsed, explicit);
+
   return {
-    ...parsed,
-    ...explicit,
+    ...merged,
     page: explicit.page ?? parsed.page ?? 1,
     limit: explicit.limit ?? parsed.limit,
     sortBy: explicit.sortBy ?? parsed.sortBy,
