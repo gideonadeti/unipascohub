@@ -1,7 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
-import { parseListPascosQuery } from "@/lib/pasco-list-query";
+import {
+  type PascoListQuery,
+  parseListPascosQuery,
+  queryToFilters,
+} from "@/lib/pasco-list-query";
 import {
   createPasco,
   getPascoMaxFileSizeBytes,
@@ -11,6 +15,7 @@ import {
   serializePasco,
 } from "@/lib/pascos";
 import { requireContributor } from "@/lib/require-contributor";
+import { resolvePascoListFromSearch } from "@/lib/search/merge-search-filters";
 
 export const runtime = "nodejs";
 
@@ -64,11 +69,36 @@ export async function GET(req: Request) {
           { error: "Invalid sortOrder (allowed: asc, desc)" },
           { status: 400 },
         );
+      case "invalid_search_query":
+        return Response.json(
+          { error: "Invalid search query (max 200 characters)" },
+          { status: 400 },
+        );
     }
   }
 
   try {
-    const result = await listPascos(parsed.data);
+    const explicitFilters = queryToFilters(parsed.data);
+    const { filters: resolvedFilters, resolution } =
+      await resolvePascoListFromSearch(parsed.data.q, explicitFilters);
+
+    const listQuery: PascoListQuery = {
+      ...parsed.data,
+      courseId: resolvedFilters.courseId,
+      courseIds: resolvedFilters.courseIds,
+      educationLevel: resolvedFilters.educationLevel,
+      academicYear: resolvedFilters.academicYear,
+      semesterType: resolvedFilters.semesterType,
+      type: resolvedFilters.type,
+      contentType: resolvedFilters.contentType,
+      isComplete: resolvedFilters.isComplete,
+      page: resolvedFilters.page ?? parsed.data.page,
+      limit: resolvedFilters.limit ?? parsed.data.limit,
+      sortBy: resolvedFilters.sortBy ?? parsed.data.sortBy,
+      sortOrder: resolvedFilters.sortOrder ?? parsed.data.sortOrder,
+    };
+
+    const result = await listPascos(listQuery);
 
     if (!result.success) {
       return Response.json({ error: "Internal server error" }, { status: 500 });
@@ -102,6 +132,24 @@ export async function GET(req: Request) {
         total: result.total,
         totalPages,
       },
+      ...(parsed.data.q
+        ? {
+            search: {
+              q: parsed.data.q,
+              parsedFilters: resolution.parsedFilters,
+              ambiguous: resolution.ambiguous,
+              matchedCourseCount: resolution.matchedCourseIds.length,
+              noCourseMatch: resolution.noCourseMatch,
+              matchedCourses: resolution.matchedCourses.map((course) => ({
+                id: course.id,
+                code: course.code,
+                title: course.title,
+                institutionName: course.institutionName,
+                pascoCount: course.pascoCount,
+              })),
+            },
+          }
+        : {}),
     });
   } catch (err) {
     console.error("Pasco list failed:", err);
