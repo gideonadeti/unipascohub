@@ -136,10 +136,17 @@ Until course names are enriched, use `academicYear` + level as the title fallbac
 
 ## Search behavior
 
-| Version       | Behavior                                                                               |
-| ------------- | -------------------------------------------------------------------------------------- |
-| **v1 (hero)** | Animated typing placeholder; submit shows toast or scrolls to list — **no search API** |
-| **v2**        | Navigate to `/pascos?courseId=...&educationLevel=...` with URL-driven filters          |
+Smart search parses free-text queries into structured browse filters and course matches.
+
+| Surface | Behavior |
+| ------- | -------- |
+| **Hero search** | Debounced autocomplete via `GET /api/search/suggest`; course pick navigates to structured `/pascos?courseId=...` URL; Enter submits `/pascos?q=...` |
+| **Browse search** | URL param `q` (max 200 chars); server resolves year, level, type, semester, and course code/title |
+| **Explicit filters** | URL params (`courseId`, `academicYear`, etc.) override values parsed from `q` |
+
+**Shareable URLs:** `/pascos?q=DCIT+101+2024%2F2025` or `/pascos?courseId=...&academicYear=2024/2025`
+
+**API:** `GET /api/pascos` accepts `q` plus existing filter params; response may include optional `search` metadata (`parsedFilters`, `ambiguous`, `matchedCourses`).
 
 Hero search input must have a static `aria-label` (e.g. `"Search pascos"`) regardless of animated placeholder.
 
