@@ -1,6 +1,10 @@
+export type SiteContributorRole = "lead" | "contributor";
+
 export type SiteContributor = {
   name: string;
-  url?: string;
+  github: string;
+  role?: SiteContributorRole;
+  avatarUrl?: string;
 };
 
 export type FooterLink = {
@@ -22,17 +26,33 @@ export const siteTagline =
 export const siteDescription =
   "A hub for university students to share pasco and better prepare for exams.";
 
-export const siteCredits = {
-  lead: "Gideon Adeti",
-  contributors: [] as SiteContributor[],
-};
+export const siteContributors: SiteContributor[] = [
+  {
+    name: "Gideon Adeti",
+    github: "gideonadeti",
+    role: "lead",
+  },
+];
+
+function getLeadContributor(): SiteContributor | undefined {
+  return (
+    siteContributors.find((person) => person.role === "lead") ??
+    siteContributors[0]
+  );
+}
 
 export function getCreditLine(): string {
-  if (siteCredits.contributors.length === 0) {
-    return `Engineered by ${siteCredits.lead}`;
+  const lead = getLeadContributor();
+  const leadName = lead?.name ?? "contributors";
+  const hasAdditionalContributors = siteContributors.some(
+    (person) => person.role === "contributor",
+  );
+
+  if (!hasAdditionalContributors) {
+    return `Engineered by ${leadName}`;
   }
 
-  return `Engineered by ${siteCredits.lead} and contributors`;
+  return `Engineered by ${leadName} and contributors`;
 }
 
 function readPublicUrl(value: string | undefined): string | undefined {
