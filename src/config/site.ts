@@ -83,9 +83,18 @@ export const heroCopy = {
 } as const;
 
 export const heroSearchExamples = [
-  "DCIT 101",
-  "Level 200",
-  "2024/2025",
-  "End of sem",
+  "ATU 111",
+  "UG DCIT 101",
+  "DCIT 101 level 200",
+  "DCIT 101 2024/2025",
+  "Level 100",
+  "2025",
+  "2025/2026",
   "Mid sem",
+  "End of sem",
+  "sem 1",
+  "resit",
+  "africa and world development",
+  "KNUST",
+  "ATU",
 ] as const;
