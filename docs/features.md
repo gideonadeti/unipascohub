@@ -71,6 +71,7 @@ See [file-uploads.md](file-uploads.md) for the end-to-end upload pipeline.
 | View counting (deduped per viewer)         | Done   | [`src/app/api/pascos/[pascoId]/view/route.ts`](../src/app/api/pascos/[pascoId]/view/route.ts)                                                            |
 | Download counting                          | Done   | [`src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts`](../src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts)                      |
 | Viewer reaction on list/detail (signed-in) | Done   | [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts)                                                                                          |
+| Dislike-triggered moderation queue         | Done   | [`src/lib/pasco-moderation.ts`](../src/lib/pasco-moderation.ts), [`src/app/moderation/pascos/page.tsx`](../src/app/moderation/pascos/page.tsx)           |
 
 ## Permissions
 
@@ -78,10 +79,10 @@ See [file-uploads.md](file-uploads.md) for the end-to-end upload pipeline.
 | ------------- | --------------------------------------------------------------- |
 | `NORMAL_USER` | Browse, react, download (signed-in), view files                 |
 | `CONTRIBUTOR` | Upload/create pascos; edit/delete own pascos                    |
-| `MODERATOR`   | Edit/delete any pasco                                           |
+| `MODERATOR`   | Edit/delete any pasco; review pending pascos (approve/reject)   |
 | `ADMIN`       | Catalog CRUD, promote moderators, orphan cleanup, storage admin |
 
-Server gates: [`src/lib/require-contributor.ts`](../src/lib/require-contributor.ts), [`src/lib/require-admin.ts`](../src/lib/require-admin.ts).
+Server gates: [`src/lib/require-contributor.ts`](../src/lib/require-contributor.ts), [`src/lib/require-moderator.ts`](../src/lib/require-moderator.ts), [`src/lib/require-admin.ts`](../src/lib/require-admin.ts).
 
 Client gates: [`src/components/pasco-create-gate.tsx`](../src/components/pasco-create-gate.tsx), [`src/components/pasco-edit-gate.tsx`](../src/components/pasco-edit-gate.tsx).
 
@@ -101,18 +102,18 @@ See [operations.md](operations.md) for maintenance workflows.
 
 ## Frontend (current state)
 
-| Page                 | Path                     | Status                                                |
-| -------------------- | ------------------------ | ----------------------------------------------------- |
-| Home                 | `/`                      | Hero, v1 search, recent + popular pasco sections      |
-| Browse pascos        | `/pascos`                | URL filters, sort, pagination                         |
-| Create pasco         | `/pascos/new`            | Functional                                            |
-| Pasco detail         | `/pascos/[pascoId]`      | Functional (course code/title on detail)              |
-| Edit pasco           | `/pascos/[pascoId]/edit` | Functional                                            |
-| Contributors         | `/contributors`          | Stub page (reads from `siteCredits`)                  |
-| Sponsors             | `/sponsors`              | Stub page                                             |
-| Privacy              | `/privacy`               | Draft placeholder                                     |
-| Terms                | `/terms`                 | Draft placeholder                                     |
-| Feedback             | `/feedback`              | Feedback hub with anchor sections                     |
+| Page          | Path                     | Status                                           |
+| ------------- | ------------------------ | ------------------------------------------------ |
+| Home          | `/`                      | Hero, v1 search, recent + popular pasco sections |
+| Browse pascos | `/pascos`                | URL filters, sort, pagination                    |
+| Create pasco  | `/pascos/new`            | Functional                                       |
+| Pasco detail  | `/pascos/[pascoId]`      | Functional (course code/title on detail)         |
+| Edit pasco    | `/pascos/[pascoId]/edit` | Functional                                       |
+| Contributors  | `/contributors`          | Stub page (reads from `siteCredits`)             |
+| Sponsors      | `/sponsors`              | Stub page                                        |
+| Privacy       | `/privacy`               | Draft placeholder                                |
+| Terms         | `/terms`                 | Draft placeholder                                |
+| Feedback      | `/feedback`              | Feedback hub with anchor sections                |
 
 Infrastructure in place: TanStack Query, shadcn/ui components, toast notifications, basic header with auth.
 

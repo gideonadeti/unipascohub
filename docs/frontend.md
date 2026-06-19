@@ -33,6 +33,7 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 | `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                                |
 | `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                                         |
 | `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub + external form CTA                                |
+| `/moderation/pascos`     | [`src/app/moderation/pascos/page.tsx`](../src/app/moderation/pascos/page.tsx)         | Pending pasco review queue (moderator/admin gate)               |
 
 Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
 
@@ -87,6 +88,7 @@ layout.tsx
 | ----------------- | ------------------------------------------------------------------ | ---------------------------- |
 | `PascoCreateGate` | [`pasco-create-gate.tsx`](../src/components/pasco-create-gate.tsx) | Signed in + contributor role |
 | `PascoEditGate`   | [`pasco-edit-gate.tsx`](../src/components/pasco-edit-gate.tsx)     | Signed in + can modify pasco |
+| `ModerationGate`  | [`moderation-gate.tsx`](../src/components/moderation-gate.tsx)     | Signed in + moderator/admin  |
 
 ### Domain components
 
@@ -101,6 +103,8 @@ layout.tsx
 | `PascoEmbedPdfViewer`               | PDF embed using `@embedpdf/react-pdf-viewer`                       |
 | `PascoFileActions`                  | View/download buttons per file                                     |
 | `PascoDeleteDialog`                 | Delete confirmation                                                |
+| `ModerationPascosPage`              | Pending pasco queue with approve/reject actions                    |
+| `PascoModerationActions`            | Inline approve/reject on detail and moderation list                |
 
 ### UI primitives
 
@@ -112,7 +116,7 @@ shadcn-style components in [`src/components/ui/`](../src/components/ui/): button
 
 Axios instance with error handling: [`src/lib/api/client.ts`](../src/lib/api/client.ts)
 
-Domain wrappers: [`src/lib/api/`](../src/lib/api/) — `pascos.ts`, `users.ts`, `institutions.ts`, `programs.ts`, `courses.ts`, `cloudinary.ts`, `pasco-engagement.ts`
+Domain wrappers: [`src/lib/api/`](../src/lib/api/) — `pascos.ts`, `users.ts`, `institutions.ts`, `programs.ts`, `courses.ts`, `cloudinary.ts`, `pasco-engagement.ts`, `moderation.ts`
 
 ### TanStack Query
 
@@ -124,6 +128,7 @@ Domain wrappers: [`src/lib/api/`](../src/lib/api/) — `pascos.ts`, `users.ts`, 
 | [`use-institutions.ts`](../src/hooks/api/use-institutions.ts)         | Institution list                                            |
 | [`use-programs.ts`](../src/hooks/api/use-programs.ts)                 | Program list                                                |
 | [`use-courses.ts`](../src/hooks/api/use-courses.ts)                   | Course list and detail (`useCourse`)                        |
+| [`use-moderation.ts`](../src/hooks/api/use-moderation.ts)             | Moderation queue list and approve/reject mutations          |
 
 Query keys: [`src/lib/api/query-keys.ts`](../src/lib/api/query-keys.ts)
 

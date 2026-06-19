@@ -179,6 +179,40 @@ Delete a pasco and all its files.
 }
 ```
 
+## Moderation
+
+When a published pasco's `dislikeCount` crosses **5** (configurable via `MODERATION_DISLIKE_THRESHOLD`), it moves to `PENDING_REVIEW` and is hidden from public list/detail. Uploaders can still view their pending pasco; moderators review via `/moderation/pascos` or pasco detail.
+
+### `GET /api/moderation/pascos`
+
+List pascos by moderation status.
+
+**Auth:** Moderator or admin
+
+**Query:** `status` (`PENDING_REVIEW` default, also `PUBLISHED` | `REJECTED`), `page`, `limit`
+
+**Response `200`:** `{ pascos: [...], pagination: { ... } }`
+
+### `PATCH /api/moderation/pascos/:pascoId`
+
+Approve or reject a pending pasco.
+
+**Auth:** Moderator or admin
+
+**Body:**
+
+```json
+{ "action": "approve" }
+```
+
+`approve` → `PUBLISHED`; `reject` → `REJECTED` (stays hidden). Returns `409` if pasco is not `PENDING_REVIEW`.
+
+**Response `200`:**
+
+```json
+{ "moderationStatus": "PUBLISHED" }
+```
+
 ## Engagement
 
 ### `PUT /api/pascos/:pascoId/reaction`

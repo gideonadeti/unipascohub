@@ -92,6 +92,14 @@ Used for: catalog mutations, admin cleanup endpoints, promote to moderator.
 
 Allows: `ADMIN` only.
 
+### `requireModerator(userId)`
+
+[`src/lib/require-moderator.ts`](../src/lib/require-moderator.ts)
+
+Used for: moderation queue list and approve/reject endpoints.
+
+Allows: `MODERATOR`, `ADMIN`.
+
 ## Client-side gates
 
 ### `PascoCreateGate`
@@ -107,6 +115,13 @@ Allows: `ADMIN` only.
 
 1. Requires sign-in
 2. Requires `canUserModifyPasco` ([`src/lib/pasco-permissions.ts`](../src/lib/pasco-permissions.ts))
+
+### `ModerationGate`
+
+[`src/components/moderation-gate.tsx`](../src/components/moderation-gate.tsx)
+
+1. Requires sign-in
+2. Requires moderator or admin role
 
 Client gates improve UX; the API enforces the same rules server-side.
 
