@@ -47,6 +47,13 @@ const socialLinks: SocialLink[] = (
   ] as const
 ).flatMap((link) => (link.href ? [{ ...link, href: link.href }] : []));
 
+const footerLinkClassName =
+  "text-sm text-muted-foreground transition-colors hover:text-foreground";
+
+function hasHashFragment(href: string): boolean {
+  return href.includes("#");
+}
+
 export function SiteFooter() {
   const currentYear = new Date().getFullYear();
 
@@ -99,16 +106,17 @@ export function SiteFooter() {
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      className={footerLinkClassName}
                     >
                       {link.label}
                       <span className="sr-only"> (opens in new tab)</span>
                     </a>
+                  ) : hasHashFragment(link.href) ? (
+                    <a href={link.href} className={footerLinkClassName}>
+                      {link.label}
+                    </a>
                   ) : (
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
+                    <Link href={link.href} className={footerLinkClassName}>
                       {link.label}
                     </Link>
                   )}
