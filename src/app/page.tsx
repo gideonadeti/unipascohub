@@ -22,6 +22,7 @@ export default function HomePage() {
             title="Recent pascos"
             description="Latest uploads from contributors."
             filters={{ sortBy: "createdAt", sortOrder: "desc", limit: 6 }}
+            emphasize="createdAt"
             emptyAction={{ label: "Upload a pasco", href: "/pascos/new" }}
             viewAllHref="/pascos"
           />
@@ -32,6 +33,7 @@ export default function HomePage() {
             title="Popular pascos"
             description="Most viewed papers on the hub."
             filters={{ sortBy: "viewCount", sortOrder: "desc", limit: 6 }}
+            emphasize="views"
             emptyTitle="No popular pascos yet"
             emptyDescription="View counts will appear as students explore papers."
             viewAllHref="/pascos?sortBy=viewCount&sortOrder=desc"
