@@ -49,6 +49,14 @@ List responses also include a nested `course` summary on each pasco:
 
 Detail (`GET /api/pascos/[pascoId]`) and mutation responses do not include `course`; fetch the course separately when needed.
 
+When the request includes a `courseId` filter, the response also includes:
+
+```json
+"appliedCourse": { "code": "DCIT 101", "title": "Introduction to Computing" }
+```
+
+Use `appliedCourse` for filter chip labels without a separate course API call.
+
 ---
 
 ### `POST /api/pascos`
