@@ -344,6 +344,37 @@ Record a download and get a signed download URL.
 }
 ```
 
+---
+
+### `POST /api/pascos/:pascoId/download-all`
+
+Record downloads for all files and stream a ZIP archive.
+
+**Auth:** Signed in
+
+**Rate limit:** 120 requests per 15 minutes per user (shared with single-file download and view)
+
+**Requirements:** Pasco must have at least two files.
+
+**Response `200`:** Binary ZIP stream
+
+| Header                   | Description                                                    |
+| ------------------------ | -------------------------------------------------------------- |
+| `Content-Type`           | `application/zip`                                              |
+| `Content-Disposition`    | `attachment; filename="..."`                                   |
+| `X-Pasco-Download-Count` | Updated pasco `downloadCount` after incrementing by file count |
+
+Each file in the archive is named with its display order (e.g. `1. exam.pdf`). Download analytics: one `PascoDownload` row per file and `downloadCount` incremented by the number of files (same as downloading each file individually).
+
+**Errors:**
+
+- `400` — fewer than two files
+- `401` — not signed in
+- `404` — pasco, user, or file not found
+- `429` — rate limit exceeded
+- `500` — Cloudinary not configured
+- `502` — could not prepare download
+
 ## Upload helpers
 
 ### `POST /api/cloudinary/sign`

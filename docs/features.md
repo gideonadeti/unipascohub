@@ -50,16 +50,17 @@ Catalog mutations require `ADMIN` role. Reads are public.
 
 ## File handling
 
-| Capability                     | Status | Key files                                                                                                                                                      |
-| ------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cloudinary widget upload       | Done   | [`src/components/pasco-cloudinary-upload.tsx`](../src/components/pasco-cloudinary-upload.tsx)                                                                  |
-| Upload signing                 | Done   | [`src/app/api/cloudinary/sign/route.ts`](../src/app/api/cloudinary/sign/route.ts)                                                                              |
-| Content hash computation       | Done   | [`src/app/api/pascos/files/compute-hash/route.ts`](../src/app/api/pascos/files/compute-hash/route.ts), [`src/lib/content-hash.ts`](../src/lib/content-hash.ts) |
-| Duplicate file detection       | Done   | [`src/app/api/pascos/files/check-duplicates/route.ts`](../src/app/api/pascos/files/check-duplicates/route.ts)                                                  |
-| In-app PDF viewer              | Done   | [`src/components/pasco-embed-pdf-viewer.tsx`](../src/components/pasco-embed-pdf-viewer.tsx)                                                                    |
-| In-app image viewer            | Done   | [`src/components/pasco-file-view.tsx`](../src/components/pasco-file-view.tsx)                                                                                  |
-| Signed file download           | Done   | [`src/components/pasco-file-download.tsx`](../src/components/pasco-file-download.tsx)                                                                          |
-| Allowed file types enforcement | Done   | [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts)                                                                                                |
+| Capability                     | Status | Key files                                                                                                                                                                                          |
+| ------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cloudinary widget upload       | Done   | [`src/components/pasco-cloudinary-upload.tsx`](../src/components/pasco-cloudinary-upload.tsx)                                                                                                      |
+| Upload signing                 | Done   | [`src/app/api/cloudinary/sign/route.ts`](../src/app/api/cloudinary/sign/route.ts)                                                                                                                  |
+| Content hash computation       | Done   | [`src/app/api/pascos/files/compute-hash/route.ts`](../src/app/api/pascos/files/compute-hash/route.ts), [`src/lib/content-hash.ts`](../src/lib/content-hash.ts)                                     |
+| Duplicate file detection       | Done   | [`src/app/api/pascos/files/check-duplicates/route.ts`](../src/app/api/pascos/files/check-duplicates/route.ts)                                                                                      |
+| In-app PDF viewer              | Done   | [`src/components/pasco-embed-pdf-viewer.tsx`](../src/components/pasco-embed-pdf-viewer.tsx)                                                                                                        |
+| In-app image viewer            | Done   | [`src/components/pasco-file-view.tsx`](../src/components/pasco-file-view.tsx)                                                                                                                      |
+| Signed file download           | Done   | [`src/components/pasco-file-download.tsx`](../src/components/pasco-file-download.tsx)                                                                                                              |
+| Download all as ZIP (2+ files) | Done   | [`src/components/pasco-download-all.tsx`](../src/components/pasco-download-all.tsx), [`src/app/api/pascos/[pascoId]/download-all/route.ts`](../src/app/api/pascos/[pascoId]/download-all/route.ts) |
+| Allowed file types enforcement | Done   | [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts)                                                                                                                                    |
 
 See [file-uploads.md](file-uploads.md) for the end-to-end upload pipeline.
 

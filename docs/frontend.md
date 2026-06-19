@@ -102,6 +102,7 @@ layout.tsx
 | `PascoFileView`                     | Modal viewer for PDFs and images                                   |
 | `PascoEmbedPdfViewer`               | PDF embed using `@embedpdf/react-pdf-viewer`                       |
 | `PascoFileActions`                  | View/download buttons per file                                     |
+| `PascoDownloadAll`                  | Bulk ZIP download for pascos with 2+ files                         |
 | `PascoDeleteDialog`                 | Delete confirmation                                                |
 | `ModerationPascosPage`              | Pending/rejected tabs, manual flag, admin threshold settings       |
 | `PascoModerationActions`            | Approve/reject/restore/flag actions                                |
@@ -127,7 +128,7 @@ Domain wrappers: [`src/lib/api/`](../src/lib/api/) — `pascos.ts`, `users.ts`, 
 | Hook file                                                             | Hooks                                                             |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | [`use-pascos.ts`](../src/hooks/api/use-pascos.ts)                     | `usePascosList`, `usePasco`, create/update/delete mutations       |
-| [`use-pasco-engagement.ts`](../src/hooks/api/use-pasco-engagement.ts) | Reactions, views, file view/download                              |
+| [`use-pasco-engagement.ts`](../src/hooks/api/use-pasco-engagement.ts) | Reactions, views, file view/download, download all as ZIP         |
 | [`use-current-user.ts`](../src/hooks/api/use-current-user.ts)         | Current user profile                                              |
 | [`use-institutions.ts`](../src/hooks/api/use-institutions.ts)         | Institution list                                                  |
 | [`use-programs.ts`](../src/hooks/api/use-programs.ts)                 | Program list                                                      |
