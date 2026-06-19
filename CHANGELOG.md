@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Catalog submission queue: contributors request programs/courses; moderators approve into live catalog
+- Hybrid catalog: courses with a linked program auto-approve; programs stay in moderation queue
+- Institution seed script (`pnpm seed-institutions`) from [Wikipedia's list of universities in Ghana](https://en.wikipedia.org/wiki/List_of_universities_in_Ghana)
+- Catalog review page at `/moderation/catalog` with notifications on submit/approve/reject
+- Upload form: request program/course dialogs, pending submission alerts, deep-link prefill after approval
 - Frontend standards doc, site config module, Motion, shadcn `empty`/`skeleton`
 - App shell: `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme toggle (system/light/dark)
 - Frontend Phase 2: layout primitives (`PageContainer`, `PageHeader`, `Section`), `PascoCard`, list skeletons, `PascoListSection`, `EmptyState`, `useCourse` hook, homepage recent-pascos preview
@@ -20,7 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Planned
 
 - Admin dashboard UI
-- Database seed script
 - Automated tests
 
 ## [0.1.0] - 2026-06-17

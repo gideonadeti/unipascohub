@@ -14,8 +14,11 @@ erDiagram
 
   Institution ||--o{ Program : has
   Institution ||--o{ Course : has
+  Institution ||--o{ CatalogSubmission : receives
   Program }o--o{ Course : offers
   Course ||--o{ Pasco : contains
+  User ||--o{ CatalogSubmission : submits
+  User ||--o{ CatalogSubmission : reviews
 
   Pasco ||--o{ PascoFile : has
   Pasco ||--o{ PascoReaction : receives
@@ -134,22 +137,46 @@ Tracks Cloudinary assets that failed to delete. `resolvedAt` is null until manua
 
 Logs batch orphan cleanup scans (dry-run or execute).
 
+### CatalogSubmission
+
+Contributor requests for new programs or courses. Moderators approve into the live catalog or reject with a reason.
+
+| Field               | Type                    | Notes                             |
+| ------------------- | ----------------------- | --------------------------------- |
+| `id`                | String                  | cuid                              |
+| `type`              | CatalogSubmissionType   | `PROGRAM` or `COURSE`             |
+| `status`            | CatalogSubmissionStatus | Default `PENDING`                 |
+| `institutionId`     | String                  | FK → Institution                  |
+| `submitterId`       | String                  | FK → User                         |
+| `reviewerId`        | String?                 | FK → User (set on approve/reject) |
+| `programName`       | String?                 | PROGRAM payload                   |
+| `programType`       | ProgramType?            | PROGRAM payload                   |
+| `courseCode`        | String?                 | COURSE payload                    |
+| `courseTitle`       | String?                 | COURSE payload                    |
+| `programIds`        | String[]                | COURSE payload — programs to link |
+| `rejectionReason`   | String?                 | Shown to submitter when rejected  |
+| `approvedProgramId` | String?                 | Set when PROGRAM approved         |
+| `approvedCourseId`  | String?                 | Set when COURSE approved          |
+| `reviewedAt`        | DateTime?               | Set on approve/reject             |
+
 ## Enums (product meaning)
 
-| Enum                     | Values                                              | Meaning                                   |
-| ------------------------ | --------------------------------------------------- | ----------------------------------------- |
-| `UserRole`               | NORMAL_USER, CONTRIBUTOR, MODERATOR, ADMIN          | Permission tier                           |
-| `ProgramType`            | BACHELOR, BTECH, BTECH_TOP_UP, HND, DIPLOMA         | Degree program category                   |
-| `EducationLevel`         | LEVEL_100 … LEVEL_400                               | Student year level                        |
-| `SemesterType`           | FIRST_SEMESTER, SECOND_SEMESTER                     | Academic semester                         |
-| `PascoType`              | MID_SEM, END_OF_SEM, RESIT                          | Exam period                               |
-| `PascoContentType`       | QUESTIONS_ONLY, QUESTIONS_AND_ANSWERS, ANSWERS_ONLY | What the upload contains                  |
-| `SolutionCompleteness`   | FULLY_SOLVED, PARTIALLY_SOLVED                      | Answer quality (when applicable)          |
-| `CloudinaryResourceType` | IMAGE, RAW                                          | Cloudinary delivery type (PDFs use IMAGE) |
-| `PascoReactionType`      | LIKE, DISLIKE                                       | User reaction                             |
-| `PascoModerationStatus`  | PUBLISHED, PENDING_REVIEW, REJECTED                 | Public visibility and review queue        |
-| `PascoModerationSource`  | DISLIKES, MANUAL                                    | Why pasco entered review                  |
-| `StorageCleanupSource`   | PASCO_SYNC, PASCO_DELETE, ORPHAN_BATCH              | Why cleanup was attempted                 |
+| Enum                      | Values                                              | Meaning                                   |
+| ------------------------- | --------------------------------------------------- | ----------------------------------------- |
+| `UserRole`                | NORMAL_USER, CONTRIBUTOR, MODERATOR, ADMIN          | Permission tier                           |
+| `ProgramType`             | BACHELOR, BTECH, BTECH_TOP_UP, HND, DIPLOMA         | Degree program category                   |
+| `EducationLevel`          | LEVEL_100 … LEVEL_400                               | Student year level                        |
+| `SemesterType`            | FIRST_SEMESTER, SECOND_SEMESTER                     | Academic semester                         |
+| `PascoType`               | MID_SEM, END_OF_SEM, RESIT                          | Exam period                               |
+| `PascoContentType`        | QUESTIONS_ONLY, QUESTIONS_AND_ANSWERS, ANSWERS_ONLY | What the upload contains                  |
+| `SolutionCompleteness`    | FULLY_SOLVED, PARTIALLY_SOLVED                      | Answer quality (when applicable)          |
+| `CloudinaryResourceType`  | IMAGE, RAW                                          | Cloudinary delivery type (PDFs use IMAGE) |
+| `PascoReactionType`       | LIKE, DISLIKE                                       | User reaction                             |
+| `PascoModerationStatus`   | PUBLISHED, PENDING_REVIEW, REJECTED                 | Public visibility and review queue        |
+| `PascoModerationSource`   | DISLIKES, MANUAL                                    | Why pasco entered review                  |
+| `StorageCleanupSource`    | PASCO_SYNC, PASCO_DELETE, ORPHAN_BATCH              | Why cleanup was attempted                 |
+| `CatalogSubmissionType`   | PROGRAM, COURSE                                     | What catalog entry is being requested     |
+| `CatalogSubmissionStatus` | PENDING, APPROVED, REJECTED                         | Submission review state                   |
 
 ## Indexes
 
@@ -161,6 +188,9 @@ Logs batch orphan cleanup scans (dry-run or execute).
 | PascoFile             | `contentHash`                                            | Duplicate detection        |
 | PascoReaction         | `(pascoId, reactionType)`                                | Reaction counts            |
 | StorageCleanupFailure | `(resolvedAt, createdAt)`                                | Unresolved failure queries |
+| CatalogSubmission     | `(status, createdAt DESC)`                               | Moderation queue           |
+| CatalogSubmission     | `(submitterId, createdAt DESC)`                          | My submissions             |
+| CatalogSubmission     | `(institutionId, type, status)`                          | Duplicate checks           |
 
 ## Catalog relationships
 

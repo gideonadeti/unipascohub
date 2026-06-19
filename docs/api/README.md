@@ -60,12 +60,13 @@ Shared TypeScript types live in [`src/types/api/`](../../src/types/api/).
 
 ## API sections
 
-| Doc                      | Endpoints                        |
-| ------------------------ | -------------------------------- |
-| [catalog.md](catalog.md) | Institutions, programs, courses  |
-| [pascos.md](pascos.md)   | Pasco CRUD, engagement, files    |
-| [users.md](users.md)     | Current user, role upgrades      |
-| [admin.md](admin.md)     | Cloudinary cleanup, storage logs |
+| Doc                                              | Endpoints                         |
+| ------------------------------------------------ | --------------------------------- |
+| [catalog.md](catalog.md)                         | Institutions, programs, courses   |
+| [catalog-submissions.md](catalog-submissions.md) | Catalog submission and moderation |
+| [pascos.md](pascos.md)                           | Pasco CRUD, engagement, files     |
+| [users.md](users.md)                             | Current user, role upgrades       |
+| [admin.md](admin.md)                             | Cloudinary cleanup, storage logs  |
 
 ## Webhooks
 

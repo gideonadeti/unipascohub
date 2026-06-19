@@ -15,16 +15,20 @@ Retrospective of what has been built, organized by user-facing capability. Cross
 
 ## Academic catalog
 
-| Capability                                               | Status        | Key files                                                   |
-| -------------------------------------------------------- | ------------- | ----------------------------------------------------------- |
-| List institutions                                        | Done          | [`src/lib/institutions.ts`](../src/lib/institutions.ts)     |
-| CRUD institutions (admin)                                | Done          | [`src/app/api/institutions/`](../src/app/api/institutions/) |
-| List programs (filter by institution)                    | Done          | [`src/lib/programs.ts`](../src/lib/programs.ts)             |
-| CRUD programs (admin)                                    | Done          | [`src/app/api/programs/`](../src/app/api/programs/)         |
-| List courses (filter by institution/program)             | Done          | [`src/lib/courses.ts`](../src/lib/courses.ts)               |
-| CRUD courses (admin)                                     | Done          | [`src/app/api/courses/`](../src/app/api/courses/)           |
-| Program label disambiguation (same name, different type) | Done          | [`src/lib/catalog-labels.ts`](../src/lib/catalog-labels.ts) |
-| Seed data script                                         | **Not built** | —                                                           |
+| Capability                                               | Status | Key files                                                                                                                                        |
+| -------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| List institutions                                        | Done   | [`src/lib/institutions.ts`](../src/lib/institutions.ts)                                                                                          |
+| CRUD institutions (admin)                                | Done   | [`src/app/api/institutions/`](../src/app/api/institutions/)                                                                                      |
+| List programs (filter by institution)                    | Done   | [`src/lib/programs.ts`](../src/lib/programs.ts)                                                                                                  |
+| CRUD programs (admin)                                    | Done   | [`src/app/api/programs/`](../src/app/api/programs/)                                                                                              |
+| List courses (filter by institution/program)             | Done   | [`src/lib/courses.ts`](../src/lib/courses.ts)                                                                                                    |
+| CRUD courses (admin)                                     | Done   | [`src/app/api/courses/`](../src/app/api/courses/)                                                                                                |
+| Program label disambiguation (same name, different type) | Done   | [`src/lib/catalog-labels.ts`](../src/lib/catalog-labels.ts)                                                                                      |
+| Institution seed script                                  | Done   | [`prisma/seed-institutions.ts`](../prisma/seed-institutions.ts)                                                                                  |
+| Contributor catalog submissions (program/course)         | Done   | [`src/lib/catalog-submissions.ts`](../src/lib/catalog-submissions.ts), [`src/app/api/catalog-submissions/`](../src/app/api/catalog-submissions/) |
+| Course auto-approve when linked to a program             | Done   | [`src/lib/catalog-submissions.ts`](../src/lib/catalog-submissions.ts)                                                                            |
+| Catalog moderation queue (moderator+)                    | Done   | [`src/app/moderation/catalog/page.tsx`](../src/app/moderation/catalog/page.tsx)                                                                  |
+| Request program/course from upload form                  | Done   | [`src/components/pasco-create-form.tsx`](../src/components/pasco-create-form.tsx)                                                                |
 
 Catalog mutations require `ADMIN` role. Reads are public.
 
@@ -80,12 +84,12 @@ See [file-uploads.md](file-uploads.md) for the end-to-end upload pipeline.
 
 ## Permissions
 
-| Role          | Capabilities                                                                           |
-| ------------- | -------------------------------------------------------------------------------------- |
-| `NORMAL_USER` | Browse, react, download (signed-in), view files                                        |
-| `CONTRIBUTOR` | Upload/create pascos; edit/delete own pascos                                           |
-| `MODERATOR`   | Edit any pasco; review queue (approve/reject/restore/flag); cannot delete              |
-| `ADMIN`       | Catalog CRUD, promote moderators, delete any pasco, threshold settings, orphan cleanup |
+| Role          | Capabilities                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `NORMAL_USER` | Browse, react, download (signed-in), view files                                                       |
+| `CONTRIBUTOR` | Upload/create pascos; edit/delete own pascos                                                          |
+| `MODERATOR`   | Edit any pasco; review queue (approve/reject/restore/flag); review catalog submissions; cannot delete |
+| `ADMIN`       | Catalog CRUD, promote moderators, delete any pasco, threshold settings, orphan cleanup                |
 
 Server gates: [`src/lib/require-contributor.ts`](../src/lib/require-contributor.ts), [`src/lib/require-moderator.ts`](../src/lib/require-moderator.ts), [`src/lib/require-admin.ts`](../src/lib/require-admin.ts).
 
@@ -107,18 +111,19 @@ See [operations.md](operations.md) for maintenance workflows.
 
 ## Frontend (current state)
 
-| Page          | Path                     | Status                                           |
-| ------------- | ------------------------ | ------------------------------------------------ |
-| Home          | `/`                      | Hero, v1 search, recent + popular pasco sections |
-| Browse pascos | `/pascos`                | URL filters, sort, pagination                    |
-| Create pasco  | `/pascos/new`            | Functional                                       |
-| Pasco detail  | `/pascos/[pascoId]`      | Functional (course code/title on detail)         |
-| Edit pasco    | `/pascos/[pascoId]/edit` | Functional                                       |
-| Contributors  | `/contributors`          | Stub page (reads from `siteCredits`)             |
-| Sponsors      | `/sponsors`              | Stub page                                        |
-| Privacy       | `/privacy`               | Draft placeholder                                |
-| Terms         | `/terms`                 | Draft placeholder                                |
-| Feedback      | `/feedback`              | Feedback hub with anchor sections                |
+| Page           | Path                     | Status                                           |
+| -------------- | ------------------------ | ------------------------------------------------ |
+| Home           | `/`                      | Hero, v1 search, recent + popular pasco sections |
+| Browse pascos  | `/pascos`                | URL filters, sort, pagination                    |
+| Create pasco   | `/pascos/new`            | Functional                                       |
+| Pasco detail   | `/pascos/[pascoId]`      | Functional (course code/title on detail)         |
+| Edit pasco     | `/pascos/[pascoId]/edit` | Functional                                       |
+| Catalog review | `/moderation/catalog`    | Pending/rejected contributor catalog requests    |
+| Contributors   | `/contributors`          | Stub page (reads from `siteCredits`)             |
+| Sponsors       | `/sponsors`              | Stub page                                        |
+| Privacy        | `/privacy`               | Draft placeholder                                |
+| Terms          | `/terms`                 | Draft placeholder                                |
+| Feedback       | `/feedback`              | Feedback hub with anchor sections                |
 
 Infrastructure in place: TanStack Query, shadcn/ui components, toast notifications, basic header with auth.
 
@@ -132,7 +137,6 @@ These are the main gaps before a student-facing product launch:
 - **Navigation polish** — full breadcrumbs (institution → program → course)
 - **Admin dashboard UI** — orphan cleanup and failure inspection in the browser
 - **Automated tests** — no test suite yet
-- **Seed data** — no `prisma db seed` script
 - **Text search** — list API supports filters only, not free-text search
 
 ## When you ship a feature, update this doc

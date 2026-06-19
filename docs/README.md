@@ -23,13 +23,14 @@ Index of all documentation for Uni Pasco Hub.
 
 ## API reference
 
-| Doc                              | Description                            |
-| -------------------------------- | -------------------------------------- |
-| [api/README.md](api/README.md)   | API conventions and error codes        |
-| [api/catalog.md](api/catalog.md) | Institutions, programs, courses        |
-| [api/pascos.md](api/pascos.md)   | Pasco CRUD, engagement, file endpoints |
-| [api/users.md](api/users.md)     | User profile and role management       |
-| [api/admin.md](api/admin.md)     | Orphan cleanup and storage logs        |
+| Doc                                                      | Description                                    |
+| -------------------------------------------------------- | ---------------------------------------------- |
+| [api/README.md](api/README.md)                           | API conventions and error codes                |
+| [api/catalog.md](api/catalog.md)                         | Institutions, programs, courses                |
+| [api/catalog-submissions.md](api/catalog-submissions.md) | Contributor catalog requests, moderation queue |
+| [api/pascos.md](api/pascos.md)                           | Pasco CRUD, engagement, file endpoints         |
+| [api/users.md](api/users.md)                             | User profile and role management               |
+| [api/admin.md](api/admin.md)                             | Orphan cleanup and storage logs                |
 
 ## Guides
 

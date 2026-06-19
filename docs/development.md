@@ -57,7 +57,15 @@ pnpm prisma migrate dev
 pnpm prisma generate
 ```
 
+Seed institutions (from [Wikipedia's list of universities in Ghana](https://en.wikipedia.org/wiki/List_of_universities_in_Ghana), parsed by [`prisma/data/parse-wikipedia-institutions.ts`](../prisma/data/parse-wikipedia-institutions.ts)):
+
+```bash
+pnpm seed-institutions
+```
+
 - Migrations live in [`prisma/migrations/`](../prisma/migrations/)
+- Seed scripts live in [`prisma/seed-*.ts`](../prisma/) and are listed in [`prisma/seeds.config.ts`](../prisma/seeds.config.ts)
+- Each seed has a matching `pnpm seed-<name>` script in [`package.json`](../package.json) (not `prisma db seed` — Prisma only supports one built-in seed command)
 - Generated client output: `generated/prisma/`
 - Config: [`prisma.config.ts`](../prisma.config.ts)
 - Search requires the `pg_trgm` extension (applied by migration `20260618100000_add_pg_trgm_course_search_indexes`). Most managed Postgres providers support `CREATE EXTENSION pg_trgm`; confirm before production deploy.
@@ -92,15 +100,19 @@ Smoke-check:
 - `/` — API smoke test (institution and pasco counts)
 - `/pascos/new` — upload form (requires sign-in + contributor role)
 
-### 8. Seed catalog data (manual)
+### 8. Seed catalog data
 
-There is no seed script yet. To test uploads, create catalog data via admin API calls or Prisma Studio:
+Institutions are seeded via dedicated scripts (see [`prisma/seeds.config.ts`](../prisma/seeds.config.ts)):
 
 ```bash
-pnpm prisma studio
+pnpm seed-institutions
 ```
 
-You need at least one institution, program, and course before creating a pasco. Catalog mutations require an `ADMIN` user (set role directly in the database for local dev).
+To add another seed: create `prisma/seed-<name>.ts`, register it in `prisma/seeds.config.ts`, and add `"seed-<name>": "tsx prisma/seed-<name>.ts"` to `package.json`.
+
+This upserts ~90 Ghanaian institutions from [Wikipedia's list of universities in Ghana](https://en.wikipedia.org/wiki/List_of_universities_in_Ghana). Programs are added via contributor submission (moderator review) or admin API. Courses with a linked program are added automatically when contributors submit from the upload form.
+
+For local moderator testing, set a user's `role` to `MODERATOR` or `ADMIN` in Prisma Studio. Catalog mutations via admin API still require `ADMIN`.
 
 ## CI expectations
 
@@ -140,8 +152,8 @@ Run these locally before pushing. Husky pre-commit hooks run lint-staged when no
 
 ### Pasco create: course not found
 
-- Catalog must be seeded with institutions, programs, and courses
-- The selected course must exist and match the institution/program filters in the form
+- Run `pnpm seed-institutions` for institutions, or add a course from `/pascos/new` (auto-added when a program is selected)
+- Program requests still require moderator approval before they appear in the upload form
 
 ### Rate limiting in development
 

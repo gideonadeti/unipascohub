@@ -45,21 +45,24 @@ Defined in Prisma as `UserRole` ([`prisma/schema.prisma`](../prisma/schema.prism
 
 ## Capability matrix
 
-| Action                      | NORMAL_USER | CONTRIBUTOR | MODERATOR | ADMIN |
-| --------------------------- | :---------: | :---------: | :-------: | :---: |
-| Browse catalog and pascos   |     Yes     |     Yes     |    Yes    |  Yes  |
-| React (like/dislike)        |     Yes     |     Yes     |    Yes    |  Yes  |
-| Download files              |     Yes     |     Yes     |    Yes    |  Yes  |
-| View files in-app           |     Yes     |     Yes     |    Yes    |  Yes  |
-| Upload / create pasco       |     No      |     Yes     |    Yes    |  Yes  |
-| Edit own pasco              |     No      |     Yes     |    Yes    |  Yes  |
-| Edit any pasco              |     No      |     No      |    Yes    |  Yes  |
-| Delete own pasco            |     No      |     Yes     |    Yes    |  Yes  |
-| Delete any pasco            |     No      |     No      |    Yes    |  Yes  |
-| Self-upgrade to contributor |     Yes     |      —      |     —     |   —   |
-| Catalog CRUD                |     No      |     No      |    No     |  Yes  |
-| Promote to moderator        |     No      |     No      |    No     |  Yes  |
-| Admin / ops endpoints       |     No      |     No      |    No     |  Yes  |
+| Action                      | NORMAL_USER |       CONTRIBUTOR       | MODERATOR | ADMIN |
+| --------------------------- | :---------: | :---------------------: | :-------: | :---: |
+| Browse catalog and pascos   |     Yes     |           Yes           |    Yes    |  Yes  |
+| React (like/dislike)        |     Yes     |           Yes           |    Yes    |  Yes  |
+| Download files              |     Yes     |           Yes           |    Yes    |  Yes  |
+| View files in-app           |     Yes     |           Yes           |    Yes    |  Yes  |
+| Upload / create pasco       |     No      |           Yes           |    Yes    |  Yes  |
+| Edit own pasco              |     No      |           Yes           |    Yes    |  Yes  |
+| Edit any pasco              |     No      |           No            |    Yes    |  Yes  |
+| Delete own pasco            |     No      |           Yes           |    Yes    |  Yes  |
+| Delete any pasco            |     No      |           No            |    Yes    |  Yes  |
+| Self-upgrade to contributor |     Yes     |            —            |     —     |   —   |
+| Catalog CRUD                |     No      |           No            |    No     |  Yes  |
+| Submit catalog request      |     No      |           Yes           |    Yes    |  Yes  |
+| Review catalog submissions  |     No      |           No            |    Yes    |  Yes  |
+| Auto-add course to catalog  |     No      | Yes (with program link) |    Yes    |  Yes  |
+| Promote to moderator        |     No      |           No            |    No     |  Yes  |
+| Admin / ops endpoints       |     No      |           No            |    No     |  Yes  |
 
 ## Server-side authorization
 
@@ -109,7 +112,7 @@ Allows: `ADMIN` only.
 
 [`src/lib/require-moderator.ts`](../src/lib/require-moderator.ts)
 
-Used for: moderation queue, restore/flag actions, read threshold settings.
+Used for: moderation queue (pascos and catalog submissions), restore/flag actions, read threshold settings.
 
 Allows: `MODERATOR`, `ADMIN`.
 
