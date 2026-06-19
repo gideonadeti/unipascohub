@@ -61,6 +61,12 @@ enum PascoReactionType {
   DISLIKE
 }
 
+enum PascoModerationStatus {
+  PUBLISHED
+  PENDING_REVIEW
+  REJECTED
+}
+
 enum StorageCleanupSource {
   PASCO_SYNC
   PASCO_DELETE
@@ -146,6 +152,7 @@ model Pasco {
   dislikeCount         Int                   @default(0)
   downloadCount        Int                   @default(0)
   viewCount            Int                   @default(0)
+  moderationStatus     PascoModerationStatus @default(PUBLISHED)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
@@ -162,6 +169,7 @@ model Pasco {
   @@index([likeCount(sort: Desc)])
   @@index([downloadCount(sort: Desc)])
   @@index([viewCount(sort: Desc)])
+  @@index([moderationStatus, createdAt(sort: Desc)])
 }
 
 model PascoFile {
