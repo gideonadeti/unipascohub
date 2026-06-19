@@ -156,6 +156,10 @@ Smart search parses free-text queries into structured browse filters and course 
 
 Hero and browse search inputs use `type="text"` (not `type="search"`) to avoid browser in-page text highlighting. Browse uses `aria-label`; hero autocomplete keeps `role="combobox"`. Hero search input must have a static `aria-label` (e.g. `"Search pascos"`) regardless of animated placeholder.
 
+**Recent searches:** Last 8 queries are stored in `localStorage` (`unipascohub:recent-searches`) and shown in the hero and browse dropdowns when the input is focused and empty. Saved on successful search submit (not on every suggest keystroke). See [`recent-searches.ts`](../src/lib/search/recent-searches.ts).
+
+**Search analytics:** Server stores search queries (2+ chars) from suggest and browse list in Postgres (`SearchQuery` table) for product improvement. See [`record-search-query.ts`](../src/lib/search/record-search-query.ts) and [operations.md](operations.md).
+
 ---
 
 ## Theming

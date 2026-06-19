@@ -72,6 +72,8 @@ Implemented in [`src/lib/rate-limit.ts`](../src/lib/rate-limit.ts).
 | File view/download | 120 / user    | 15 min | `PASCO_DOWNLOAD_RATE_LIMIT`, `PASCO_DOWNLOAD_RATE_WINDOW_MS`       |
 | View dedupe        | 1 / viewer    | 1 hour | `PASCO_VIEW_DEDUPE_WINDOW_MS`                                      |
 | View global        | 300 total     | 15 min | `PASCO_VIEW_GLOBAL_RATE_LIMIT`, `PASCO_VIEW_GLOBAL_RATE_WINDOW_MS` |
+| Pasco list         | 120 / IP      | 15 min | `PASCO_LIST_RATE_LIMIT`, `PASCO_LIST_RATE_WINDOW_MS`               |
+| Search suggest     | 60 / IP       | 1 min  | (hardcoded in suggest route)                                         |
 
 ### Redis vs in-memory
 
@@ -79,6 +81,12 @@ Implemented in [`src/lib/rate-limit.ts`](../src/lib/rate-limit.ts).
 - **`REDIS_URL` unset:** in-memory fallback (single process only; logs a warning once)
 
 Rate-limited responses return `429` with optional `Retry-After` header (seconds).
+
+## Search analytics
+
+Search queries (2+ characters) from `GET /api/search/suggest` and browse list requests with a `q` param are stored in the `SearchQuery` table for product improvement. Rows include the query text, source (`SUGGEST` or `BROWSE_LIST`), optional signed-in `userId`, result counts, and light metadata (parsed filters). No third-party analytics SDK is used for search in the current MVP.
+
+Retention and purge of old rows are not automated yet; add a scheduled job if the table grows large.
 
 ## Signed URL TTL
 

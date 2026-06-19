@@ -12,6 +12,8 @@ List pascos with filters, pagination, and sorting.
 
 **Auth:** None (includes `viewerReaction` when signed in)
 
+**Rate limit:** 120 requests per 15 minutes per IP (configurable via `PASCO_LIST_RATE_LIMIT`, `PASCO_LIST_RATE_WINDOW_MS`). Returns `429` with optional `Retry-After` when exceeded.
+
 **Query parameters:**
 
 | Param            | Type    | Default     | Description                                                                                         |
