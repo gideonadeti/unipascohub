@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { getPascoFileSignedUrl } from "@/lib/pasco-engagement";
+import { getPascoViewerContext } from "@/lib/pascos";
 import {
   checkRateLimit,
   getPascoDownloadRateLimitOptions,
@@ -37,9 +38,10 @@ export async function POST(
   }
 
   const { pascoId, fileId } = await params;
+  const viewer = await getPascoViewerContext(userId);
 
   try {
-    const result = await getPascoFileSignedUrl(pascoId, fileId);
+    const result = await getPascoFileSignedUrl(pascoId, fileId, viewer);
 
     if (!result.success) {
       switch (result.error) {

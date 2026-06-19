@@ -6,6 +6,7 @@ import {
   getPascoById,
   getPascoMaxFileSizeBytes,
   getPascoMaxFilesPerPasco,
+  getPascoViewerContext,
   parsePascoUpdate,
   serializePasco,
   updatePasco,
@@ -21,27 +22,27 @@ export async function GET(
   const { pascoId } = await params;
 
   try {
-    const result = await getPascoById(pascoId);
+    const { isAuthenticated, userId } = await auth();
+    const viewer =
+      isAuthenticated && userId ? await getPascoViewerContext(userId) : null;
+    const result = await getPascoById(pascoId, viewer);
 
     if (!result.success) {
       return Response.json({ error: "Pasco not found" }, { status: 404 });
     }
 
-    const { isAuthenticated, userId } = await auth();
     const viewerReactions =
       isAuthenticated && userId
         ? await getViewerReactionsForPascos(userId, [pascoId])
         : null;
 
     return Response.json({
-      pasco: serializePasco(
-        result.pasco,
-        viewerReactions
-          ? {
-              viewerReaction: viewerReactions.get(pascoId) ?? null,
-            }
-          : undefined,
-      ),
+      pasco: serializePasco(result.pasco, {
+        viewer,
+        ...(viewerReactions
+          ? { viewerReaction: viewerReactions.get(pascoId) ?? null }
+          : {}),
+      }),
     });
   } catch (err) {
     console.error("Pasco fetch failed:", err);
@@ -61,8 +62,9 @@ export async function PATCH(
   }
 
   const { pascoId } = await params;
+  const viewer = await getPascoViewerContext(userId);
 
-  const existingResult = await getPascoById(pascoId);
+  const existingResult = await getPascoById(pascoId, viewer);
 
   if (!existingResult.success) {
     return Response.json({ error: "Pasco not found" }, { status: 404 });
@@ -303,8 +305,9 @@ export async function DELETE(
   }
 
   const { pascoId } = await params;
+  const viewer = await getPascoViewerContext(userId);
 
-  const existingResult = await getPascoById(pascoId);
+  const existingResult = await getPascoById(pascoId, viewer);
 
   if (!existingResult.success) {
     return Response.json({ error: "Pasco not found" }, { status: 404 });

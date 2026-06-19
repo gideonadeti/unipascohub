@@ -6,6 +6,7 @@ import {
   getRequestViewerKey,
   recordPascoView,
 } from "@/lib/pasco-engagement";
+import { getPascoViewerContext } from "@/lib/pascos";
 import {
   checkRateLimit,
   getPascoViewDedupeOptions,
@@ -39,6 +40,8 @@ export async function POST(
   }
 
   const { pascoId } = await params;
+  const viewer =
+    isAuthenticated && userId ? await getPascoViewerContext(userId) : null;
 
   const dedupeRateLimitResult = await checkRateLimit(
     `pasco-view:${pascoId}:${viewerKey}`,
@@ -59,7 +62,7 @@ export async function POST(
       });
     }
 
-    const result = await recordPascoView(pascoId);
+    const result = await recordPascoView(pascoId, viewer);
 
     if (!result.success) {
       return Response.json({ error: "Pasco not found" }, { status: 404 });

@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { recordPascoDownload } from "@/lib/pasco-engagement";
+import { getPascoViewerContext } from "@/lib/pascos";
 import {
   checkRateLimit,
   getPascoDownloadRateLimitOptions,
@@ -37,9 +38,10 @@ export async function POST(
   }
 
   const { pascoId, fileId } = await params;
+  const viewer = await getPascoViewerContext(userId);
 
   try {
-    const result = await recordPascoDownload(userId, pascoId, fileId);
+    const result = await recordPascoDownload(userId, pascoId, fileId, viewer);
 
     if (!result.success) {
       switch (result.error) {
