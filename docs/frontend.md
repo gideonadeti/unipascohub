@@ -55,7 +55,7 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 | `PageContainer`       | [`layout/page-container.tsx`](../src/components/layout/page-container.tsx) | Width-tiered `<main>` wrapper (`narrow` / `default` / `wide`) |
 | `PageHeader`          | [`layout/page-header.tsx`](../src/components/layout/page-header.tsx)       | Page title, description, optional actions                     |
 | `Section`             | [`layout/section.tsx`](../src/components/layout/section.tsx)               | Titled content section                                        |
-| `PascoCard`           | [`pasco-card.tsx`](../src/components/pasco-card.tsx)                       | Linked card for pasco list grids                              |
+| `PascoCard`           | [`pasco-card.tsx`](../src/components/pasco-card.tsx)                       | Linked card with institution eyebrow, course title, badges    |
 | `PascoListSection`    | [`pasco-list-section.tsx`](../src/components/pasco-list-section.tsx)       | Async list section with skeleton/error/empty states           |
 | `PascoListSkeleton`   | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx)     | Grid of card skeletons                                        |
 | `EmptyState`          | [`empty-state.tsx`](../src/components/empty-state.tsx)                     | shadcn Empty wrapper with optional CTA                        |
@@ -159,10 +159,9 @@ Zod schemas with react-hook-form:
 
 These items remain after the frontend roadmap (Phases 0–7):
 
-1. **Enriched display** — show course code/title on list cards when not filtered by course
-2. **Navigation** — full breadcrumbs (institution → program → course)
-3. **Admin dashboard** — UI for orphan cleanup and storage failure inspection
-4. **Automated a11y tests** — no Lighthouse CI or axe suite yet
+1. **Navigation** — full breadcrumbs (institution → program → course)
+2. **Admin dashboard** — UI for orphan cleanup and storage failure inspection
+3. **Automated a11y tests** — no Lighthouse CI or axe suite yet
 
 See [features.md](features.md) for the full implemented vs planned breakdown.
 
