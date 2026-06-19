@@ -65,22 +65,26 @@ See [file-uploads.md](file-uploads.md) for the end-to-end upload pipeline.
 
 ## Engagement
 
-| Capability                                 | Status | Key files                                                                                                                                                |
-| ------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Like / dislike (toggle)                    | Done   | [`src/components/pasco-engagement-bar.tsx`](../src/components/pasco-engagement-bar.tsx), [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts) |
-| View counting (deduped per viewer)         | Done   | [`src/app/api/pascos/[pascoId]/view/route.ts`](../src/app/api/pascos/[pascoId]/view/route.ts)                                                            |
-| Download counting                          | Done   | [`src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts`](../src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts)                      |
-| Viewer reaction on list/detail (signed-in) | Done   | [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts)                                                                                          |
-| Dislike-triggered moderation queue         | Done   | [`src/lib/pasco-moderation.ts`](../src/lib/pasco-moderation.ts), [`src/app/moderation/pascos/page.tsx`](../src/app/moderation/pascos/page.tsx)           |
+| Capability                                 | Status | Key files                                                                                                                                                                |
+| ------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Like / dislike (toggle)                    | Done   | [`src/components/pasco-engagement-bar.tsx`](../src/components/pasco-engagement-bar.tsx), [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts)                 |
+| View counting (deduped per viewer)         | Done   | [`src/app/api/pascos/[pascoId]/view/route.ts`](../src/app/api/pascos/[pascoId]/view/route.ts)                                                                            |
+| Download counting                          | Done   | [`src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts`](../src/app/api/pascos/[pascoId]/files/[fileId]/download/route.ts)                                      |
+| Viewer reaction on list/detail (signed-in) | Done   | [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts)                                                                                                          |
+| Dislike-triggered moderation queue         | Done   | [`src/lib/pasco-moderation.ts`](../src/lib/pasco-moderation.ts), [`src/app/moderation/pascos/page.tsx`](../src/app/moderation/pascos/page.tsx)                           |
+| Manual flag, restore, rejection reasons    | Done   | [`src/lib/pasco-moderation.ts`](../src/lib/pasco-moderation.ts), [`src/components/pasco-reject-dialog.tsx`](../src/components/pasco-reject-dialog.tsx)                   |
+| Auto-unflag on dislike drop (DISLIKES)     | Done   | [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts)                                                                                                          |
+| In-app notifications (queue + reject)      | Done   | [`src/lib/notifications.ts`](../src/lib/notifications.ts), [`src/components/notification-bell.tsx`](../src/components/notification-bell.tsx)                             |
+| Admin-configurable dislike threshold       | Done   | [`src/lib/moderation-settings.ts`](../src/lib/moderation-settings.ts), [`src/components/admin-moderation-settings.tsx`](../src/components/admin-moderation-settings.tsx) |
 
 ## Permissions
 
-| Role          | Capabilities                                                    |
-| ------------- | --------------------------------------------------------------- |
-| `NORMAL_USER` | Browse, react, download (signed-in), view files                 |
-| `CONTRIBUTOR` | Upload/create pascos; edit/delete own pascos                    |
-| `MODERATOR`   | Edit/delete any pasco; review pending pascos (approve/reject)   |
-| `ADMIN`       | Catalog CRUD, promote moderators, orphan cleanup, storage admin |
+| Role          | Capabilities                                                                           |
+| ------------- | -------------------------------------------------------------------------------------- |
+| `NORMAL_USER` | Browse, react, download (signed-in), view files                                        |
+| `CONTRIBUTOR` | Upload/create pascos; edit/delete own pascos                                           |
+| `MODERATOR`   | Edit any pasco; review queue (approve/reject/restore/flag); cannot delete              |
+| `ADMIN`       | Catalog CRUD, promote moderators, delete any pasco, threshold settings, orphan cleanup |
 
 Server gates: [`src/lib/require-contributor.ts`](../src/lib/require-contributor.ts), [`src/lib/require-moderator.ts`](../src/lib/require-moderator.ts), [`src/lib/require-admin.ts`](../src/lib/require-admin.ts).
 

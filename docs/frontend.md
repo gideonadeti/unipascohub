@@ -39,14 +39,14 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 
 ### Shell components
 
-| Component       | File                                                                             | Purpose                              |
-| --------------- | -------------------------------------------------------------------------------- | ------------------------------------ |
-| `SiteHeader`    | [`site-header.tsx`](../src/components/site-header.tsx)                           | Brand link, theme toggle, Clerk auth |
-| `SkipToContent` | [`skip-to-content.tsx`](../src/components/skip-to-content.tsx)                   | Skip link to main content landmark   |
-| `SiteFooter`    | [`site-footer.tsx`](../src/components/site-footer.tsx)                           | Nav groups, credits, social links    |
-| `ThemeToggle`   | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx)                         | Light / dark / system picker         |
-| `ScrollToTop`   | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx)                       | Fixed scroll-to-top button           |
-| `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper                |
+| Component       | File                                                                             | Purpose                                                                  |
+| --------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `SiteHeader`    | [`site-header.tsx`](../src/components/site-header.tsx)                           | Brand link, moderation link, notification bell, theme toggle, Clerk auth |
+| `SkipToContent` | [`skip-to-content.tsx`](../src/components/skip-to-content.tsx)                   | Skip link to main content landmark                                       |
+| `SiteFooter`    | [`site-footer.tsx`](../src/components/site-footer.tsx)                           | Nav groups, credits, social links                                        |
+| `ThemeToggle`   | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx)                         | Light / dark / system picker                                             |
+| `ScrollToTop`   | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx)                       | Fixed scroll-to-top button                                               |
+| `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper                                                    |
 
 ### Layout and list components
 
@@ -103,8 +103,12 @@ layout.tsx
 | `PascoEmbedPdfViewer`               | PDF embed using `@embedpdf/react-pdf-viewer`                       |
 | `PascoFileActions`                  | View/download buttons per file                                     |
 | `PascoDeleteDialog`                 | Delete confirmation                                                |
-| `ModerationPascosPage`              | Pending pasco queue with approve/reject actions                    |
-| `PascoModerationActions`            | Inline approve/reject on detail and moderation list                |
+| `ModerationPascosPage`              | Pending/rejected tabs, manual flag, admin threshold settings       |
+| `PascoModerationActions`            | Approve/reject/restore/flag actions                                |
+| `PascoRejectDialog`                 | Required reason dialog for reject                                  |
+| `PascoManualFlagForm`               | Send pasco to review by ID                                         |
+| `AdminModerationSettings`           | Admin-only dislike threshold editor                                |
+| `NotificationBell`                  | Header dropdown for in-app notifications                           |
 
 ### UI primitives
 
@@ -116,19 +120,20 @@ shadcn-style components in [`src/components/ui/`](../src/components/ui/): button
 
 Axios instance with error handling: [`src/lib/api/client.ts`](../src/lib/api/client.ts)
 
-Domain wrappers: [`src/lib/api/`](../src/lib/api/) — `pascos.ts`, `users.ts`, `institutions.ts`, `programs.ts`, `courses.ts`, `cloudinary.ts`, `pasco-engagement.ts`, `moderation.ts`
+Domain wrappers: [`src/lib/api/`](../src/lib/api/) — `pascos.ts`, `users.ts`, `institutions.ts`, `programs.ts`, `courses.ts`, `cloudinary.ts`, `pasco-engagement.ts`, `moderation.ts`, `notifications.ts`
 
 ### TanStack Query
 
-| Hook file                                                             | Hooks                                                       |
-| --------------------------------------------------------------------- | ----------------------------------------------------------- |
-| [`use-pascos.ts`](../src/hooks/api/use-pascos.ts)                     | `usePascosList`, `usePasco`, create/update/delete mutations |
-| [`use-pasco-engagement.ts`](../src/hooks/api/use-pasco-engagement.ts) | Reactions, views, file view/download                        |
-| [`use-current-user.ts`](../src/hooks/api/use-current-user.ts)         | Current user profile                                        |
-| [`use-institutions.ts`](../src/hooks/api/use-institutions.ts)         | Institution list                                            |
-| [`use-programs.ts`](../src/hooks/api/use-programs.ts)                 | Program list                                                |
-| [`use-courses.ts`](../src/hooks/api/use-courses.ts)                   | Course list and detail (`useCourse`)                        |
-| [`use-moderation.ts`](../src/hooks/api/use-moderation.ts)             | Moderation queue list and approve/reject mutations          |
+| Hook file                                                             | Hooks                                                             |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [`use-pascos.ts`](../src/hooks/api/use-pascos.ts)                     | `usePascosList`, `usePasco`, create/update/delete mutations       |
+| [`use-pasco-engagement.ts`](../src/hooks/api/use-pasco-engagement.ts) | Reactions, views, file view/download                              |
+| [`use-current-user.ts`](../src/hooks/api/use-current-user.ts)         | Current user profile                                              |
+| [`use-institutions.ts`](../src/hooks/api/use-institutions.ts)         | Institution list                                                  |
+| [`use-programs.ts`](../src/hooks/api/use-programs.ts)                 | Program list                                                      |
+| [`use-courses.ts`](../src/hooks/api/use-courses.ts)                   | Course list and detail (`useCourse`)                              |
+| [`use-moderation.ts`](../src/hooks/api/use-moderation.ts)             | Moderation queue, settings, approve/reject/restore/flag mutations |
+| [`use-notifications.ts`](../src/hooks/api/use-notifications.ts)       | Notification list, mark read (polls every 60s)                    |
 
 Query keys: [`src/lib/api/query-keys.ts`](../src/lib/api/query-keys.ts)
 

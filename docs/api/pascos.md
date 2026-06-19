@@ -181,7 +181,9 @@ Delete a pasco and all its files.
 
 ## Moderation
 
-When a published pasco's `dislikeCount` crosses **5** (configurable via `MODERATION_DISLIKE_THRESHOLD`), it moves to `PENDING_REVIEW` and is hidden from public list/detail. Uploaders can still view their pending pasco; moderators review via `/moderation/pascos` or pasco detail.
+Auto-flag when a published pasco's `dislikeCount` reaches the threshold (DB setting `moderation_dislike_threshold`, env `MODERATION_DISLIKE_THRESHOLD`, default **5**) and exceeds `dislikesAtLastApproval`. Re-flag after approve requires dislikes to rise above the last approval baseline. Auto-unflag: `PENDING_REVIEW` + `moderationSource = DISLIKES` + count drops below threshold → `PUBLISHED`. Manual flags (`MANUAL`) stay pending until a moderator acts.
+
+Uploaders can view own `PENDING_REVIEW` and `REJECTED` pascos (with rejection reason). Delete: uploader (own) or admin only.
 
 ### `GET /api/moderation/pascos`
 
@@ -191,11 +193,11 @@ List pascos by moderation status.
 
 **Query:** `status` (`PENDING_REVIEW` default, also `PUBLISHED` | `REJECTED`), `page`, `limit`
 
-**Response `200`:** `{ pascos: [...], pagination: { ... } }`
+**Response `200`:** `{ pascos: [...], pagination: { ... } }` — includes `moderationSource`, `rejectionReason`, `moderationNote` where applicable.
 
 ### `PATCH /api/moderation/pascos/:pascoId`
 
-Approve or reject a pending pasco.
+Moderation action.
 
 **Auth:** Moderator or admin
 
@@ -205,13 +207,54 @@ Approve or reject a pending pasco.
 { "action": "approve" }
 ```
 
-`approve` → `PUBLISHED`; `reject` → `REJECTED` (stays hidden). Returns `409` if pasco is not `PENDING_REVIEW`.
+| Action    | From                      | To               | Notes                            |
+| --------- | ------------------------- | ---------------- | -------------------------------- |
+| `approve` | `PENDING_REVIEW`          | `PUBLISHED`      | Sets dislike baseline            |
+| `reject`  | `PENDING_REVIEW`          | `REJECTED`       | Requires `reason` (string)       |
+| `restore` | `REJECTED`                | `PUBLISHED`      | Clears rejection reason          |
+| `flag`    | `PUBLISHED` or `REJECTED` | `PENDING_REVIEW` | Optional `note`; source `MANUAL` |
+
+Returns `400` if `reject` without `reason`; `409` on invalid transition.
 
 **Response `200`:**
 
 ```json
 { "moderationStatus": "PUBLISHED" }
 ```
+
+### `GET /api/admin/settings/moderation`
+
+Read dislike threshold.
+
+**Auth:** Moderator or admin
+
+**Response `200`:** `{ "dislikeThreshold": 5 }`
+
+### `PATCH /api/admin/settings/moderation`
+
+Update dislike threshold.
+
+**Auth:** Admin only
+
+**Body:** `{ "dislikeThreshold": 5 }`
+
+### Notifications
+
+#### `GET /api/notifications`
+
+**Auth:** Signed in
+
+**Query:** `unreadOnly`, `limit`
+
+**Response `200`:** `{ notifications: [...], unreadCount: number }`
+
+#### `PATCH /api/notifications/:notificationId/read`
+
+Mark one notification read.
+
+#### `PATCH /api/notifications/read-all`
+
+Mark all notifications read for current user.
 
 ## Engagement
 

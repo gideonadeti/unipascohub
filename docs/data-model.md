@@ -71,26 +71,38 @@ Unique per `(institutionId, code)`. Linked to programs via many-to-many.
 
 ### Pasco
 
-| Field                  | Type                  | Notes                               |
-| ---------------------- | --------------------- | ----------------------------------- |
-| `id`                   | String                | cuid                                |
-| `courseId`             | String                | FK → Course                         |
-| `uploaderId`           | String?               | FK → User (set null on delete)      |
-| `academicYear`         | String                | Format `YYYY/YYYY`                  |
-| `description`          | String?               |                                     |
-| `educationLevel`       | EducationLevel        | LEVEL_100 … LEVEL_400               |
-| `semesterType`         | SemesterType          | FIRST_SEMESTER, SECOND_SEMESTER     |
-| `type`                 | PascoType             | MID_SEM, END_OF_SEM, RESIT          |
-| `contentType`          | PascoContentType      | QUESTIONS_ONLY, etc.                |
-| `solutionCompleteness` | SolutionCompleteness? | Only when answers included          |
-| `isComplete`           | Boolean               | False if upload is partial          |
-| `likeCount`            | Int                   | Denormalized counter                |
-| `dislikeCount`         | Int                   | Denormalized counter                |
-| `downloadCount`        | Int                   | Denormalized counter                |
-| `viewCount`            | Int                   | Denormalized counter                |
-| `moderationStatus`     | PascoModerationStatus | PUBLISHED, PENDING_REVIEW, REJECTED |
+| Field                    | Type                   | Notes                               |
+| ------------------------ | ---------------------- | ----------------------------------- |
+| `id`                     | String                 | cuid                                |
+| `courseId`               | String                 | FK → Course                         |
+| `uploaderId`             | String?                | FK → User (set null on delete)      |
+| `academicYear`           | String                 | Format `YYYY/YYYY`                  |
+| `description`            | String?                |                                     |
+| `educationLevel`         | EducationLevel         | LEVEL_100 … LEVEL_400               |
+| `semesterType`           | SemesterType           | FIRST_SEMESTER, SECOND_SEMESTER     |
+| `type`                   | PascoType              | MID_SEM, END_OF_SEM, RESIT          |
+| `contentType`            | PascoContentType       | QUESTIONS_ONLY, etc.                |
+| `solutionCompleteness`   | SolutionCompleteness?  | Only when answers included          |
+| `isComplete`             | Boolean                | False if upload is partial          |
+| `likeCount`              | Int                    | Denormalized counter                |
+| `dislikeCount`           | Int                    | Denormalized counter                |
+| `downloadCount`          | Int                    | Denormalized counter                |
+| `viewCount`              | Int                    | Denormalized counter                |
+| `moderationStatus`       | PascoModerationStatus  | PUBLISHED, PENDING_REVIEW, REJECTED |
+| `moderationSource`       | PascoModerationSource? | DISLIKES (auto-flag) or MANUAL      |
+| `rejectionReason`        | String?                | Shown to uploader when rejected     |
+| `moderationNote`         | String?                | Optional note on manual flag        |
+| `dislikesAtLastApproval` | Int?                   | Baseline for re-flag after approve  |
 
-PascoModerationStatus: `PUBLISHED` (default, visible in browse), `PENDING_REVIEW` (auto-flagged at dislike threshold), `REJECTED` (moderator rejected, hidden).
+PascoModerationStatus: `PUBLISHED` (default, visible in browse), `PENDING_REVIEW` (in review queue), `REJECTED` (moderator rejected, hidden from public).
+
+### AppSetting
+
+Key-value store for runtime config. Key `moderation_dislike_threshold` holds the auto-flag dislike count (env var fallback when unset).
+
+### Notification
+
+In-app notification for a user: `type`, `title`, `body`, optional `link`, `readAt`.
 
 ### PascoFile
 
@@ -136,6 +148,7 @@ Logs batch orphan cleanup scans (dry-run or execute).
 | `CloudinaryResourceType` | IMAGE, RAW                                          | Cloudinary delivery type (PDFs use IMAGE) |
 | `PascoReactionType`      | LIKE, DISLIKE                                       | User reaction                             |
 | `PascoModerationStatus`  | PUBLISHED, PENDING_REVIEW, REJECTED                 | Public visibility and review queue        |
+| `PascoModerationSource`  | DISLIKES, MANUAL                                    | Why pasco entered review                  |
 | `StorageCleanupSource`   | PASCO_SYNC, PASCO_DELETE, ORPHAN_BATCH              | Why cleanup was attempted                 |
 
 ## Indexes

@@ -77,12 +77,25 @@ Returns `401` if not signed in, `403` if role insufficient, `404` if user not in
 
 [`src/lib/require-contributor.ts`](../src/lib/require-contributor.ts)
 
-Used for: pasco update and delete.
+Used for: pasco update (not delete).
 
 Allows if:
 
 - Actor is the pasco uploader, **or**
 - Actor is `MODERATOR` or `ADMIN`
+
+### `canDeletePasco(actorUserId, pasco)`
+
+[`src/lib/pasco-delete-permissions.ts`](../src/lib/pasco-delete-permissions.ts)
+
+Used for: pasco delete.
+
+Allows if:
+
+- Actor is the pasco uploader, **or**
+- Actor is `ADMIN`
+
+Moderators can edit any pasco but cannot delete.
 
 ### `requireAdmin(userId)`
 
@@ -96,9 +109,11 @@ Allows: `ADMIN` only.
 
 [`src/lib/require-moderator.ts`](../src/lib/require-moderator.ts)
 
-Used for: moderation queue list and approve/reject endpoints.
+Used for: moderation queue, restore/flag actions, read threshold settings.
 
 Allows: `MODERATOR`, `ADMIN`.
+
+Admin-only: `PATCH /api/admin/settings/moderation`, pasco delete (any pasco).
 
 ## Client-side gates
 
