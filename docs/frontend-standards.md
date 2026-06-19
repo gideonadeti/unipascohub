@@ -128,6 +128,16 @@ List responses from `GET /api/pascos` include `course: { code, title }` on each 
 
 ---
 
+## Pasco detail file rows
+
+`PascoFileActions` on the pasco detail page:
+
+- Bordered row: file-type icon, truncated name (`title` for full name on hover), size on a muted second line
+- View / Download: icon-only on mobile (`size="icon-sm"`); icon + label from `sm` breakpoint up
+- Descriptive `aria-label` per file (e.g. `View exam.pdf`, `Download exam.pdf`)
+
+---
+
 ## Data fetching
 
 - Use hooks from `src/hooks/api/` with `queryKeys` from [query-keys.ts](../src/lib/api/query-keys.ts)
