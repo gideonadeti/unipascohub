@@ -23,6 +23,8 @@ export type PascoReactionType = "LIKE" | "DISLIKE";
 
 export type PascoModerationStatus = "PUBLISHED" | "PENDING_REVIEW" | "REJECTED";
 
+export type PascoModerationSource = "DISLIKES" | "MANUAL";
+
 export type PascoListSortBy =
   | "createdAt"
   | "updatedAt"
@@ -100,6 +102,9 @@ export type Pasco = {
   viewerReaction?: PascoReactionType | null;
   course?: PascoCourseSummary;
   moderationStatus?: PascoModerationStatus;
+  moderationSource?: PascoModerationSource;
+  rejectionReason?: string;
+  moderationNote?: string;
 };
 
 export type PascoListResponse = {
@@ -238,6 +243,9 @@ export type ModerationPascoListItem = Pasco & {
   course: PascoCourseSummary;
   uploader: ModerationPascoUploader | null;
   moderationStatus: PascoModerationStatus;
+  moderationSource?: PascoModerationSource | null;
+  rejectionReason?: string | null;
+  moderationNote?: string | null;
 };
 
 export type ModerationPascoListResponse = {
@@ -250,8 +258,18 @@ export type ModerationPascoListResponse = {
   };
 };
 
-export type ModerationPascoAction = "approve" | "reject";
+export type ModerationPascoAction = "approve" | "reject" | "restore" | "flag";
+
+export type ModerationPascoUpdateRequest = {
+  action: ModerationPascoAction;
+  reason?: string;
+  note?: string;
+};
 
 export type ModerationPascoUpdateResponse = {
   moderationStatus: PascoModerationStatus;
+};
+
+export type ModerationSettingsResponse = {
+  dislikeThreshold: number;
 };

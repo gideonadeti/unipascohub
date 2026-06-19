@@ -1,9 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import type {
-  ModerationPascoAction,
   ModerationPascoListResponse,
+  ModerationPascoUpdateRequest,
   ModerationPascoUpdateResponse,
+  ModerationSettingsResponse,
 } from "@/types/api/pascos";
 
 import { apiClient } from "./client";
@@ -25,11 +26,26 @@ export function listModerationPascos(filters: ModerationPascoListFilters = {}) {
 
 export function moderatePascoReview(
   pascoId: string,
-  action: ModerationPascoAction,
+  payload: ModerationPascoUpdateRequest,
 ) {
   return apiClient
-    .patch<ModerationPascoUpdateResponse>(`/api/moderation/pascos/${pascoId}`, {
-      action,
+    .patch<ModerationPascoUpdateResponse>(
+      `/api/moderation/pascos/${pascoId}`,
+      payload,
+    )
+    .then((response) => response.data);
+}
+
+export function getModerationSettings() {
+  return apiClient
+    .get<ModerationSettingsResponse>("/api/admin/settings/moderation")
+    .then((response) => response.data);
+}
+
+export function updateModerationSettings(dislikeThreshold: number) {
+  return apiClient
+    .patch<ModerationSettingsResponse>("/api/admin/settings/moderation", {
+      dislikeThreshold,
     })
     .then((response) => response.data);
 }
@@ -40,5 +56,12 @@ export function moderationPascosListOptions(
   return queryOptions({
     queryKey: queryKeys.moderation.pascos(filters),
     queryFn: () => listModerationPascos(filters),
+  });
+}
+
+export function moderationSettingsOptions() {
+  return queryOptions({
+    queryKey: queryKeys.moderation.settings(),
+    queryFn: getModerationSettings,
   });
 }

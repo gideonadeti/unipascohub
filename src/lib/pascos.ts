@@ -12,8 +12,9 @@ import type { PascoListQuery } from "@/lib/pasco-list-query";
 import {
   canViewPasco,
   type PascoViewerContext,
+  shouldIncludeModerationSource,
   shouldIncludeModerationStatus,
-} from "@/lib/pasco-moderation";
+} from "@/lib/pasco-moderation-utils";
 import type { PascoFileDuplicate } from "@/types/api/pascos";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
@@ -1047,6 +1048,19 @@ export function serializePasco(
     ...(shouldIncludeModerationStatus(options?.viewer, pasco)
       ? {
           moderationStatus: pasco.moderationStatus as PascoModerationStatusType,
+          ...(pasco.rejectionReason
+            ? { rejectionReason: pasco.rejectionReason }
+            : {}),
+          ...(pasco.moderationNote
+            ? { moderationNote: pasco.moderationNote }
+            : {}),
+        }
+      : {}),
+    ...(shouldIncludeModerationSource(options?.viewer)
+      ? {
+          ...(pasco.moderationSource
+            ? { moderationSource: pasco.moderationSource }
+            : {}),
         }
       : {}),
   };

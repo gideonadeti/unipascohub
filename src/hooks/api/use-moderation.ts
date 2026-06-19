@@ -8,14 +8,38 @@ import {
   type ModerationPascoListFilters,
   moderatePascoReview,
   moderationPascosListOptions,
+  moderationSettingsOptions,
+  updateModerationSettings,
 } from "@/lib/api/moderation";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { ModerationPascoAction } from "@/types/api/pascos";
+import type { ModerationPascoUpdateRequest } from "@/types/api/pascos";
 
 export function useModerationPascosList(
   filters: ModerationPascoListFilters = { status: "PENDING_REVIEW" },
 ) {
   return useQuery(moderationPascosListOptions(filters));
+}
+
+export function useModerationSettings() {
+  return useQuery(moderationSettingsOptions());
+}
+
+export function useUpdateModerationSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dislikeThreshold: number) =>
+      updateModerationSettings(dislikeThreshold),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.moderation.settings(),
+      });
+      toast.success("Moderation threshold updated");
+    },
+    onError: () => {
+      toast.error("Could not update moderation threshold");
+    },
+  });
 }
 
 export function useModeratePascoReview() {
@@ -24,23 +48,25 @@ export function useModeratePascoReview() {
   return useMutation({
     mutationFn: ({
       pascoId,
-      action,
-    }: {
-      pascoId: string;
-      action: ModerationPascoAction;
-    }) => moderatePascoReview(pascoId, action),
+      ...payload
+    }: ModerationPascoUpdateRequest & { pascoId: string }) =>
+      moderatePascoReview(pascoId, payload),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.moderation.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.pascos.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
       queryClient.invalidateQueries({
         queryKey: queryKeys.pascos.detail(variables.pascoId),
       });
 
-      toast.success(
-        variables.action === "approve"
-          ? "Pasco approved and published"
-          : "Pasco rejected",
-      );
+      const messages: Record<ModerationPascoUpdateRequest["action"], string> = {
+        approve: "Pasco approved and published",
+        reject: "Pasco rejected",
+        restore: "Pasco restored and published",
+        flag: "Pasco sent to review",
+      };
+
+      toast.success(messages[variables.action]);
     },
     onError: () => {
       toast.error("Could not update moderation status");

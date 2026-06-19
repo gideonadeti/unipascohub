@@ -13,6 +13,23 @@ export function isModeratorRole(
   return MODIFY_ROLES.has(role);
 }
 
+export function isAdminRole(
+  role: ProfileUser["role"] | null | undefined,
+): boolean {
+  return role === "ADMIN";
+}
+
+export function canUserDeletePasco(
+  user: Pick<ProfileUser, "id" | "role"> | null | undefined,
+  pasco: Pick<Pasco, "uploaderId">,
+): boolean {
+  if (!user) {
+    return false;
+  }
+
+  return isAdminRole(user.role) || pasco.uploaderId === user.id;
+}
+
 export function canUserModifyPasco(
   user: Pick<ProfileUser, "id" | "role"> | null | undefined,
   pasco: Pick<Pasco, "uploaderId">,

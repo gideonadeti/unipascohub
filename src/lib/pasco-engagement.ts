@@ -1,8 +1,10 @@
 import { createSignedCloudinaryDownloadUrl } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
+import { getModerationDislikeThreshold } from "@/lib/moderation-settings";
 import {
   canViewPasco,
-  maybeFlagPascoForReview,
+  evaluateModerationOnReaction,
+  notifyModeratorsPascoFlagged,
   type PascoViewerContext,
 } from "@/lib/pasco-moderation";
 import {
@@ -201,12 +203,17 @@ export async function setPascoReaction(
     return { success: false, error: "user_not_found" };
   }
 
-  return prisma.$transaction(async (tx) => {
+  const threshold = await getModerationDislikeThreshold();
+
+  const transactionResult = await prisma.$transaction(async (tx) => {
     const pascoBefore = await tx.pasco.findUniqueOrThrow({
       where: { id: pascoId },
       select: {
+        id: true,
         dislikeCount: true,
         moderationStatus: true,
+        moderationSource: true,
+        dislikesAtLastApproval: true,
       },
     });
 
@@ -271,10 +278,11 @@ export async function setPascoReaction(
       });
 
       return {
-        success: true,
+        success: true as const,
         likeCount: current.likeCount,
         dislikeCount: current.dislikeCount,
         viewerReaction,
+        moderationResult: { flagged: false, autoPublished: false },
       };
     }
 
@@ -290,23 +298,37 @@ export async function setPascoReaction(
       },
     });
 
-    if (dislikeDelta > 0) {
-      await maybeFlagPascoForReview(
+    let moderationResult = { flagged: false, autoPublished: false };
+
+    if (dislikeDelta !== 0) {
+      moderationResult = await evaluateModerationOnReaction(
         tx,
-        pascoId,
-        pascoBefore.dislikeCount,
+        pascoBefore,
         updated.dislikeCount,
-        pascoBefore.moderationStatus,
+        dislikeDelta,
+        threshold,
       );
     }
 
     return {
-      success: true,
+      success: true as const,
       likeCount: updated.likeCount,
       dislikeCount: updated.dislikeCount,
       viewerReaction,
+      moderationResult,
     };
   });
+
+  if (transactionResult.moderationResult.flagged) {
+    await notifyModeratorsPascoFlagged(pascoId);
+  }
+
+  return {
+    success: true,
+    likeCount: transactionResult.likeCount,
+    dislikeCount: transactionResult.dislikeCount,
+    viewerReaction: transactionResult.viewerReaction,
+  };
 }
 
 export async function getPascoFileSignedUrl(
