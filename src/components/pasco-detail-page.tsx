@@ -21,6 +21,7 @@ import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { useRecordPascoView } from "@/hooks/api/use-pasco-engagement";
 import { usePasco } from "@/hooks/api/use-pascos";
 import { formatEnumLabel } from "@/lib/catalog-labels";
+import { formatDateTime } from "@/lib/dates";
 import {
   getPascoBrowseHref,
   getPascoDisplayDescription,
@@ -148,7 +149,7 @@ export function PascoDetailPage() {
               </div>
               <div>
                 <dt className="text-muted-foreground">Created</dt>
-                <dd>{new Date(pasco.createdAt).toLocaleString()}</dd>
+                <dd>{formatDateTime(pasco.createdAt)}</dd>
               </div>
             </dl>
           </Section>
