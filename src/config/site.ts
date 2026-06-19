@@ -7,6 +7,15 @@ export type SiteContributor = {
   avatarUrl?: string;
 };
 
+export type SiteSponsorTier = "partner" | "supporter";
+
+export type SiteSponsor = {
+  name: string;
+  url: string;
+  logoUrl?: string;
+  tier?: SiteSponsorTier;
+};
+
 export type FooterLink = {
   label: string;
   href: string;
@@ -33,6 +42,8 @@ export const siteContributors: SiteContributor[] = [
     role: "lead",
   },
 ];
+
+export const siteSponsors: SiteSponsor[] = [];
 
 function getLeadContributor(): SiteContributor | undefined {
   return (

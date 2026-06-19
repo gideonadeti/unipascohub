@@ -41,7 +41,7 @@ export function getGitHubAvatarUrl(
   return `https://github.com/${username}.png`;
 }
 
-export function getContributorInitials(name: string): string {
+export function getDisplayInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
 
   if (parts.length === 0) {
@@ -53,4 +53,8 @@ export function getContributorInitials(name: string): string {
   }
 
   return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+export function getContributorInitials(name: string): string {
+  return getDisplayInitials(name);
 }
