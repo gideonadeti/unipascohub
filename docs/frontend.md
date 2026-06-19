@@ -6,33 +6,33 @@ Current UI structure, conventions, and planned work.
 
 ## Phased roadmap
 
-| Phase | Focus                                                   | Status  |
-| ----- | ------------------------------------------------------- | ------- |
-| 0     | Standards, `site.ts`, Motion, shadcn `empty`/`skeleton` | Done    |
-| 1     | Theme, header, footer, favicon                          | Done    |
-| 2     | Shared primitives, `PascoCard`, skeletons               | Done    |
-| 3     | Stub pages (contributors, legal, feedback)              | Done    |
-| 4     | Homepage                                                | Done    |
-| 5     | Browse with URL filters                                 | Done    |
-| 6     | Pasco page shell alignment                              | Done    |
-| 7     | A11y polish, docs update                                | Done    |
+| Phase | Focus                                                   | Status |
+| ----- | ------------------------------------------------------- | ------ |
+| 0     | Standards, `site.ts`, Motion, shadcn `empty`/`skeleton` | Done   |
+| 1     | Theme, header, footer, favicon                          | Done   |
+| 2     | Shared primitives, `PascoCard`, skeletons               | Done   |
+| 3     | Stub pages (contributors, legal, feedback)              | Done   |
+| 4     | Homepage                                                | Done   |
+| 5     | Browse with URL filters                                 | Done   |
+| 6     | Pasco page shell alignment                              | Done   |
+| 7     | A11y polish, docs update                                | Done   |
 
 See [frontend-standards.md](frontend-standards.md) for full conventions.
 
 ## Pages
 
-| Route                    | File                                                                                  | Renders                                           |
-| ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Hero, v1 search, recent + popular pasco sections  |
-| `/pascos`                | [`src/app/pascos/page.tsx`](../src/app/pascos/page.tsx)                               | URL-filtered browse grid with pagination          |
-| `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | `PageHeader`, create form behind contributor gate |
-| `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | `PascoDetailPage` with enriched title, back nav   |
-| `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | `PageHeader`, cancel/back nav, edit form + gate   |
-| `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Credits and contributors list from `siteCredits`  |
-| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsorship stub + optional BMC CTA               |
-| `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                  |
-| `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                           |
-| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub with anchor sections                 |
+| Route                    | File                                                                                  | Renders                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Hero, v1 search, recent + popular pasco sections                |
+| `/pascos`                | [`src/app/pascos/page.tsx`](../src/app/pascos/page.tsx)                               | URL-filtered browse grid with pagination                        |
+| `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | `PageHeader`, create form behind contributor gate               |
+| `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | `PascoDetailPage` with enriched title, back nav                 |
+| `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | `PageHeader`, cancel/back nav, edit form + gate                 |
+| `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Team grid with avatars and GitHub links from `siteContributors` |
+| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsorship stub + optional BMC CTA                             |
+| `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                                |
+| `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                                         |
+| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub with anchor sections                               |
 
 Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
 

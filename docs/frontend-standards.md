@@ -228,15 +228,14 @@ Minimum tap target: ~44px height for primary actions.
 All branding, footer links, hero copy, and social URLs live in [src/config/site.ts](../src/config/site.ts).
 
 ```ts
-siteCredits.lead          // "Gideon Adeti"
-siteCredits.contributors  // grows over time
-getCreditLine()           // scalable footer string
-siteLinks                 // from NEXT_PUBLIC_* env vars
-footerNav                 // grouped footer links
-heroSearchExamples        // typing animation strings
+siteContributors         // { name, github, role?, avatarUrl? }[]
+getCreditLine()            // scalable footer string
+siteLinks                  // from NEXT_PUBLIC_* env vars
+footerNav                  // grouped footer links
+heroSearchExamples         // typing animation strings
 ```
 
-Contributors page (`/contributors`, Phase 3) reads from `siteCredits`.
+Contributors page (`/contributors`) reads from `siteContributors`. Avatars default to `https://github.com/{username}.png`; set `avatarUrl` to override. GitHub username can be left empty until profiles are ready (initials fallback).
 
 ---
 
