@@ -23,13 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCourse } from "@/hooks/api/use-courses";
 import { usePascosList } from "@/hooks/api/use-pascos";
 import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import {
   getPascoCardEmphasis,
   hiddenBadgeKeysFromFilters,
+  resolveCourseChipLabel,
 } from "@/lib/pasco-display";
 import {
   BROWSE_DEFAULT_LIMIT,
@@ -281,10 +281,12 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
   const pathname = usePathname();
   const pascosQuery = usePascosList(filters);
   const searchMeta = pascosQuery.data?.search;
-  const courseQuery = useCourse(filters.courseId ?? "");
-  const courseLabel = courseQuery.data?.course
-    ? `${courseQuery.data.course.code} — ${courseQuery.data.course.title}`
-    : undefined;
+  const courseLabel = resolveCourseChipLabel({
+    filters,
+    appliedCourse: pascosQuery.data?.appliedCourse,
+    pascos: pascosQuery.data?.pascos,
+    searchMeta,
+  });
 
   const activeChips = buildActiveChips(filters, courseLabel, searchMeta);
 
