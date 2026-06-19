@@ -3,6 +3,16 @@ import type { ProfileUser } from "@/types/api/users";
 
 const MODIFY_ROLES = new Set<ProfileUser["role"]>(["MODERATOR", "ADMIN"]);
 
+export function isModeratorRole(
+  role: ProfileUser["role"] | null | undefined,
+): boolean {
+  if (!role) {
+    return false;
+  }
+
+  return MODIFY_ROLES.has(role);
+}
+
 export function canUserModifyPasco(
   user: Pick<ProfileUser, "id" | "role"> | null | undefined,
   pasco: Pick<Pasco, "uploaderId">,

@@ -21,6 +21,8 @@ export type CloudinaryResourceType = "IMAGE" | "RAW";
 
 export type PascoReactionType = "LIKE" | "DISLIKE";
 
+export type PascoModerationStatus = "PUBLISHED" | "PENDING_REVIEW" | "REJECTED";
+
 export type PascoListSortBy =
   | "createdAt"
   | "updatedAt"
@@ -97,6 +99,7 @@ export type Pasco = {
   updatedAt: string;
   viewerReaction?: PascoReactionType | null;
   course?: PascoCourseSummary;
+  moderationStatus?: PascoModerationStatus;
 };
 
 export type PascoListResponse = {
@@ -224,4 +227,31 @@ export type PascoDownloadResponse = {
 export type PascoFileViewResponse = {
   fileUrl: string;
   fileName: string;
+};
+
+export type ModerationPascoUploader = {
+  id: string;
+  name: string;
+};
+
+export type ModerationPascoListItem = Pasco & {
+  course: PascoCourseSummary;
+  uploader: ModerationPascoUploader | null;
+  moderationStatus: PascoModerationStatus;
+};
+
+export type ModerationPascoListResponse = {
+  pascos: ModerationPascoListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
+export type ModerationPascoAction = "approve" | "reject";
+
+export type ModerationPascoUpdateResponse = {
+  moderationStatus: PascoModerationStatus;
 };

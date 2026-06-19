@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Prisma } from "../../../generated/prisma/client";
+import { PascoModerationStatus } from "../../../generated/prisma/enums";
 
 import { expandInstitutionSynonyms } from "./institution-synonyms";
 import {
@@ -127,14 +128,23 @@ async function searchCoursesWithPrisma(
         },
         {
           pascos: {
-            some: { description: { contains: trimmed, mode: "insensitive" } },
+            some: {
+              description: { contains: trimmed, mode: "insensitive" },
+              moderationStatus: PascoModerationStatus.PUBLISHED,
+            },
           },
         },
       ],
     },
     include: {
       institution: { select: { name: true } },
-      _count: { select: { pascos: true } },
+      _count: {
+        select: {
+          pascos: {
+            where: { moderationStatus: PascoModerationStatus.PUBLISHED },
+          },
+        },
+      },
     },
     take: Math.max(limit * 3, 24),
   });
@@ -214,6 +224,7 @@ async function searchCoursesWithTrigram(
     FROM "Course" c
     INNER JOIN "Institution" i ON i.id = c."institutionId"
     LEFT JOIN "Pasco" p ON p."courseId" = c.id
+      AND p."moderationStatus" = 'PUBLISHED'
     LEFT JOIN "_CourseToProgram" cp ON cp."A" = c.id
     LEFT JOIN "Program" pr ON pr.id = cp."B"
     WHERE

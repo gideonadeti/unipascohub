@@ -37,4 +37,9 @@ export const queryKeys = {
     suggest: (q: string, limit = 8) =>
       [...queryKeys.search.all, "suggest", q, limit] as const,
   },
+  moderation: {
+    all: ["moderation"] as const,
+    pascos: (filters: Record<string, unknown>) =>
+      [...queryKeys.moderation.all, "pascos", filters] as const,
+  },
 } as const;

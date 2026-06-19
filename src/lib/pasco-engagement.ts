@@ -1,6 +1,11 @@
 import { createSignedCloudinaryDownloadUrl } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
 import {
+  canViewPasco,
+  maybeFlagPascoForReview,
+  type PascoViewerContext,
+} from "@/lib/pasco-moderation";
+import {
   PascoReactionType,
   type PascoReactionType as PascoReactionTypeValue,
 } from "../../generated/prisma/enums";
@@ -73,16 +78,17 @@ export async function getPascoViewCount(
 
 export async function recordPascoView(
   pascoId: string,
+  viewer?: PascoViewerContext | null,
 ): Promise<
   | { success: true; viewCount: number }
   | { success: false; error: RecordPascoViewError }
 > {
   const pasco = await prisma.pasco.findUnique({
     where: { id: pascoId },
-    select: { id: true },
+    select: { id: true, uploaderId: true, moderationStatus: true },
   });
 
-  if (!pasco) {
+  if (!pasco || !canViewPasco(viewer, pasco)) {
     return { success: false, error: "pasco_not_found" };
   }
 
@@ -196,6 +202,14 @@ export async function setPascoReaction(
   }
 
   return prisma.$transaction(async (tx) => {
+    const pascoBefore = await tx.pasco.findUniqueOrThrow({
+      where: { id: pascoId },
+      select: {
+        dislikeCount: true,
+        moderationStatus: true,
+      },
+    });
+
     const existing = await tx.pascoReaction.findUnique({
       where: {
         userId_pascoId: {
@@ -276,6 +290,16 @@ export async function setPascoReaction(
       },
     });
 
+    if (dislikeDelta > 0) {
+      await maybeFlagPascoForReview(
+        tx,
+        pascoId,
+        pascoBefore.dislikeCount,
+        updated.dislikeCount,
+        pascoBefore.moderationStatus,
+      );
+    }
+
     return {
       success: true,
       likeCount: updated.likeCount,
@@ -288,6 +312,7 @@ export async function setPascoReaction(
 export async function getPascoFileSignedUrl(
   pascoId: string,
   fileId: string,
+  viewer?: PascoViewerContext | null,
 ): Promise<
   | { success: true; fileUrl: string; fileName: string }
   | { success: false; error: GetPascoFileSignedUrlError }
@@ -295,7 +320,7 @@ export async function getPascoFileSignedUrl(
   const [pasco, file] = await Promise.all([
     prisma.pasco.findUnique({
       where: { id: pascoId },
-      select: { id: true },
+      select: { id: true, uploaderId: true, moderationStatus: true },
     }),
     prisma.pascoFile.findFirst({
       where: {
@@ -310,7 +335,7 @@ export async function getPascoFileSignedUrl(
     }),
   ]);
 
-  if (!pasco) {
+  if (!pasco || !canViewPasco(viewer, pasco)) {
     return { success: false, error: "pasco_not_found" };
   }
 
@@ -339,6 +364,7 @@ export async function recordPascoDownload(
   userId: string,
   pascoId: string,
   fileId: string,
+  viewer?: PascoViewerContext | null,
 ): Promise<
   | {
       success: true;
@@ -351,7 +377,7 @@ export async function recordPascoDownload(
   const [pasco, user, file] = await Promise.all([
     prisma.pasco.findUnique({
       where: { id: pascoId },
-      select: { id: true },
+      select: { id: true, uploaderId: true, moderationStatus: true },
     }),
     prisma.user.findUnique({
       where: { id: userId },
@@ -371,7 +397,7 @@ export async function recordPascoDownload(
     }),
   ]);
 
-  if (!pasco) {
+  if (!pasco || !canViewPasco(viewer ?? { userId, role: null }, pasco)) {
     return { success: false, error: "pasco_not_found" };
   }
 
@@ -403,7 +429,7 @@ export async function recordPascoDownload(
     });
   });
 
-  const signedUrlResult = await getPascoFileSignedUrl(pascoId, fileId);
+  const signedUrlResult = await getPascoFileSignedUrl(pascoId, fileId, viewer);
 
   if (!signedUrlResult.success) {
     return { success: false, error: signedUrlResult.error };

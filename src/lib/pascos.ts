@@ -9,6 +9,11 @@ import { isValidContentHash, normalizeContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
 import { findDuplicatePascoFiles } from "@/lib/pasco-file-hash";
 import type { PascoListQuery } from "@/lib/pasco-list-query";
+import {
+  canViewPasco,
+  type PascoViewerContext,
+  shouldIncludeModerationStatus,
+} from "@/lib/pasco-moderation";
 import type { PascoFileDuplicate } from "@/types/api/pascos";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
@@ -19,6 +24,8 @@ import {
   type EducationLevel as EducationLevelType,
   PascoContentType,
   type PascoContentType as PascoContentTypeType,
+  PascoModerationStatus,
+  type PascoModerationStatus as PascoModerationStatusType,
   type PascoReactionType as PascoReactionTypeValue,
   PascoType,
   type PascoType as PascoTypeType,
@@ -1012,6 +1019,7 @@ export function serializePasco(
   pasco: PascoWithFiles & { course?: PascoCourseSummaryFields },
   options?: {
     viewerReaction?: PascoReactionTypeValue | null;
+    viewer?: PascoViewerContext | null;
   },
 ) {
   const serialized = {
@@ -1036,6 +1044,11 @@ export function serializePasco(
     ...(pasco.course && {
       course: { code: pasco.course.code, title: pasco.course.title },
     }),
+    ...(shouldIncludeModerationStatus(options?.viewer, pasco)
+      ? {
+          moderationStatus: pasco.moderationStatus as PascoModerationStatusType,
+        }
+      : {}),
   };
 
   if (options && "viewerReaction" in options) {
@@ -1250,6 +1263,7 @@ export async function listPascos(params: PascoListQuery): Promise<
   }
 
   const where = {
+    moderationStatus: PascoModerationStatus.PUBLISHED,
     ...(params.courseId ? { courseId: params.courseId } : {}),
     ...(params.courseIds && params.courseIds.length > 0
       ? { courseId: { in: params.courseIds } }
@@ -1291,6 +1305,7 @@ export async function listPascos(params: PascoListQuery): Promise<
 
 export async function getPascoById(
   pascoId: string,
+  viewer?: PascoViewerContext | null,
 ): Promise<
   | { success: true; pasco: PascoWithFiles }
   | { success: false; error: PascoError }
@@ -1300,11 +1315,30 @@ export async function getPascoById(
     include: pascoInclude,
   });
 
-  if (!pasco) {
+  if (!pasco || !canViewPasco(viewer, pasco)) {
     return { success: false, error: "not_found" };
   }
 
   return { success: true, pasco };
+}
+
+export async function getPascoViewerContext(
+  userId: string | null | undefined,
+): Promise<PascoViewerContext | null> {
+  if (!userId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true },
+  });
+
+  if (!user) {
+    return { userId, role: null };
+  }
+
+  return { userId: user.id, role: user.role };
 }
 
 export async function createPasco(
