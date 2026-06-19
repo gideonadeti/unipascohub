@@ -4,6 +4,7 @@ import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { siteName } from "@/config/site";
@@ -51,6 +52,7 @@ export function SiteHeader() {
           </SignUpButton>
         </Show>
         <Show when="signed-in">
+          <NotificationBell />
           <UserButton />
         </Show>
       </div>

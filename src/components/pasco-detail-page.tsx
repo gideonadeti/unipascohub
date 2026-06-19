@@ -30,7 +30,11 @@ import {
   getPascoDisplayTitle,
   pascoOverviewBadges,
 } from "@/lib/pasco-display";
-import { canUserModifyPasco, isModeratorRole } from "@/lib/pasco-permissions";
+import {
+  canUserDeletePasco,
+  canUserModifyPasco,
+  isModeratorRole,
+} from "@/lib/pasco-permissions";
 import type { PascoFile } from "@/types/api/pascos";
 
 export function PascoDetailPage() {
@@ -64,13 +68,14 @@ export function PascoDetailPage() {
     : courseQuery.isPending
       ? "Loading course details…"
       : pasco.courseId;
-  const canEdit =
-    currentUser.data?.user && canUserModifyPasco(currentUser.data.user, pasco);
-  const isModerator = isModeratorRole(currentUser.data?.user?.role);
+  const user = currentUser.data?.user;
+  const canEdit = user && canUserModifyPasco(user, pasco);
+  const canDelete = user && canUserDeletePasco(user, pasco);
+  const isModerator = isModeratorRole(user?.role);
   const moderationStatus = pasco.moderationStatus;
-  const isUploaderPending =
-    moderationStatus === "PENDING_REVIEW" &&
-    currentUser.data?.user?.id === pasco.uploaderId;
+  const isUploader = user?.id === pasco.uploaderId;
+  const isUploaderPending = moderationStatus === "PENDING_REVIEW" && isUploader;
+  const isUploaderRejected = moderationStatus === "REJECTED" && isUploader;
 
   return (
     <div className="space-y-8">
@@ -85,6 +90,17 @@ export function PascoDetailPage() {
         </Alert>
       ) : null}
 
+      {isUploaderRejected ? (
+        <Alert variant="destructive">
+          <AlertTitle>Not published</AlertTitle>
+          <AlertDescription>
+            {pasco.rejectionReason
+              ? `Moderators rejected this pasco: ${pasco.rejectionReason}`
+              : "Moderators rejected this pasco. It is hidden from other students."}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {isModerator && moderationStatus && moderationStatus !== "PUBLISHED" ? (
         <Alert>
           <AlertTitle>
@@ -93,12 +109,30 @@ export function PascoDetailPage() {
           <AlertDescription className="space-y-3">
             <p>
               {moderationStatus === "PENDING_REVIEW"
-                ? "This pasco was flagged after receiving enough dislikes."
+                ? pasco.moderationSource === "MANUAL"
+                  ? "This pasco was manually sent for review."
+                  : "This pasco was flagged after receiving enough dislikes."
                 : "This pasco was rejected and remains hidden from students."}
             </p>
-            {moderationStatus === "PENDING_REVIEW" ? (
-              <PascoModerationActions pascoId={pascoId} />
+            {pasco.moderationNote ? (
+              <p className="text-sm">Note: {pasco.moderationNote}</p>
             ) : null}
+            {pasco.rejectionReason ? (
+              <p className="text-sm">Reason: {pasco.rejectionReason}</p>
+            ) : null}
+            <PascoModerationActions
+              pascoId={pascoId}
+              status={moderationStatus}
+            />
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {isModerator && moderationStatus === "PUBLISHED" ? (
+        <Alert>
+          <AlertTitle>Moderator actions</AlertTitle>
+          <AlertDescription>
+            <PascoModerationActions pascoId={pascoId} status="PUBLISHED" />
           </AlertDescription>
         </Alert>
       ) : null}
@@ -110,19 +144,19 @@ export function PascoDetailPage() {
           <>
             <ReportPascoLink pascoId={pascoId} />
             {canEdit ? (
-              <>
-                <Button type="button" variant="outline" size="sm" asChild>
-                  <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  Delete
-                </Button>
-              </>
+              <Button type="button" variant="outline" size="sm" asChild>
+                <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete
+              </Button>
             ) : null}
           </>
         }
