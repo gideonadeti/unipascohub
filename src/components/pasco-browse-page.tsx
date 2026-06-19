@@ -28,6 +28,10 @@ import { usePascosList } from "@/hooks/api/use-pascos";
 import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import {
+  getPascoCardEmphasis,
+  hiddenBadgeKeysFromFilters,
+} from "@/lib/pasco-display";
+import {
   BROWSE_DEFAULT_LIMIT,
   filtersToSearchParams,
   type PascoListParseError,
@@ -497,11 +501,8 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
                 <PascoCard
                   key={pasco.id}
                   pasco={pasco}
-                  title={
-                    courseLabel && pasco.courseId === filters.courseId
-                      ? `${pasco.academicYear} · ${courseLabel}`
-                      : undefined
-                  }
+                  emphasize={getPascoCardEmphasis(sortBy)}
+                  hiddenBadgeKeys={hiddenBadgeKeysFromFilters(filters)}
                 />
               ))}
             </div>

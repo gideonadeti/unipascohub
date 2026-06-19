@@ -10,12 +10,14 @@ import { PascoListSkeleton } from "@/components/pasco-list-skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { usePascosList } from "@/hooks/api/use-pascos";
+import type { PascoCardEmphasis } from "@/lib/pasco-display";
 import type { PascoListFilters } from "@/types/api/pascos";
 
 type PascoListSectionProps = {
   title: string;
   description?: string;
   filters?: PascoListFilters;
+  emphasize?: PascoCardEmphasis;
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: { label: string; href: string };
@@ -30,6 +32,7 @@ export function PascoListSection({
   emptyDescription = "Be the first to upload a past exam paper.",
   emptyAction = { label: "Upload a pasco", href: "/pascos/new" },
   viewAllHref,
+  emphasize = "createdAt",
 }: PascoListSectionProps) {
   const pascosQuery = usePascosList(filters);
 
@@ -73,7 +76,7 @@ export function PascoListSection({
     <Section title={title} description={description}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pascos.map((pasco) => (
-          <PascoCard key={pasco.id} pasco={pasco} />
+          <PascoCard key={pasco.id} pasco={pasco} emphasize={emphasize} />
         ))}
       </div>
       {viewAllHref ? (

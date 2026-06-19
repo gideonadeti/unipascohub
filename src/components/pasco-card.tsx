@@ -1,64 +1,163 @@
-import { Download, Eye, ThumbsUp } from "lucide-react";
+import { Clock, Download, Eye, FileText, ThumbsUp } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatEnumLabel } from "@/lib/catalog-labels";
-import { getPascoDisplayTitle, pascoOverviewBadges } from "@/lib/pasco-display";
+import {
+  formatPascoRelativeDate,
+  getPascoCardBadges,
+  getPascoDisplayDescription,
+  getPascoDisplayTitle,
+  type PascoCardBadgeKey,
+  type PascoCardEmphasis,
+} from "@/lib/pasco-display";
 import { cn } from "@/lib/utils";
 import type { Course } from "@/types/api/catalog";
 import type { Pasco } from "@/types/api/pascos";
 
 type PascoCardProps = {
   pasco: Pasco;
-  title?: string;
   course?: Pick<Course, "code" | "title"> | null;
   className?: string;
+  emphasize?: PascoCardEmphasis;
+  hiddenBadgeKeys?: PascoCardBadgeKey[];
+};
+
+type MetaItem = {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  emphasized?: boolean;
 };
 
 function formatCount(count: number): string {
   return count.toLocaleString();
 }
 
-export function PascoCard({ pasco, title, course, className }: PascoCardProps) {
-  const displayTitle = title ?? getPascoDisplayTitle(pasco, course);
+function formatFileCount(count: number): string {
+  return count === 1 ? "1 file" : `${count} files`;
+}
+
+function getMetaItems(pasco: Pasco, emphasize: PascoCardEmphasis): MetaItem[] {
+  const views: MetaItem = {
+    icon: <Eye className="size-3.5" aria-hidden />,
+    label: "views",
+    value: formatCount(pasco.viewCount),
+  };
+  const downloads: MetaItem = {
+    icon: <Download className="size-3.5" aria-hidden />,
+    label: "downloads",
+    value: formatCount(pasco.downloadCount),
+  };
+  const files: MetaItem = {
+    icon: <FileText className="size-3.5" aria-hidden />,
+    label: "files",
+    value: formatFileCount(pasco.files.length),
+  };
+
+  switch (emphasize) {
+    case "views":
+      return [{ ...views, emphasized: true }, downloads, files];
+    case "downloads":
+      return [{ ...downloads, emphasized: true }, views, files];
+    case "likes":
+      return [
+        {
+          icon: <ThumbsUp className="size-3.5" aria-hidden />,
+          label: "likes",
+          value: formatCount(pasco.likeCount),
+          emphasized: true,
+        },
+        views,
+        files,
+      ];
+    default:
+      return [
+        {
+          icon: <Clock className="size-3.5" aria-hidden />,
+          label: "uploaded",
+          value: formatPascoRelativeDate(pasco.createdAt),
+          emphasized: true,
+        },
+        views,
+        files,
+      ];
+  }
+}
+
+function MetaStat({ icon, label, value, emphasized }: MetaItem) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1",
+        emphasized ? "text-foreground" : undefined,
+      )}
+    >
+      {icon}
+      <span>{value}</span>
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}
+
+export function PascoCard({
+  pasco,
+  course: courseProp,
+  className,
+  emphasize = "createdAt",
+  hiddenBadgeKeys,
+}: PascoCardProps) {
+  const course = courseProp ?? pasco.course ?? null;
+  const displayTitle = getPascoDisplayTitle(pasco, course);
+  const displayDescription = getPascoDisplayDescription(pasco, course);
+  const badges = getPascoCardBadges(pasco, { hiddenKeys: hiddenBadgeKeys });
+  const metaItems = getMetaItems(pasco, emphasize);
+  const emphasizedItem =
+    metaItems.find((item) => item.emphasized) ?? metaItems[0];
+
+  const ariaLabel = [
+    displayTitle,
+    displayDescription,
+    `${emphasizedItem.value} ${emphasizedItem.label}`,
+    formatFileCount(pasco.files.length),
+  ]
+    .filter(Boolean)
+    .join(". ");
 
   return (
     <Link
       href={`/pascos/${pasco.id}`}
       className={cn("group block h-full", className)}
-      aria-label={`${displayTitle}. ${formatCount(pasco.viewCount)} views, ${formatCount(pasco.downloadCount)} downloads, ${formatCount(pasco.likeCount)} likes.`}
+      aria-label={ariaLabel}
     >
       <Card className="h-full transition-colors group-hover:bg-muted/50">
         <CardHeader className="space-y-3">
-          <CardTitle className="text-lg font-medium leading-snug">
-            {displayTitle}
-          </CardTitle>
-          <div className="flex flex-wrap gap-1.5">
-            {pascoOverviewBadges.map((key) => (
-              <Badge key={key} variant="secondary">
-                {formatEnumLabel(pasco[key])}
-              </Badge>
-            ))}
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-medium leading-snug">
+              {displayTitle}
+            </CardTitle>
+            {displayDescription ? (
+              <p className="text-sm text-muted-foreground">
+                {displayDescription}
+              </p>
+            ) : null}
           </div>
+          {badges.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {badges.map((badge) => (
+                <Badge key={badge.key} variant={badge.variant}>
+                  {badge.label}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground sm:text-sm">
-            <span className="inline-flex items-center gap-1">
-              <Eye className="size-3.5" aria-hidden />
-              <span>{formatCount(pasco.viewCount)}</span>
-              <span className="sr-only">views</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Download className="size-3.5" aria-hidden />
-              <span>{formatCount(pasco.downloadCount)}</span>
-              <span className="sr-only">downloads</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <ThumbsUp className="size-3.5" aria-hidden />
-              <span>{formatCount(pasco.likeCount)}</span>
-              <span className="sr-only">likes</span>
-            </span>
+            {metaItems.map((item) => (
+              <MetaStat key={item.label} {...item} />
+            ))}
           </div>
         </CardContent>
       </Card>
