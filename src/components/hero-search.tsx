@@ -3,11 +3,12 @@
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-
+import { RecentSearchesList } from "@/components/recent-searches-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { heroCopy, heroSearchExamples } from "@/config/site";
 import { useSearchSuggest } from "@/hooks/api/use-search-suggest";
+import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import {
   buildBrowseHref,
@@ -42,15 +43,23 @@ export function HeroSearch() {
   const [charIndex, setCharIndex] = useState(0);
   const [deleting, setDeleting] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const {
+    recents,
+    push: pushRecent,
+    remove: removeRecent,
+  } = useRecentSearches();
 
   const suggestQuery = useSearchSuggest(debouncedValue);
   const courses = suggestQuery.data?.courses ?? [];
   const detectedFilters = suggestQuery.data?.detectedFilters ?? {};
   const hasDetectedFilters = Object.keys(detectedFilters).length > 0;
-  const showDropdown =
+  const showRecents = focused && value.trim().length < 2 && recents.length > 0;
+  const showSuggestions =
     focused &&
     debouncedValue.trim().length >= 2 &&
     (suggestQuery.isFetching || courses.length > 0 || hasDetectedFilters);
+  const showDropdown = showRecents || showSuggestions;
+  const selectableCount = (showRecents ? recents.length : 0) + courses.length;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -108,11 +117,29 @@ export function HeroSearch() {
     ? (heroSearchExamples[0] ?? STATIC_PLACEHOLDER)
     : displayText;
 
+  const navigateToQuery = (query: string) => {
+    const trimmed = query.trim();
+
+    if (!trimmed) {
+      return;
+    }
+
+    pushRecent(trimmed);
+    setFocused(false);
+    router.push(buildBrowseHrefFromQuery(trimmed));
+  };
+
   const navigateToCourse = (course: SearchSuggestCourse) => {
     const href = buildBrowseHref({
       courseId: course.id,
       ...detectedFilters,
     });
+    const trimmed = value.trim();
+
+    if (trimmed.length >= 2) {
+      pushRecent(trimmed);
+    }
+
     setFocused(false);
     router.push(href);
   };
@@ -125,13 +152,24 @@ export function HeroSearch() {
       return;
     }
 
-    if (activeIndex >= 0 && courses[activeIndex]) {
-      navigateToCourse(courses[activeIndex]);
-      return;
+    if (activeIndex >= 0) {
+      if (showRecents && activeIndex < recents.length) {
+        navigateToQuery(recents[activeIndex] ?? "");
+        return;
+      }
+
+      const courseIndex = showRecents
+        ? activeIndex - recents.length
+        : activeIndex;
+      const course = courses[courseIndex];
+
+      if (course) {
+        navigateToCourse(course);
+        return;
+      }
     }
 
-    setFocused(false);
-    router.push(buildBrowseHrefFromQuery(trimmed));
+    navigateToQuery(trimmed);
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -140,13 +178,13 @@ export function HeroSearch() {
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showDropdown || courses.length === 0) {
+    if (!showDropdown || selectableCount === 0) {
       return;
     }
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActiveIndex((index) => Math.min(index + 1, courses.length - 1));
+      setActiveIndex((index) => Math.min(index + 1, selectableCount - 1));
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setActiveIndex((index) => Math.max(index - 1, 0));
@@ -207,7 +245,16 @@ export function HeroSearch() {
             role="listbox"
             className="absolute top-full z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md"
           >
-            {hasDetectedFilters ? (
+            {showRecents ? (
+              <RecentSearchesList
+                searches={recents}
+                activeIndex={activeIndex}
+                onSelect={navigateToQuery}
+                onRemove={removeRecent}
+              />
+            ) : null}
+
+            {showSuggestions && hasDetectedFilters ? (
               <div className="border-b px-3 py-2">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">
                   Detected filters
@@ -231,41 +278,48 @@ export function HeroSearch() {
               </div>
             ) : null}
 
-            {suggestQuery.isFetching ? (
+            {showSuggestions && suggestQuery.isFetching ? (
               <p className="px-3 py-2 text-sm text-muted-foreground">
                 Searching…
               </p>
             ) : null}
 
-            {courses.length > 0 ? (
+            {showSuggestions && courses.length > 0 ? (
               <ul className="max-h-64 overflow-y-auto py-1">
-                {courses.map((course, index) => (
-                  <li key={course.id} role="presentation">
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={index === activeIndex}
-                      className={cn(
-                        "flex w-full flex-col gap-0.5 px-3 py-2 text-left text-sm hover:bg-muted",
-                        index === activeIndex && "bg-muted",
-                      )}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => navigateToCourse(course)}
-                    >
-                      <span className="font-medium">
-                        {course.code} — {course.title}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {course.institutionName} · {course.pascoCount} pasco
-                        {course.pascoCount === 1 ? "" : "s"}
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                {courses.map((course, index) => {
+                  const optionIndex = showRecents
+                    ? recents.length + index
+                    : index;
+
+                  return (
+                    <li key={course.id} role="presentation">
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={optionIndex === activeIndex}
+                        className={cn(
+                          "flex w-full flex-col gap-0.5 px-3 py-2 text-left text-sm hover:bg-muted",
+                          optionIndex === activeIndex && "bg-muted",
+                        )}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => navigateToCourse(course)}
+                      >
+                        <span className="font-medium">
+                          {course.code} — {course.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {course.institutionName} · {course.pascoCount} pasco
+                          {course.pascoCount === 1 ? "" : "s"}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             ) : null}
 
-            {!suggestQuery.isFetching &&
+            {showSuggestions &&
+            !suggestQuery.isFetching &&
             courses.length === 0 &&
             !hasDetectedFilters ? (
               <p className="px-3 py-2 text-sm text-muted-foreground">

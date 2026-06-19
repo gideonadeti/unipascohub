@@ -3,13 +3,14 @@
 import { FileQuestion, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { PascoBrowseFilters } from "@/components/pasco-browse-filters";
 import { PascoBrowsePagination } from "@/components/pasco-browse-pagination";
 import { PascoCard } from "@/components/pasco-card";
 import { PascoListSkeleton } from "@/components/pasco-list-skeleton";
+import { RecentSearchesList } from "@/components/recent-searches-list";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useCourse } from "@/hooks/api/use-courses";
 import { usePascosList } from "@/hooks/api/use-pascos";
+import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import {
   BROWSE_DEFAULT_LIMIT,
@@ -195,20 +197,41 @@ function PascoBrowseSearchBar({
   onSearch: (query: string) => void;
 }) {
   const [query, setQuery] = useState(initialQuery);
+  const [focused, setFocused] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const {
+    recents,
+    push: pushRecent,
+    remove: removeRecent,
+  } = useRecentSearches();
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
+
+  const showRecents =
+    focused && query.trim().length === 0 && recents.length > 0;
+
+  const submitQuery = (value: string) => {
+    const trimmed = value.trim();
+
+    if (trimmed.length >= 2) {
+      pushRecent(trimmed);
+    }
+
+    onSearch(trimmed);
+    setFocused(false);
+  };
 
   return (
     <form
       className="flex flex-col gap-2 sm:flex-row"
       onSubmit={(event) => {
         event.preventDefault();
-        onSearch(query.trim());
+        submitQuery(query);
       }}
     >
-      <div className="relative flex-1">
+      <div ref={containerRef} className="relative flex-1">
         <Search
           className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
@@ -217,11 +240,30 @@ function PascoBrowseSearchBar({
           type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={(event) => {
+            if (
+              containerRef.current?.contains(event.relatedTarget as Node | null)
+            ) {
+              return;
+            }
+
+            window.setTimeout(() => setFocused(false), 150);
+          }}
           placeholder="Search by course, level, year…"
           className="h-11 pl-9"
           aria-label="Search pascos"
           autoComplete="off"
         />
+        {showRecents ? (
+          <div className="absolute top-full z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
+            <RecentSearchesList
+              searches={recents}
+              onSelect={submitQuery}
+              onRemove={removeRecent}
+            />
+          </div>
+        ) : null}
       </div>
       <Button type="submit" className="h-11 min-w-28">
         Search
