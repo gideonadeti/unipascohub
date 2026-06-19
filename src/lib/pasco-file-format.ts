@@ -1,3 +1,5 @@
+import type { PascoFile } from "@/types/api/pascos";
+
 export function formatPascoFileSize(bytes: number): string {
   if (bytes < 1024) {
     return `${bytes} B`;
@@ -8,4 +10,10 @@ export function formatPascoFileSize(bytes: number): string {
   }
 
   return `${(bytes / 1_048_576).toFixed(1)} MB`;
+}
+
+export function formatPascoFileDisplayName(
+  file: Pick<PascoFile, "order" | "fileName">,
+): string {
+  return `${file.order}. ${file.fileName}`;
 }
