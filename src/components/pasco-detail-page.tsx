@@ -11,6 +11,7 @@ import { PascoDetailSkeleton } from "@/components/pasco-detail-skeleton";
 import { PascoEngagementBar } from "@/components/pasco-engagement-bar";
 import { PascoFileActions } from "@/components/pasco-file-actions";
 import { PascoFileView } from "@/components/pasco-file-view";
+import { PascoModerationActions } from "@/components/pasco-moderation-actions";
 import { PascoPageNav } from "@/components/pasco-page-nav";
 import { ReportPascoLink } from "@/components/report-pasco-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -29,7 +30,7 @@ import {
   getPascoDisplayTitle,
   pascoOverviewBadges,
 } from "@/lib/pasco-display";
-import { canUserModifyPasco } from "@/lib/pasco-permissions";
+import { canUserModifyPasco, isModeratorRole } from "@/lib/pasco-permissions";
 import type { PascoFile } from "@/types/api/pascos";
 
 export function PascoDetailPage() {
@@ -65,10 +66,42 @@ export function PascoDetailPage() {
       : pasco.courseId;
   const canEdit =
     currentUser.data?.user && canUserModifyPasco(currentUser.data.user, pasco);
+  const isModerator = isModeratorRole(currentUser.data?.user?.role);
+  const moderationStatus = pasco.moderationStatus;
+  const isUploaderPending =
+    moderationStatus === "PENDING_REVIEW" &&
+    currentUser.data?.user?.id === pasco.uploaderId;
 
   return (
     <div className="space-y-8">
       <PascoPageNav href={getPascoBrowseHref(pasco)} />
+
+      {isUploaderPending ? (
+        <Alert>
+          <AlertTitle>Under review</AlertTitle>
+          <AlertDescription>
+            This pasco is hidden from other students while moderators review it.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {isModerator && moderationStatus && moderationStatus !== "PUBLISHED" ? (
+        <Alert>
+          <AlertTitle>
+            Moderation: {formatEnumLabel(moderationStatus)}
+          </AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>
+              {moderationStatus === "PENDING_REVIEW"
+                ? "This pasco was flagged after receiving enough dislikes."
+                : "This pasco was rejected and remains hidden from students."}
+            </p>
+            {moderationStatus === "PENDING_REVIEW" ? (
+              <PascoModerationActions pascoId={pascoId} />
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <PageHeader
         title={getPascoDisplayTitle(pasco, course)}
