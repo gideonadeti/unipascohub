@@ -83,6 +83,17 @@ enum SearchQuerySource {
   BROWSE_LIST
 }
 
+enum CatalogSubmissionType {
+  PROGRAM
+  COURSE
+}
+
+enum CatalogSubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        String   @id
   name      String
@@ -98,6 +109,8 @@ model User {
   storageCleanupRuns        StorageCleanupRun[]
   searchQueries             SearchQuery[]
   notifications             Notification[]
+  catalogSubmissionsSubmitted CatalogSubmission[] @relation("CatalogSubmissionSubmitter")
+  catalogSubmissionsReviewed  CatalogSubmission[] @relation("CatalogSubmissionReviewer")
 }
 
 model Institution {
@@ -106,8 +119,9 @@ model Institution {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  programs Program[]
-  courses  Course[]
+  programs           Program[]
+  courses            Course[]
+  catalogSubmissions CatalogSubmission[]
 
   @@unique([name])
 }
@@ -306,4 +320,32 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt, createdAt(sort: Desc)])
+}
+
+model CatalogSubmission {
+  id                String                  @id @default(cuid())
+  type              CatalogSubmissionType
+  status            CatalogSubmissionStatus @default(PENDING)
+  institutionId     String
+  submitterId       String
+  reviewerId        String?
+  programName       String?
+  programType       ProgramType?
+  courseCode        String?
+  courseTitle       String?
+  programIds        String[]                @default([])
+  rejectionReason   String?
+  approvedProgramId String?
+  approvedCourseId  String?
+  reviewedAt        DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  submitter   User        @relation("CatalogSubmissionSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  reviewer    User?       @relation("CatalogSubmissionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([submitterId, createdAt(sort: Desc)])
+  @@index([institutionId, type, status])
 }
