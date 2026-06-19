@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
 import { getClientIp } from "@/lib/client-ip";
+import { prisma } from "@/lib/db";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
   type PascoListQuery,
@@ -119,7 +120,15 @@ export async function GET(req: Request) {
       sortOrder: resolvedFilters.sortOrder ?? parsed.data.sortOrder,
     };
 
-    const result = await listPascos(listQuery);
+    const [result, appliedCourse] = await Promise.all([
+      listPascos(listQuery),
+      resolvedFilters.courseId
+        ? prisma.course.findUnique({
+            where: { id: resolvedFilters.courseId },
+            select: { code: true, title: true },
+          })
+        : Promise.resolve(null),
+    ]);
 
     if (!result.success) {
       return Response.json({ error: "Internal server error" }, { status: 500 });
@@ -170,6 +179,14 @@ export async function GET(req: Request) {
         total: result.total,
         totalPages,
       },
+      ...(appliedCourse
+        ? {
+            appliedCourse: {
+              code: appliedCourse.code,
+              title: appliedCourse.title,
+            },
+          }
+        : {}),
       ...(parsed.data.q
         ? {
             search: {
