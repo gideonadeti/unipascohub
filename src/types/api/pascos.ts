@@ -108,6 +108,7 @@ export type PascoListResponse = {
     totalPages: number;
   };
   search?: PascoListSearchMeta;
+  appliedCourse?: PascoCourseSummary;
 };
 
 export type PascoDetailResponse = {
