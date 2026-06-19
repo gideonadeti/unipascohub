@@ -41,11 +41,18 @@ export const queryKeys = {
     all: ["moderation"] as const,
     pascos: (filters: Record<string, unknown>) =>
       [...queryKeys.moderation.all, "pascos", filters] as const,
+    catalog: (filters: Record<string, unknown>) =>
+      [...queryKeys.moderation.all, "catalog", filters] as const,
     settings: () => [...queryKeys.moderation.all, "settings"] as const,
   },
   notifications: {
     all: ["notifications"] as const,
     list: (filters: Record<string, unknown>) =>
       [...queryKeys.notifications.all, "list", filters] as const,
+  },
+  catalogSubmissions: {
+    all: ["catalog-submissions"] as const,
+    mine: (filters: Record<string, unknown>) =>
+      [...queryKeys.catalogSubmissions.all, "mine", filters] as const,
   },
 } as const;

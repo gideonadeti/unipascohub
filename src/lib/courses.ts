@@ -224,14 +224,14 @@ export function serializeCourseDetail(course: CourseWithPrograms) {
   };
 }
 
-function isDuplicateCodeError(error: unknown): boolean {
+export function isDuplicateCodeError(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2002"
   );
 }
 
-async function validateProgramIds(
+export async function validateProgramIds(
   institutionId: string,
   programIds: string[],
 ): Promise<

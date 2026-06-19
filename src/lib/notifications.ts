@@ -4,6 +4,10 @@ import { UserRole } from "../../generated/prisma/enums";
 export const NotificationType = {
   PASCO_PENDING_REVIEW: "PASCO_PENDING_REVIEW",
   PASCO_REJECTED: "PASCO_REJECTED",
+  CATALOG_SUBMISSION_PENDING: "CATALOG_SUBMISSION_PENDING",
+  CATALOG_SUBMISSION_APPROVED: "CATALOG_SUBMISSION_APPROVED",
+  CATALOG_SUBMISSION_REJECTED: "CATALOG_SUBMISSION_REJECTED",
+  CATALOG_COURSE_AUTO_APPROVED: "CATALOG_COURSE_AUTO_APPROVED",
 } as const;
 
 type NotificationTypeValue =
@@ -53,6 +57,92 @@ export async function createUploaderRejectedNotification(
       body: `"${title}" was rejected: ${reason}`,
       link: `/pascos/${pascoId}`,
     },
+  });
+}
+
+export async function createCatalogSubmissionPendingNotifications(
+  summary: string,
+): Promise<void> {
+  const moderators = await prisma.user.findMany({
+    where: {
+      role: {
+        in: [UserRole.MODERATOR, UserRole.ADMIN],
+      },
+    },
+    select: { id: true },
+  });
+
+  if (moderators.length === 0) {
+    return;
+  }
+
+  await prisma.notification.createMany({
+    data: moderators.map((moderator) => ({
+      userId: moderator.id,
+      type: NotificationType.CATALOG_SUBMISSION_PENDING,
+      title: "Catalog submission pending",
+      body: `"${summary}" needs catalog review.`,
+      link: "/moderation/catalog",
+    })),
+  });
+}
+
+export async function createCatalogSubmissionApprovedNotification(
+  submitterId: string,
+  summary: string,
+  link: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: submitterId,
+      type: NotificationType.CATALOG_SUBMISSION_APPROVED,
+      title: "Catalog request approved",
+      body: `"${summary}" was added to the catalog. You can continue uploading.`,
+      link,
+    },
+  });
+}
+
+export async function createCatalogSubmissionRejectedNotification(
+  submitterId: string,
+  summary: string,
+  reason: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: submitterId,
+      type: NotificationType.CATALOG_SUBMISSION_REJECTED,
+      title: "Catalog request rejected",
+      body: `"${summary}" was rejected: ${reason}`,
+      link: "/pascos/new",
+    },
+  });
+}
+
+export async function createCatalogCourseAutoApprovedNotification(
+  summary: string,
+): Promise<void> {
+  const moderators = await prisma.user.findMany({
+    where: {
+      role: {
+        in: [UserRole.MODERATOR, UserRole.ADMIN],
+      },
+    },
+    select: { id: true },
+  });
+
+  if (moderators.length === 0) {
+    return;
+  }
+
+  await prisma.notification.createMany({
+    data: moderators.map((moderator) => ({
+      userId: moderator.id,
+      type: NotificationType.CATALOG_COURSE_AUTO_APPROVED,
+      title: "Course added to catalog",
+      body: `"${summary}" was added by a contributor. Review if needed.`,
+      link: "/moderation/catalog",
+    })),
   });
 }
 
