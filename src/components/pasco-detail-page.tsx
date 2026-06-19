@@ -12,6 +12,7 @@ import { PascoEngagementBar } from "@/components/pasco-engagement-bar";
 import { PascoFileActions } from "@/components/pasco-file-actions";
 import { PascoFileView } from "@/components/pasco-file-view";
 import { PascoPageNav } from "@/components/pasco-page-nav";
+import { ReportPascoLink } from "@/components/report-pasco-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,21 +74,24 @@ export function PascoDetailPage() {
         title={getPascoDisplayTitle(pasco, course)}
         description={getPascoDisplayDescription(pasco, course)}
         actions={
-          canEdit ? (
-            <>
-              <Button type="button" variant="outline" size="sm" asChild>
-                <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={() => setDeleteOpen(true)}
-              >
-                Delete
-              </Button>
-            </>
-          ) : undefined
+          <>
+            <ReportPascoLink pascoId={pascoId} />
+            {canEdit ? (
+              <>
+                <Button type="button" variant="outline" size="sm" asChild>
+                  <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  Delete
+                </Button>
+              </>
+            ) : null}
+          </>
         }
       />
 
