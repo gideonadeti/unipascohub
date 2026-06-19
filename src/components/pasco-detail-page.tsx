@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Section } from "@/components/layout/section";
 import { PascoDeleteDialog } from "@/components/pasco-delete-dialog";
 import { PascoDetailSkeleton } from "@/components/pasco-detail-skeleton";
+import { PascoDownloadAll } from "@/components/pasco-download-all";
 import { PascoEngagementBar } from "@/components/pasco-engagement-bar";
 import { PascoFileActions } from "@/components/pasco-file-actions";
 import { PascoFileView } from "@/components/pasco-file-view";
@@ -233,7 +234,18 @@ export function PascoDetailPage() {
             </Section>
           ) : null}
 
-          <Section title="Files">
+          <Section
+            title="Files"
+            actions={
+              pasco.files.length >= 2 ? (
+                <PascoDownloadAll
+                  pascoId={pascoId}
+                  files={pasco.files}
+                  course={course}
+                />
+              ) : null
+            }
+          >
             {pasco.files.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No files attached to this pasco.
