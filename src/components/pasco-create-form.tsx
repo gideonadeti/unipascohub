@@ -3,7 +3,14 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { CatalogCourseRequestDialog } from "@/components/catalog-course-request-dialog";
+import { CatalogProgramRequestDialog } from "@/components/catalog-program-request-dialog";
+import { CatalogSubmissionPendingAlert } from "@/components/catalog-submission-pending-alert";
+import { CourseCombobox } from "@/components/course-combobox";
+import { InstitutionCombobox } from "@/components/institution-combobox";
 import { PascoCloudinaryUpload } from "@/components/pasco-cloudinary-upload";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -55,6 +62,11 @@ import {
 import type { Program } from "@/types/api/catalog";
 
 export function PascoCreateForm() {
+  const searchParams = useSearchParams();
+  const deepLinkInstitutionId = searchParams.get("institutionId") ?? "";
+  const deepLinkProgramId = searchParams.get("programId") ?? "";
+  const deepLinkCourseId = searchParams.get("courseId") ?? "";
+
   const form = useForm<PascoCreateFormValues>({
     resolver: standardSchemaResolver(pascoCreateFormSchema),
     mode: "onTouched",
@@ -96,6 +108,63 @@ export function PascoCreateForm() {
     ? getPascoFileDuplicatesFromError(createPasco.error)
     : null;
 
+  useEffect(() => {
+    if (!institutions.data || deepLinkInstitutionId.length === 0) {
+      return;
+    }
+
+    const institutionExists = institutions.data.institutions.some(
+      (institution) => institution.id === deepLinkInstitutionId,
+    );
+
+    if (!institutionExists) {
+      return;
+    }
+
+    if (form.getValues("institutionId") !== deepLinkInstitutionId) {
+      form.setValue("institutionId", deepLinkInstitutionId);
+      form.setValue("programId", "");
+      form.setValue("courseId", "");
+    }
+  }, [deepLinkInstitutionId, form, institutions.data]);
+
+  useEffect(() => {
+    if (!programs.data || deepLinkProgramId.length === 0) {
+      return;
+    }
+
+    const programExists = programs.data.programs.some(
+      (program) => program.id === deepLinkProgramId,
+    );
+
+    if (!programExists) {
+      return;
+    }
+
+    if (form.getValues("programId") !== deepLinkProgramId) {
+      form.setValue("programId", deepLinkProgramId);
+      form.setValue("courseId", "");
+    }
+  }, [deepLinkProgramId, form, programs.data]);
+
+  useEffect(() => {
+    if (!courses.data || deepLinkCourseId.length === 0) {
+      return;
+    }
+
+    const courseExists = courses.data.courses.some(
+      (course) => course.id === deepLinkCourseId,
+    );
+
+    if (!courseExists) {
+      return;
+    }
+
+    if (form.getValues("courseId") !== deepLinkCourseId) {
+      form.setValue("courseId", deepLinkCourseId);
+    }
+  }, [courses.data, deepLinkCourseId, form]);
+
   async function onSubmit(values: PascoCreateFormValues) {
     await createPasco.submit(values);
   }
@@ -113,6 +182,10 @@ export function PascoCreateForm() {
             className="space-y-6 border-0 p-0 m-0 min-w-0"
           >
             <FieldGroup>
+              {institutionId ? (
+                <CatalogSubmissionPendingAlert institutionId={institutionId} />
+              ) : null}
+
               <Controller
                 name="institutionId"
                 control={form.control}
@@ -121,33 +194,17 @@ export function PascoCreateForm() {
                     <FieldLabel htmlFor="pasco-institution">
                       Institution
                     </FieldLabel>
-                    <Select
-                      name={field.name}
+                    <InstitutionCombobox
+                      id="pasco-institution"
+                      institutions={institutions.data?.institutions ?? []}
                       value={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
                         form.setValue("programId", "");
                         form.setValue("courseId", "");
                       }}
-                    >
-                      <SelectTrigger
-                        id="pasco-institution"
-                        className="w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Select institution" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {institutions.data?.institutions.map((institution) => (
-                          <SelectItem
-                            key={institution.id}
-                            value={institution.id}
-                          >
-                            {institution.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      aria-invalid={fieldState.invalid}
+                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -208,6 +265,12 @@ export function PascoCreateForm() {
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
+                      <div className="pt-1">
+                        <CatalogProgramRequestDialog
+                          institutionId={institutionId}
+                          disabled={isSubmitting}
+                        />
+                      </div>
                     </Field>
                   );
                 }}
@@ -219,30 +282,30 @@ export function PascoCreateForm() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="pasco-course">Course</FieldLabel>
-                    <Select
-                      name={field.name}
+                    <CourseCombobox
+                      id="pasco-course"
+                      courses={courses.data?.courses ?? []}
                       value={field.value}
                       onValueChange={field.onChange}
+                      placeholder={
+                        programId ? "Search courses..." : "Select program first"
+                      }
                       disabled={!programId}
-                    >
-                      <SelectTrigger
-                        id="pasco-course"
-                        className="w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Select course" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {courses.data?.courses.map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
-                            {course.code} — {course.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      aria-invalid={fieldState.invalid}
+                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
+                    <div className="pt-1">
+                      <CatalogCourseRequestDialog
+                        institutionId={institutionId}
+                        programId={programId}
+                        disabled={isSubmitting}
+                        onCourseAdded={(courseId) =>
+                          form.setValue("courseId", courseId)
+                        }
+                      />
+                    </div>
                   </Field>
                 )}
               />

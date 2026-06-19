@@ -134,6 +134,9 @@ export function ModerationPascosPage() {
         >
           Rejected
         </Button>
+        <Button type="button" size="sm" variant="ghost" asChild>
+          <Link href="/moderation/catalog">Catalog review</Link>
+        </Button>
       </div>
 
       {pascos.length === 0 ? (

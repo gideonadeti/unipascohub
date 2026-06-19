@@ -30,9 +30,14 @@ export function SiteHeader() {
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
         {showModerationLink ? (
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/moderation/pascos">Moderation</Link>
-          </Button>
+          <>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/moderation/pascos">Pasco review</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/moderation/catalog">Catalog review</Link>
+            </Button>
+          </>
         ) : null}
         <ThemeToggle />
         <Show when="signed-out">

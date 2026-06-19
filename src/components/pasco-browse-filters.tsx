@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-
+import { CourseCombobox } from "@/components/course-combobox";
+import { InstitutionCombobox } from "@/components/institution-combobox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -177,6 +178,8 @@ export function PascoBrowseFilters({
   });
 
   const programItems = programs.data?.programs ?? [];
+  const institutionItems = institutions.data?.institutions ?? [];
+  const courseItems = courses.data?.courses ?? [];
   const selectedProgram =
     programItems.find((program) => program.id === draft.programId) ?? null;
 
@@ -189,29 +192,21 @@ export function PascoBrowseFilters({
         <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field>
             <FieldLabel htmlFor="browse-institution">Institution</FieldLabel>
-            <Select
-              value={draft.institutionId || ANY_VALUE}
-              onValueChange={(value) => {
+            <InstitutionCombobox
+              id="browse-institution"
+              institutions={institutionItems}
+              value={draft.institutionId}
+              onValueChange={(institutionId) => {
                 setDraft((current) => ({
                   ...current,
-                  institutionId: value === ANY_VALUE ? "" : value,
+                  institutionId,
                   programId: "",
                   courseId: "",
                 }));
               }}
-            >
-              <SelectTrigger id="browse-institution" className="w-full">
-                <SelectValue placeholder="Any institution" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY_VALUE}>Any institution</SelectItem>
-                {institutions.data?.institutions.map((institution) => (
-                  <SelectItem key={institution.id} value={institution.id}>
-                    {institution.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Any institution"
+              allowClear
+            />
           </Field>
 
           <Field>
@@ -257,28 +252,20 @@ export function PascoBrowseFilters({
 
           <Field>
             <FieldLabel htmlFor="browse-course">Course</FieldLabel>
-            <Select
-              value={draft.courseId || ANY_VALUE}
-              onValueChange={(value) => {
+            <CourseCombobox
+              id="browse-course"
+              courses={courseItems}
+              value={draft.courseId}
+              onValueChange={(courseId) => {
                 setDraft((current) => ({
                   ...current,
-                  courseId: value === ANY_VALUE ? "" : value,
+                  courseId,
                 }));
               }}
+              placeholder="Any course"
               disabled={!draft.programId}
-            >
-              <SelectTrigger id="browse-course" className="w-full">
-                <SelectValue placeholder="Any course" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY_VALUE}>Any course</SelectItem>
-                {courses.data?.courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.code} — {course.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              allowClear
+            />
           </Field>
 
           <Field>

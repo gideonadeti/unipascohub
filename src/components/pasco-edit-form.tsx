@@ -6,6 +6,8 @@ import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { CourseCombobox } from "@/components/course-combobox";
+import { InstitutionCombobox } from "@/components/institution-combobox";
 import { PascoCloudinaryUpload } from "@/components/pasco-cloudinary-upload";
 import { PascoDetailSkeleton } from "@/components/pasco-detail-skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -280,8 +282,9 @@ function PascoEditFormFields({
                     <FieldLabel htmlFor="pasco-edit-institution">
                       Institution
                     </FieldLabel>
-                    <Select
-                      name={field.name}
+                    <InstitutionCombobox
+                      id="pasco-edit-institution"
+                      institutions={institutions}
                       value={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
@@ -289,25 +292,8 @@ function PascoEditFormFields({
                         form.setValue("courseId", "");
                         clearNewUploadsOnCatalogChange();
                       }}
-                    >
-                      <SelectTrigger
-                        id="pasco-edit-institution"
-                        className="w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Select institution" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {institutions.map((institution) => (
-                          <SelectItem
-                            key={institution.id}
-                            value={institution.id}
-                          >
-                            {institution.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      aria-invalid={fieldState.invalid}
+                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -381,33 +367,17 @@ function PascoEditFormFields({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="pasco-edit-course">Course</FieldLabel>
-                    <Select
-                      name={field.name}
+                    <CourseCombobox
+                      id="pasco-edit-course"
+                      courses={courseOptions}
                       value={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
                         clearNewUploadsOnCatalogChange();
                       }}
                       disabled={!institutionId}
-                    >
-                      <SelectTrigger
-                        id="pasco-edit-course"
-                        className="w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Select course" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {courseOptions.map((courseOption) => (
-                          <SelectItem
-                            key={courseOption.id}
-                            value={courseOption.id}
-                          >
-                            {courseOption.code} — {courseOption.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      aria-invalid={fieldState.invalid}
+                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
