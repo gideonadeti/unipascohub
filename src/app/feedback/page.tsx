@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function FeedbackPage() {
+  const hasFeedbackForm = Boolean(siteLinks.feedback);
+
   return (
     <PageContainer width="default">
       <div className="space-y-8">
@@ -22,11 +24,18 @@ export default function FeedbackPage() {
         />
 
         <ProseContent>
-          <p>
-            The best way to reach the maintainers is through a single feedback
-            link. You can configure it by setting{" "}
-            <code className="text-foreground">NEXT_PUBLIC_FEEDBACK_URL</code>.
-          </p>
+          {hasFeedbackForm ? (
+            <p>
+              Use the form below to share suggestions, report issues, or leave a
+              testimonial. Screenshots and clear steps help us fix problems
+              faster.
+            </p>
+          ) : (
+            <p>
+              The feedback form is not available right now. You can still reach
+              the maintainers through the link below.
+            </p>
+          )}
         </ProseContent>
 
         <div>
@@ -37,7 +46,7 @@ export default function FeedbackPage() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Open feedback link
+                Open feedback form
               </a>
             </Button>
           ) : siteLinks.github ? (
@@ -78,7 +87,8 @@ export default function FeedbackPage() {
                 <p>
                   If something is broken, include the page URL, what you
                   expected to happen, and what actually happened. If a file
-                  cannot be viewed or downloaded, include the pasco ID.
+                  cannot be viewed or downloaded, include the pasco ID. You can
+                  attach screenshots in the form.
                 </p>
               </ProseContent>
             </Section>
@@ -91,8 +101,8 @@ export default function FeedbackPage() {
             >
               <ProseContent>
                 <p>
-                  Testimonials are coming soon. For now, you can leave a note
-                  via the feedback link above.
+                  A few sentences about how past papers helped you prepare is
+                  enough. Share yours through the form above.
                 </p>
               </ProseContent>
             </Section>
