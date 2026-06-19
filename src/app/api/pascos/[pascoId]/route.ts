@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { canDeletePasco } from "@/lib/pasco-delete-permissions";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
   deletePasco,
@@ -313,10 +313,10 @@ export async function DELETE(
     return Response.json({ error: "Pasco not found" }, { status: 404 });
   }
 
-  const modifyResult = await canModifyPasco(userId, existingResult.pasco);
+  const deleteResult = await canDeletePasco(userId, existingResult.pasco);
 
-  if (!modifyResult.success) {
-    switch (modifyResult.error) {
+  if (!deleteResult.success) {
+    switch (deleteResult.error) {
       case "not_found":
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":

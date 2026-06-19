@@ -1,24 +1,45 @@
 import { auth } from "@clerk/nextjs/server";
 
-import { moderatePasco } from "@/lib/pasco-moderation";
+import {
+  moderatePasco,
+  runModerationSideEffects,
+} from "@/lib/pasco-moderation";
 import { requireModerator } from "@/lib/require-moderator";
+import type { ModerationPascoAction } from "@/types/api/pascos";
 
 export const runtime = "nodejs";
 
-type ModerationAction = "approve" | "reject";
+type ModerationRequestBody = {
+  action?: unknown;
+  reason?: unknown;
+  note?: unknown;
+};
 
-function parseAction(body: unknown): ModerationAction | null {
-  if (body === null || typeof body !== "object" || Array.isArray(body)) {
-    return null;
-  }
+function parseAction(
+  body: ModerationRequestBody,
+): ModerationPascoAction | null {
+  const { action } = body;
 
-  const action = (body as Record<string, unknown>).action;
-
-  if (action === "approve" || action === "reject") {
+  if (
+    action === "approve" ||
+    action === "reject" ||
+    action === "restore" ||
+    action === "flag"
+  ) {
     return action;
   }
 
   return null;
+}
+
+function parseOptionalString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 export async function PATCH(
@@ -44,10 +65,10 @@ export async function PATCH(
 
   const { pascoId } = await params;
 
-  let body: unknown;
+  let body: ModerationRequestBody;
 
   try {
-    body = await req.json();
+    body = (await req.json()) as ModerationRequestBody;
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -56,27 +77,41 @@ export async function PATCH(
 
   if (!action) {
     return Response.json(
-      { error: "Invalid action (allowed: approve, reject)" },
+      {
+        error: "Invalid action (allowed: approve, reject, restore, flag)",
+      },
       { status: 400 },
     );
   }
 
   try {
-    const result = await moderatePasco(pascoId, action);
+    const result = await moderatePasco({
+      pascoId,
+      action,
+      reason: parseOptionalString(body.reason),
+      note: parseOptionalString(body.note),
+    });
 
     if (!result.success) {
       switch (result.error) {
         case "not_found":
           return Response.json({ error: "Pasco not found" }, { status: 404 });
+        case "reason_required":
+          return Response.json(
+            { error: "Rejection reason is required" },
+            { status: 400 },
+          );
         case "invalid_transition":
           return Response.json(
-            { error: "Pasco is not pending review" },
+            { error: "Invalid moderation state transition" },
             { status: 409 },
           );
       }
     }
 
-    return Response.json({ moderationStatus: result.moderationStatus });
+    await runModerationSideEffects(result.result);
+
+    return Response.json({ moderationStatus: result.result.moderationStatus });
   } catch (err) {
     console.error("Moderation pasco update failed:", err);
 
