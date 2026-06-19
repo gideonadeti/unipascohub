@@ -229,6 +229,7 @@ All branding, footer links, hero copy, and social URLs live in [src/config/site.
 
 ```ts
 siteContributors         // { name, github, role?, avatarUrl? }[]
+siteSponsors             // { name, url, logoUrl?, tier? }[]
 getCreditLine()            // scalable footer string
 siteLinks                  // from NEXT_PUBLIC_* env vars
 footerNav                  // grouped footer links
@@ -236,6 +237,8 @@ heroSearchExamples         // typing animation strings
 ```
 
 Contributors page (`/contributors`) reads from `siteContributors`. Avatars default to `https://github.com/{username}.png`; set `avatarUrl` to override. GitHub username can be left empty until profiles are ready (initials fallback).
+
+Sponsors page (`/sponsors`) reads from `siteSponsors`. Each card links to `url` with an optional `logoUrl` (falls back to initials) and optional `tier` (`partner` | `supporter`) for badge display. Buy Me a Coffee CTA uses `siteLinks.buyMeACoffee` when set.
 
 ---
 

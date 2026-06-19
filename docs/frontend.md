@@ -29,7 +29,7 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 | `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | `PascoDetailPage` with enriched title, back nav                 |
 | `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | `PageHeader`, cancel/back nav, edit form + gate                 |
 | `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Team grid with avatars and GitHub links from `siteContributors` |
-| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsorship stub + optional BMC CTA                             |
+| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsor cards from `siteSponsors` + optional BMC CTA            |
 | `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                                |
 | `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                                         |
 | `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub with anchor sections                               |
