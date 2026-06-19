@@ -162,22 +162,28 @@ export function PascoDetailPage() {
             </Section>
           ) : null}
 
-          <Section title="Engagement">
-            <PascoEngagementBar pascoId={pascoId} pasco={pasco} />
+          <Section title="Files">
+            {pasco.files.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No files attached to this pasco.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {pasco.files.map((file) => (
+                  <li key={file.id}>
+                    <PascoFileActions
+                      pascoId={pascoId}
+                      file={file}
+                      onView={setViewFile}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
           </Section>
 
-          <Section title="Files">
-            <ul className="space-y-2">
-              {pasco.files.map((file) => (
-                <li key={file.id}>
-                  <PascoFileActions
-                    pascoId={pascoId}
-                    file={file}
-                    onView={setViewFile}
-                  />
-                </li>
-              ))}
-            </ul>
+          <Section title="Engagement">
+            <PascoEngagementBar pascoId={pascoId} pasco={pasco} />
           </Section>
         </CardContent>
       </Card>
