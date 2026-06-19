@@ -1,9 +1,11 @@
+import { getMonth, getYear } from "date-fns";
+
 export const ACADEMIC_YEAR_LOOKBACK = 10;
 
 /** Academic year starts in September (month index 8). */
 export function getCurrentAcademicStartYear(date = new Date()): number {
-  const year = date.getFullYear();
-  return date.getMonth() >= 8 ? year : year - 1;
+  const year = getYear(date);
+  return getMonth(date) >= 8 ? year : year - 1;
 }
 
 export function formatAcademicYear(startYear: number): string {

@@ -65,37 +65,7 @@ export const pascoOverviewBadges = [
   "contentType",
 ] as const satisfies ReadonlyArray<keyof Pasco>;
 
-const RELATIVE_TIME_DIVISIONS: Array<{
-  amount: number;
-  unit: Intl.RelativeTimeFormatUnit;
-}> = [
-  { amount: 60, unit: "second" },
-  { amount: 60, unit: "minute" },
-  { amount: 24, unit: "hour" },
-  { amount: 7, unit: "day" },
-  { amount: 4.345_24, unit: "week" },
-  { amount: 12, unit: "month" },
-  { amount: Number.POSITIVE_INFINITY, unit: "year" },
-];
-
-export function formatPascoRelativeDate(iso: string): string {
-  const date = new Date(iso);
-  const now = Date.now();
-  let delta = (date.getTime() - now) / 1000;
-
-  for (const division of RELATIVE_TIME_DIVISIONS) {
-    if (Math.abs(delta) < division.amount) {
-      return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(
-        Math.round(delta),
-        division.unit,
-      );
-    }
-
-    delta /= division.amount;
-  }
-
-  return date.toLocaleDateString();
-}
+export { formatRelativeDate as formatPascoRelativeDate } from "@/lib/dates";
 
 export function getPascoCardEmphasis(
   sortBy?: PascoListSortBy,
