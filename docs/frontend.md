@@ -32,7 +32,7 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 | `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsor cards from `siteSponsors` + optional BMC CTA            |
 | `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                                |
 | `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                                         |
-| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub + external form CTA (`NEXT_PUBLIC_FEEDBACK_URL`)   |
+| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub + external form CTA                                |
 
 Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
 

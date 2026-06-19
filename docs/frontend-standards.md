@@ -240,6 +240,8 @@ Contributors page (`/contributors`) reads from `siteContributors`. Avatars defau
 
 Sponsors page (`/sponsors`) reads from `siteSponsors`. Each card links to `url` with an optional `logoUrl` (falls back to initials) and optional `tier` (`partner` | `supporter`) for badge display. Buy Me a Coffee CTA uses `siteLinks.buyMeACoffee` when set.
 
+Pasco detail **Report** opens `NEXT_PUBLIC_FEEDBACK_URL` with Google Form prefill when entry env vars are set: `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_CATEGORY`, `NEXT_PUBLIC_FEEDBACK_FORM_CATEGORY_REPORT` (exact “What is this about?” option, default `Report`), `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_MESSAGE`, `NEXT_PUBLIC_FEEDBACK_FORM_MESSAGE_REPORT` (optional starter text), `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_PASCO_ID`, `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_PAGE_URL`. Use the full `viewform` URL, not `forms.gle`. Screenshot uploads cannot be prefilled. The Report button is hidden when `NEXT_PUBLIC_FEEDBACK_URL` is unset.
+
 ---
 
 ## Label formatting
