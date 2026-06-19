@@ -9,7 +9,7 @@ export const privacySections = [
   },
   {
     title: "Cookies and analytics",
-    body: "We use cookies required for authentication and session management. We may add product analytics later; if we do, this policy will be updated with the provider and what data is collected.",
+    body: "We use cookies required for authentication and session management. When you use search, we store your search query text on our servers (along with optional account identifier if signed in and basic result metadata) to understand usage and improve the product. We do not use third-party advertising trackers for search.",
   },
   {
     title: "Third-party processors",

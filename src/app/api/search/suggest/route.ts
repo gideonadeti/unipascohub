@@ -1,8 +1,13 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+
+import { getClientIp } from "@/lib/client-ip";
 import { MAX_SEARCH_QUERY_LENGTH } from "@/lib/pasco-list-query";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { parseSearchQuery } from "@/lib/search/parse-search-query";
+import { recordSearchQuery } from "@/lib/search/record-search-query";
 import { searchCourses } from "@/lib/search/search-courses";
+import { SearchQuerySource } from "../../../../../generated/prisma/client";
 
 export const runtime = "nodejs";
 
@@ -11,16 +16,6 @@ const SUGGEST_RATE_WINDOW_MS = 60_000;
 const DEFAULT_LIMIT = 8;
 const MAX_LIMIT = 20;
 const MIN_QUERY_LENGTH = 2;
-
-function getClientIp(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-
-  if (forwarded) {
-    return forwarded.split(",")[0]?.trim() ?? "unknown";
-  }
-
-  return "unknown";
-}
 
 export async function GET(req: Request) {
   const rateLimit = await checkRateLimit(`search-suggest:${getClientIp(req)}`, {
@@ -68,6 +63,19 @@ export async function GET(req: Request) {
     const courses = parsed.courseQuery
       ? await searchCourses(parsed.courseQuery, limit)
       : [];
+
+    const { userId } = await auth();
+
+    recordSearchQuery({
+      query: rawQ,
+      source: SearchQuerySource.SUGGEST,
+      userId,
+      resultCount: courses.length,
+      metadata: {
+        parsedFilters: parsed.filters,
+        hasCourseQuery: Boolean(parsed.courseQuery),
+      },
+    });
 
     return NextResponse.json({
       q: rawQ,

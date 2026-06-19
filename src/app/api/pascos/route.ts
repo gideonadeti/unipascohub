@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { getClientIp } from "@/lib/client-ip";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
   type PascoListQuery,
@@ -14,12 +15,32 @@ import {
   parsePascoCreate,
   serializePasco,
 } from "@/lib/pascos";
+import { checkRateLimit, getPascoListRateLimitOptions } from "@/lib/rate-limit";
 import { requireContributor } from "@/lib/require-contributor";
 import { resolvePascoListFromSearch } from "@/lib/search/merge-search-filters";
+import { recordSearchQuery } from "@/lib/search/record-search-query";
+import { SearchQuerySource } from "../../../../generated/prisma/client";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
+  const rateLimit = await checkRateLimit(
+    `pasco-list:${getClientIp(req)}`,
+    getPascoListRateLimitOptions(),
+  );
+
+  if (rateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: rateLimit.retryAfterSeconds
+          ? { "Retry-After": String(rateLimit.retryAfterSeconds) }
+          : undefined,
+      },
+    );
+  }
+
   const url = new URL(req.url);
   const parsed = parseListPascosQuery(url.searchParams);
 
@@ -114,6 +135,23 @@ export async function GET(req: Request) {
         : null;
 
     const totalPages = Math.ceil(result.total / result.limit);
+
+    if (parsed.data.q) {
+      const { userId } = await auth();
+
+      recordSearchQuery({
+        query: parsed.data.q,
+        source: SearchQuerySource.BROWSE_LIST,
+        userId,
+        resultCount: result.total,
+        noCourseMatch: resolution.noCourseMatch,
+        metadata: {
+          parsedFilters: resolution.parsedFilters,
+          ambiguous: resolution.ambiguous,
+          matchedCourseCount: resolution.matchedCourseIds.length,
+        },
+      });
+    }
 
     return Response.json({
       pascos: result.pascos.map((pasco) =>
