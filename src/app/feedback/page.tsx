@@ -31,15 +31,12 @@ export default function FeedbackPage() {
               faster.
             </p>
           ) : (
-            <p>
-              The feedback form is not available right now. You can still reach
-              the maintainers through the link below.
-            </p>
+            <p>The feedback form is not available right now.</p>
           )}
         </ProseContent>
 
-        <div>
-          {siteLinks.feedback ? (
+        {siteLinks.feedback ? (
+          <div>
             <Button asChild>
               <a
                 href={siteLinks.feedback}
@@ -49,18 +46,8 @@ export default function FeedbackPage() {
                 Open feedback form
               </a>
             </Button>
-          ) : siteLinks.github ? (
-            <Button asChild>
-              <a
-                href={siteLinks.github}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open GitHub
-              </a>
-            </Button>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         <div className="space-y-12">
           <div id="feedback">
