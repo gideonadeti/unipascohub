@@ -58,6 +58,10 @@ export function PascoListSection({
   }
 
   const pascos = pascosQuery.data.pascos;
+  const previewLimit = filters.limit ?? 6;
+  const showViewAll =
+    viewAllHref !== undefined &&
+    pascosQuery.data.pagination.total > previewLimit;
 
   if (pascos.length === 0) {
     return (
@@ -79,7 +83,7 @@ export function PascoListSection({
           <PascoCard key={pasco.id} pasco={pasco} emphasize={emphasize} />
         ))}
       </div>
-      {viewAllHref ? (
+      {showViewAll ? (
         <div className="flex justify-center pt-2">
           <Button variant="ghost" asChild>
             <Link href={viewAllHref}>View all</Link>
