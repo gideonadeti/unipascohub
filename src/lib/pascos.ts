@@ -103,7 +103,31 @@ export type PascoUpdateInput = {
 
 export type PascoWithFiles = Pasco & { files: PascoFile[] };
 
-export type PascoCourseSummaryFields = { code: string; title: string };
+export type PascoCourseSummaryFields = {
+  code: string;
+  title: string;
+  institutionName?: string;
+};
+
+type PascoCourseForSerialize = {
+  code: string;
+  title: string;
+  institution?: { name: string } | null;
+  institutionName?: string;
+};
+
+function serializeCourseSummary(
+  course: PascoCourseForSerialize,
+): PascoCourseSummaryFields {
+  const institutionName =
+    course.institutionName ?? course.institution?.name ?? undefined;
+
+  return {
+    code: course.code,
+    title: course.title,
+    ...(institutionName ? { institutionName } : {}),
+  };
+}
 
 export type PascoWithFilesAndCourse = PascoWithFiles & {
   course: PascoCourseSummaryFields;
@@ -185,7 +209,13 @@ const pascoInclude = {
 
 const pascoListInclude = {
   files: { orderBy: { order: "asc" as const } },
-  course: { select: { code: true, title: true } },
+  course: {
+    select: {
+      code: true,
+      title: true,
+      institution: { select: { name: true } },
+    },
+  },
 } satisfies Prisma.PascoInclude;
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
@@ -1017,7 +1047,7 @@ function serializePascoFile(file: PascoFile) {
 }
 
 export function serializePasco(
-  pasco: PascoWithFiles & { course?: PascoCourseSummaryFields },
+  pasco: PascoWithFiles & { course?: PascoCourseForSerialize | null },
   options?: {
     viewerReaction?: PascoReactionTypeValue | null;
     viewer?: PascoViewerContext | null;
@@ -1043,7 +1073,7 @@ export function serializePasco(
     createdAt: pasco.createdAt.toISOString(),
     updatedAt: pasco.updatedAt.toISOString(),
     ...(pasco.course && {
-      course: { code: pasco.course.code, title: pasco.course.title },
+      course: serializeCourseSummary(pasco.course),
     }),
     ...(shouldIncludeModerationStatus(options?.viewer, pasco)
       ? {

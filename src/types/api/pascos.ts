@@ -66,7 +66,9 @@ export type PascoListSearchMeta = {
   }>;
 };
 
-export type PascoCourseSummary = Pick<Course, "code" | "title">;
+export type PascoCourseSummary = Pick<Course, "code" | "title"> & {
+  institutionName?: string;
+};
 
 export type PascoFile = {
   id: string;

@@ -328,7 +328,13 @@ export async function listModerationPascos(params: ModerationPascoListQuery) {
     prisma.pasco.findMany({
       where,
       include: {
-        course: { select: { code: true, title: true } },
+        course: {
+          select: {
+            code: true,
+            title: true,
+            institution: { select: { name: true } },
+          },
+        },
         uploader: { select: { id: true, name: true } },
         files: { orderBy: { order: "asc" } },
       },

@@ -20,6 +20,14 @@ export function formatCourseLabel(course: CourseTitleFields): string {
   return `${course.code} — ${course.title}`;
 }
 
+export function getPascoInstitutionName(
+  course?: Pick<PascoCourseSummary, "institutionName"> | null,
+): string | undefined {
+  const name = course?.institutionName?.trim();
+
+  return name && name.length > 0 ? name : undefined;
+}
+
 export type PascoCardEmphasis = "views" | "downloads" | "likes" | "createdAt";
 
 export type PascoCardBadgeKey = "type" | "contentType";
