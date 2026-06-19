@@ -41,6 +41,14 @@ List pascos with filters, pagination, and sorting.
 
 Each pasco includes `viewerReaction` (`LIKE`, `DISLIKE`, or `null`) when the request is authenticated.
 
+List responses also include a nested `course` summary on each pasco:
+
+```json
+"course": { "code": "DCIT 101", "title": "Introduction to Computing" }
+```
+
+Detail (`GET /api/pascos/[pascoId]`) and mutation responses do not include `course`; fetch the course separately when needed.
+
 ---
 
 ### `POST /api/pascos`

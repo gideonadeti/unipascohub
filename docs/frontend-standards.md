@@ -113,16 +113,18 @@ Prefer `PascoCardSkeleton` grid (Phase 2) over spinners for list loading.
 
 ---
 
-## List and card standard (Phase 2 target)
+## List and card standard
 
 `PascoCard` — shared by homepage and browse:
 
 - Entire card is a `Link` to `/pascos/[id]` (large tap target on mobile)
-- Badges: `type`, `educationLevel`, `semesterType`, `contentType` via `Badge`
-- Meta row: views, downloads, likes with Lucide icons
+- **Title:** `course.code — course.title` from list API `course` summary (fallback: `academicYear · level`)
+- **Subtitle:** `getPascoDisplayDescription` — muted line with year, level, semester, and exam type
+- **Badges:** max 2 via `getPascoCardBadges` — incomplete upload, non-default content type, partial solutions, exam type; browse passes `hiddenBadgeKeys` for active filters
+- **Meta row:** context-aware via `emphasize` (`createdAt`, `views`, `downloads`, `likes`) plus file count
 - Grid: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4`
 
-Until course names are enriched, use `academicYear` + level as the title fallback.
+List responses from `GET /api/pascos` include `course: { code, title }` on each pasco.
 
 ---
 
