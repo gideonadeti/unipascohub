@@ -67,6 +67,11 @@ enum StorageCleanupSource {
   ORPHAN_BATCH
 }
 
+enum SearchQuerySource {
+  SUGGEST
+  BROWSE_LIST
+}
+
 model User {
   id        String   @id
   name      String
@@ -80,6 +85,7 @@ model User {
   pascoDownloads            PascoDownload[]
   storageCleanupFailures    StorageCleanupFailure[]
   storageCleanupRuns        StorageCleanupRun[]
+  searchQueries             SearchQuery[]
 }
 
 model Institution {
@@ -242,4 +248,21 @@ model StorageCleanupRun {
   triggeredBy User? @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
 
   @@index([createdAt(sort: Desc)])
+}
+
+model SearchQuery {
+  id            String            @id @default(cuid())
+  query         String
+  source        SearchQuerySource
+  userId        String?
+  resultCount   Int?
+  noCourseMatch Boolean?
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([source, createdAt])
+  @@index([query])
 }
