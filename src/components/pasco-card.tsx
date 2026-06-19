@@ -9,19 +9,20 @@ import {
   getPascoCardBadges,
   getPascoDisplayDescription,
   getPascoDisplayTitle,
+  getPascoInstitutionName,
   type PascoCardBadgeKey,
   type PascoCardEmphasis,
 } from "@/lib/pasco-display";
 import { cn } from "@/lib/utils";
-import type { Course } from "@/types/api/catalog";
-import type { Pasco } from "@/types/api/pascos";
+import type { Pasco, PascoCourseSummary } from "@/types/api/pascos";
 
 type PascoCardProps = {
   pasco: Pasco;
-  course?: Pick<Course, "code" | "title"> | null;
+  course?: PascoCourseSummary | null;
   className?: string;
   emphasize?: PascoCardEmphasis;
   hiddenBadgeKeys?: PascoCardBadgeKey[];
+  showInstitution?: boolean;
 };
 
 type MetaItem = {
@@ -107,16 +108,20 @@ export function PascoCard({
   className,
   emphasize = "createdAt",
   hiddenBadgeKeys,
+  showInstitution = true,
 }: PascoCardProps) {
   const course = courseProp ?? pasco.course ?? null;
   const displayTitle = getPascoDisplayTitle(pasco, course);
   const displayDescription = getPascoDisplayDescription(pasco, course);
+  const institutionName =
+    showInstitution && course ? getPascoInstitutionName(course) : undefined;
   const badges = getPascoCardBadges(pasco, { hiddenKeys: hiddenBadgeKeys });
   const metaItems = getMetaItems(pasco, emphasize);
   const emphasizedItem =
     metaItems.find((item) => item.emphasized) ?? metaItems[0];
 
   const ariaLabel = [
+    institutionName,
     displayTitle,
     displayDescription,
     `${emphasizedItem.value} ${emphasizedItem.label}`,
@@ -134,6 +139,9 @@ export function PascoCard({
       <Card className="h-full transition-colors group-hover:bg-muted/50">
         <CardHeader className="space-y-3">
           <div className="space-y-1">
+            {institutionName ? (
+              <p className="text-xs text-muted-foreground">{institutionName}</p>
+            ) : null}
             <CardTitle className="text-lg font-medium leading-snug">
               {displayTitle}
             </CardTitle>

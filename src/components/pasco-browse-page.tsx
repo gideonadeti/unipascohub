@@ -505,6 +505,7 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
                   pasco={pasco}
                   emphasize={getPascoCardEmphasis(sortBy)}
                   hiddenBadgeKeys={hiddenBadgeKeysFromFilters(filters)}
+                  showInstitution={!filters.courseId}
                 />
               ))}
             </div>
