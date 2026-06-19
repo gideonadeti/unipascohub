@@ -25,6 +25,14 @@ export function getPascoEngagementErrorMessage(
         : "Pasco not found";
     }
 
+    if (error.status === 400 && action === "download") {
+      const data = error.data as { error?: string } | undefined;
+
+      if (data?.error === "At least two files are required for bulk download") {
+        return "Nothing to download as a bundle";
+      }
+    }
+
     if (error.status === 429) {
       return "Too many requests. Please wait a moment and try again.";
     }

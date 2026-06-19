@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import {
+  downloadPascoAll,
   getPascoFileViewUrl,
   patchPascoDetailEngagement,
   recordPascoFileDownload,
@@ -67,6 +68,23 @@ export function useRecordPascoFileDownload(pascoId: string) {
 
   return useMutation({
     mutationFn: (fileId: string) => recordPascoFileDownload(pascoId, fileId),
+    onSuccess: (data) => {
+      patchPascoDetailEngagement(queryClient, pascoId, {
+        downloadCount: data.downloadCount,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pascos.all });
+    },
+    onError: (error) => {
+      toast.error(getPascoEngagementErrorMessage(error, "download"));
+    },
+  });
+}
+
+export function useDownloadPascoAll(pascoId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => downloadPascoAll(pascoId),
     onSuccess: (data) => {
       patchPascoDetailEngagement(queryClient, pascoId, {
         downloadCount: data.downloadCount,
