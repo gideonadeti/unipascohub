@@ -95,6 +95,12 @@ export type PascoUpdateInput = {
 
 export type PascoWithFiles = Pasco & { files: PascoFile[] };
 
+export type PascoCourseSummaryFields = { code: string; title: string };
+
+export type PascoWithFilesAndCourse = PascoWithFiles & {
+  course: PascoCourseSummaryFields;
+};
+
 export type {
   PascoListParseError,
   PascoListQuery,
@@ -167,6 +173,11 @@ type PascoFileSyncError =
 
 const pascoInclude = {
   files: { orderBy: { order: "asc" as const } },
+} satisfies Prisma.PascoInclude;
+
+const pascoListInclude = {
+  files: { orderBy: { order: "asc" as const } },
+  course: { select: { code: true, title: true } },
 } satisfies Prisma.PascoInclude;
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
@@ -998,7 +1009,7 @@ function serializePascoFile(file: PascoFile) {
 }
 
 export function serializePasco(
-  pasco: PascoWithFiles,
+  pasco: PascoWithFiles & { course?: PascoCourseSummaryFields },
   options?: {
     viewerReaction?: PascoReactionTypeValue | null;
   },
@@ -1022,6 +1033,9 @@ export function serializePasco(
     files: pasco.files.map(serializePascoFile),
     createdAt: pasco.createdAt.toISOString(),
     updatedAt: pasco.updatedAt.toISOString(),
+    ...(pasco.course && {
+      course: { code: pasco.course.code, title: pasco.course.title },
+    }),
   };
 
   if (options && "viewerReaction" in options) {
@@ -1218,7 +1232,7 @@ async function syncPascoFiles(
 export async function listPascos(params: PascoListQuery): Promise<
   | {
       success: true;
-      pascos: PascoWithFiles[];
+      pascos: PascoWithFilesAndCourse[];
       total: number;
       page: number;
       limit: number;
@@ -1259,7 +1273,7 @@ export async function listPascos(params: PascoListQuery): Promise<
     prisma.pasco.count({ where }),
     prisma.pasco.findMany({
       where,
-      include: pascoInclude,
+      include: pascoListInclude,
       orderBy,
       skip,
       take: params.limit,

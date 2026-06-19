@@ -1,3 +1,5 @@
+import type { Course } from "@/types/api/catalog";
+
 export type EducationLevel =
   | "LEVEL_100"
   | "LEVEL_200"
@@ -60,6 +62,8 @@ export type PascoListSearchMeta = {
   }>;
 };
 
+export type PascoCourseSummary = Pick<Course, "code" | "title">;
+
 export type PascoFile = {
   id: string;
   pascoId: string;
@@ -92,6 +96,7 @@ export type Pasco = {
   createdAt: string;
   updatedAt: string;
   viewerReaction?: PascoReactionType | null;
+  course?: PascoCourseSummary;
 };
 
 export type PascoListResponse = {
