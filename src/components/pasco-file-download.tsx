@@ -9,7 +9,7 @@ import { useRecordPascoFileDownload } from "@/hooks/api/use-pasco-engagement";
 import type { PascoFile } from "@/types/api/pascos";
 
 const COMPACT_BUTTON_CLASS =
-  "min-h-11 min-w-11 gap-1.5 sm:min-h-8 sm:min-w-8 sm:px-3 sm:gap-1";
+  "min-h-11 w-full gap-1.5 sm:min-h-8 sm:w-auto sm:min-w-8 sm:px-3 sm:gap-1";
 
 type PascoFileDownloadProps = {
   pascoId: string;

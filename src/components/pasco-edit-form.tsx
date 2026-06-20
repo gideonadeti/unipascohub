@@ -711,7 +711,8 @@ function PascoEditFormFields({
                           <Button
                             type="button"
                             variant="destructive"
-                            size="icon-xs"
+                            size="icon-sm"
+                            className="min-h-11 min-w-11 shrink-0 sm:min-h-0 sm:min-w-0"
                             onClick={() =>
                               handleFilesChange(removeEditFile(files, file))
                             }
