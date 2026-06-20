@@ -29,6 +29,7 @@ import {
   getPascoBrowseHref,
   getPascoDisplayDescription,
   getPascoDisplayTitle,
+  getPascoUploaderLabel,
   pascoOverviewBadges,
 } from "@/lib/pasco-display";
 import {
@@ -77,6 +78,7 @@ export function PascoDetailPage() {
   const isUploader = user?.id === pasco.uploaderId;
   const isUploaderPending = moderationStatus === "PENDING_REVIEW" && isUploader;
   const isUploaderRejected = moderationStatus === "REJECTED" && isUploader;
+  const uploaderLabel = getPascoUploaderLabel(pasco);
 
   return (
     <div className="space-y-8">
@@ -223,6 +225,12 @@ export function PascoDetailPage() {
                 <dt className="text-muted-foreground">Created</dt>
                 <dd>{formatDateTime(pasco.createdAt)}</dd>
               </div>
+              {uploaderLabel ? (
+                <div>
+                  <dt className="text-muted-foreground">Uploaded by</dt>
+                  <dd>{uploaderLabel}</dd>
+                </div>
+              ) : null}
             </dl>
           </Section>
 
