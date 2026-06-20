@@ -205,6 +205,7 @@ type PascoFileSyncError =
 
 const pascoInclude = {
   files: { orderBy: { order: "asc" as const } },
+  uploader: { select: { name: true } },
 } satisfies Prisma.PascoInclude;
 
 const pascoListInclude = {
@@ -1047,7 +1048,10 @@ function serializePascoFile(file: PascoFile) {
 }
 
 export function serializePasco(
-  pasco: PascoWithFiles & { course?: PascoCourseForSerialize | null },
+  pasco: PascoWithFiles & {
+    course?: PascoCourseForSerialize | null;
+    uploader?: { name: string } | null;
+  },
   options?: {
     viewerReaction?: PascoReactionTypeValue | null;
     viewer?: PascoViewerContext | null;
@@ -1075,6 +1079,11 @@ export function serializePasco(
     ...(pasco.course && {
       course: serializeCourseSummary(pasco.course),
     }),
+    ...(pasco.uploader !== undefined
+      ? {
+          uploader: pasco.uploader ? { name: pasco.uploader.name } : null,
+        }
+      : {}),
     ...(shouldIncludeModerationStatus(options?.viewer, pasco)
       ? {
           moderationStatus: pasco.moderationStatus as PascoModerationStatusType,

@@ -82,10 +82,14 @@ export type PascoFile = {
   updatedAt: string;
 };
 
+export type PascoUploader = {
+  name: string;
+};
+
 export type Pasco = {
   id: string;
   courseId: string;
-  uploaderId: string;
+  uploaderId: string | null;
   academicYear: string;
   description: string | null;
   educationLevel: EducationLevel;
@@ -103,6 +107,7 @@ export type Pasco = {
   updatedAt: string;
   viewerReaction?: PascoReactionType | null;
   course?: PascoCourseSummary;
+  uploader?: PascoUploader | null;
   moderationStatus?: PascoModerationStatus;
   moderationSource?: PascoModerationSource;
   rejectionReason?: string;

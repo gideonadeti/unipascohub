@@ -28,6 +28,14 @@ export function getPascoInstitutionName(
   return name && name.length > 0 ? name : undefined;
 }
 
+export function getPascoUploaderLabel(
+  pasco: Pick<Pasco, "uploader">,
+): string | null {
+  const name = pasco.uploader?.name.trim();
+
+  return name && name.length > 0 ? name : null;
+}
+
 export type PascoCardEmphasis = "views" | "downloads" | "likes" | "createdAt";
 
 export type PascoCardBadgeKey = "type" | "contentType";
