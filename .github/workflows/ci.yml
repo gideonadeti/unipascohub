@@ -25,6 +25,7 @@ jobs:
                   CI: true
                   HUSKY: 0
 
+            - run: pnpm prisma generate
             - run: pnpm lint
             - run: pnpm typecheck
             - run: pnpm build
