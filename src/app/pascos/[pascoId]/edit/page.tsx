@@ -22,7 +22,7 @@ export default async function EditPascoPage({ params }: EditPascoPageProps) {
   const { pascoId } = await params;
 
   return (
-    <PageContainer width="narrow" className="space-y-8">
+    <PageContainer width="narrow" className="space-y-8 pb-32 lg:pb-6">
       <PageHeader
         title="Edit pasco"
         description="Update metadata or manage files for this pasco."
