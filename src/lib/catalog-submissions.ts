@@ -12,6 +12,7 @@ import {
   createCatalogSubmissionPendingNotifications,
   createCatalogSubmissionRejectedNotification,
 } from "@/lib/notifications";
+import { buildPascoCreateHref } from "@/lib/pasco-create-href";
 import { createProgram } from "@/lib/programs";
 import type { CatalogSubmission } from "../../generated/prisma/client";
 import {
@@ -673,20 +674,14 @@ export async function runCatalogSubmissionSideEffects(
     const { submitterId, institutionId, programId, courseId } =
       result.notifySubmitterApproved;
 
-    const params = new URLSearchParams({ institutionId });
-
-    if (programId) {
-      params.set("programId", programId);
-    }
-
-    if (courseId) {
-      params.set("courseId", courseId);
-    }
-
     await createCatalogSubmissionApprovedNotification(
       submitterId,
       result.summary,
-      `/pascos/new?${params.toString()}`,
+      buildPascoCreateHref({
+        institutionId,
+        programId: programId ?? undefined,
+        courseId: courseId ?? undefined,
+      }),
     );
   }
 
