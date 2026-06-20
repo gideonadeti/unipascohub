@@ -1,0 +1,125 @@
+"use client";
+
+import { SignInButton, useAuth } from "@clerk/nextjs";
+import type { LucideIcon } from "lucide-react";
+import { Eye, File, FileImage, FileText } from "lucide-react";
+
+import { PascoFileDownload } from "@/components/pasco-file-download";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { usePascoFileViewUrl } from "@/hooks/api/use-pasco-engagement";
+import {
+  formatPascoFileDisplayName,
+  formatPascoFileSize,
+} from "@/lib/pasco-file-format";
+import {
+  getPascoFileViewKind,
+  type PascoFileViewKind,
+} from "@/lib/pasco-file-types";
+import type { PascoFile } from "@/types/api/pascos";
+
+const COMPACT_BUTTON_CLASS =
+  "min-h-11 min-w-11 gap-1.5 sm:min-h-8 sm:min-w-8 sm:px-3 sm:gap-1";
+
+const FILE_TYPE_ICONS: Record<PascoFileViewKind, LucideIcon> = {
+  pdf: FileText,
+  image: FileImage,
+  "download-only": File,
+};
+
+type PascoFileActionsProps = {
+  pascoId: string;
+  file: PascoFile;
+  onView: (file: PascoFile) => void;
+};
+
+export function PascoFileActions({
+  pascoId,
+  file,
+  onView,
+}: PascoFileActionsProps) {
+  const { isSignedIn } = useAuth();
+  const viewUrlMutation = usePascoFileViewUrl(pascoId);
+  const viewKind = getPascoFileViewKind(file.fileName);
+  const canView = viewKind !== "download-only";
+  const TypeIcon = FILE_TYPE_ICONS[viewKind];
+  const viewAriaLabel = `View ${file.fileName}`;
+
+  async function handleView() {
+    const result = await viewUrlMutation.mutateAsync(file.id);
+    onView({
+      ...file,
+      fileUrl: result.fileUrl,
+      fileName: result.fileName,
+    });
+  }
+
+  function renderViewButton() {
+    if (!canView) {
+      return null;
+    }
+
+    const viewContent = viewUrlMutation.isPending ? (
+      <Spinner aria-hidden />
+    ) : (
+      <>
+        <Eye className="size-4" aria-hidden />
+        <span>View</span>
+      </>
+    );
+
+    if (isSignedIn !== true) {
+      return (
+        <SignInButton mode="modal">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            className={COMPACT_BUTTON_CLASS}
+            aria-label={viewAriaLabel}
+          >
+            <Eye className="size-4" aria-hidden />
+            <span>View</span>
+          </Button>
+        </SignInButton>
+      );
+    }
+
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-sm"
+        className={COMPACT_BUTTON_CLASS}
+        aria-label={viewAriaLabel}
+        disabled={viewUrlMutation.isPending}
+        onClick={() => void handleView()}
+      >
+        {viewContent}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+      <div className="flex min-w-0 flex-1 items-start gap-2.5">
+        <TypeIcon
+          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+          aria-hidden
+        />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium" title={file.fileName}>
+            {formatPascoFileDisplayName(file)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {formatPascoFileSize(file.fileSize)}
+          </p>
+        </div>
+      </div>
+      <div className="grid shrink-0 grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-1">
+        {renderViewButton()}
+        <PascoFileDownload pascoId={pascoId} file={file} compact />
+      </div>
+    </div>
+  );
+}

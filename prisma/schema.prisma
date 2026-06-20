@@ -1,0 +1,351 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  NORMAL_USER
+  CONTRIBUTOR // can upload
+  MODERATOR
+  ADMIN
+}
+
+enum ProgramType {
+  BACHELOR
+  BTECH
+  BTECH_TOP_UP
+  HND
+  DIPLOMA
+}
+
+enum EducationLevel {
+  LEVEL_100
+  LEVEL_200
+  LEVEL_300
+  LEVEL_400
+}
+
+enum SemesterType {
+  FIRST_SEMESTER
+  SECOND_SEMESTER
+}
+
+enum PascoType {
+  MID_SEM
+  END_OF_SEM
+  RESIT
+}
+
+enum PascoContentType {
+  QUESTIONS_ONLY
+  QUESTIONS_AND_ANSWERS
+  ANSWERS_ONLY
+}
+
+enum SolutionCompleteness {
+  FULLY_SOLVED
+  PARTIALLY_SOLVED
+}
+
+enum CloudinaryResourceType {
+  IMAGE
+  RAW
+}
+
+enum PascoReactionType {
+  LIKE
+  DISLIKE
+}
+
+enum PascoModerationStatus {
+  PUBLISHED
+  PENDING_REVIEW
+  REJECTED
+}
+
+enum PascoModerationSource {
+  DISLIKES
+  MANUAL
+}
+
+enum StorageCleanupSource {
+  PASCO_SYNC
+  PASCO_DELETE
+  ORPHAN_BATCH
+}
+
+enum SearchQuerySource {
+  SUGGEST
+  BROWSE_LIST
+}
+
+enum CatalogSubmissionType {
+  PROGRAM
+  COURSE
+}
+
+enum CatalogSubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        String   @id
+  name      String
+  school    String?
+  role      UserRole @default(NORMAL_USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pascos                    Pasco[]
+  pascoReactions            PascoReaction[]
+  pascoDownloads            PascoDownload[]
+  storageCleanupFailures    StorageCleanupFailure[]
+  storageCleanupRuns        StorageCleanupRun[]
+  searchQueries             SearchQuery[]
+  notifications             Notification[]
+  catalogSubmissionsSubmitted CatalogSubmission[] @relation("CatalogSubmissionSubmitter")
+  catalogSubmissionsReviewed  CatalogSubmission[] @relation("CatalogSubmissionReviewer")
+}
+
+model Institution {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  programs           Program[]
+  courses            Course[]
+  catalogSubmissions CatalogSubmission[]
+
+  @@unique([name])
+}
+
+model Program {
+  id            String      @id @default(cuid())
+  institutionId String
+  name          String
+  type          ProgramType
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  courses     Course[]
+
+  @@unique([institutionId, name, type])
+  @@index([institutionId, type])
+}
+
+model Course {
+  id            String   @id @default(cuid())
+  institutionId String
+  code          String
+  title         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  programs    Program[]
+  pascos      Pasco[]
+
+  @@unique([institutionId, code])
+}
+
+model Pasco {
+  id                   String                @id @default(cuid())
+  courseId             String
+  uploaderId           String?
+  academicYear         String // e.g., "2024/2025"
+  description          String?
+  educationLevel       EducationLevel
+  semesterType         SemesterType
+  type                 PascoType
+  contentType          PascoContentType
+  solutionCompleteness SolutionCompleteness?
+  isComplete           Boolean               @default(true)
+  likeCount            Int                   @default(0)
+  dislikeCount         Int                   @default(0)
+  downloadCount        Int                   @default(0)
+  viewCount            Int                   @default(0)
+  moderationStatus       PascoModerationStatus  @default(PUBLISHED)
+  moderationSource       PascoModerationSource?
+  rejectionReason        String?
+  moderationNote         String?
+  dislikesAtLastApproval Int?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  course    Course          @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  uploader  User?           @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  files                    PascoFile[]
+  reactions                PascoReaction[]
+  downloads                PascoDownload[]
+  storageCleanupFailures   StorageCleanupFailure[]
+
+  @@index([courseId, educationLevel, academicYear])
+  @@index([uploaderId])
+  @@index([createdAt(sort: Desc)])
+  @@index([likeCount(sort: Desc)])
+  @@index([downloadCount(sort: Desc)])
+  @@index([viewCount(sort: Desc)])
+  @@index([moderationStatus, createdAt(sort: Desc)])
+}
+
+model PascoFile {
+  id            String   @id @default(cuid())
+  pascoId       String
+  order         Int
+  publicId     String                 @unique // Cloudinary public id
+  fileName     String
+  fileSize     Int
+  fileUrl      String
+  resourceType CloudinaryResourceType @default(IMAGE)
+  contentHash  String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pasco     Pasco           @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+  downloads PascoDownload[]
+
+  @@unique([pascoId, order])
+  @@index([pascoId])
+  @@index([contentHash])
+}
+
+model PascoReaction {
+  id           String            @id @default(cuid())
+  userId       String
+  pascoId      String
+  reactionType PascoReactionType
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pasco Pasco @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pascoId])
+  @@index([pascoId, reactionType])
+}
+
+model PascoDownload {
+  id        String   @id @default(cuid())
+  userId    String
+  pascoId   String
+  fileId    String
+  createdAt DateTime @default(now())
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pasco Pasco     @relation(fields: [pascoId], references: [id], onDelete: Cascade)
+  file  PascoFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([pascoId, createdAt])
+  @@index([userId, pascoId])
+}
+
+model StorageCleanupFailure {
+  id            String                 @id @default(cuid())
+  publicId      String                 @unique
+  resourceType  CloudinaryResourceType
+  source        StorageCleanupSource
+  pascoId       String?
+  triggeredById String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  resolvedAt    DateTime?
+
+  pasco       Pasco? @relation(fields: [pascoId], references: [id], onDelete: SetNull)
+  triggeredBy User?  @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([resolvedAt, createdAt])
+}
+
+model StorageCleanupRun {
+  id            String   @id @default(cuid())
+  dryRun        Boolean
+  courseId      String?
+  scanned       Int
+  orphanCount   Int
+  deletedCount  Int
+  failureCount  Int
+  triggeredById String?
+  details       Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  triggeredBy User? @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
+}
+
+model SearchQuery {
+  id            String            @id @default(cuid())
+  query         String
+  source        SearchQuerySource
+  userId        String?
+  resultCount   Int?
+  noCourseMatch Boolean?
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([source, createdAt])
+  @@index([query])
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+}
+
+model CatalogSubmission {
+  id                String                  @id @default(cuid())
+  type              CatalogSubmissionType
+  status            CatalogSubmissionStatus @default(PENDING)
+  institutionId     String
+  submitterId       String
+  reviewerId        String?
+  programName       String?
+  programType       ProgramType?
+  courseCode        String?
+  courseTitle       String?
+  programIds        String[]                @default([])
+  rejectionReason   String?
+  approvedProgramId String?
+  approvedCourseId  String?
+  reviewedAt        DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  submitter   User        @relation("CatalogSubmissionSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  reviewer    User?       @relation("CatalogSubmissionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([submitterId, createdAt(sort: Desc)])
+  @@index([institutionId, type, status])
+}

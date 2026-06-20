@@ -1,0 +1,72 @@
+"use client";
+
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { MobileNavSheet } from "@/components/mobile-nav-sheet";
+import { NotificationBell } from "@/components/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { siteName } from "@/config/site";
+import { useCurrentUser } from "@/hooks/api/use-current-user";
+import { isContributorRole, isModeratorRole } from "@/lib/pasco-permissions";
+
+export function SiteHeader() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const currentUser = useCurrentUser();
+  const showModerationLink = isModeratorRole(currentUser.data?.user?.role);
+  const showContributionsLink = isContributorRole(currentUser.data?.user?.role);
+
+  return (
+    <header className="sticky top-0 z-50 flex h-14 items-center border-b border-border bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/80 sm:h-16 sm:px-6">
+      <Link
+        href="/"
+        className="text-base font-semibold tracking-tight sm:text-lg"
+        aria-current={isHome ? "page" : undefined}
+      >
+        <span className="sm:hidden">Uni Pasco</span>
+        <span className="hidden sm:inline">{siteName}</span>
+      </Link>
+
+      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <div className="hidden items-center gap-2 lg:flex lg:gap-3">
+          {showContributionsLink ? (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/contributions">My contributions</Link>
+            </Button>
+          ) : null}
+          {showModerationLink ? (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/moderation/pascos">Pasco review</Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/moderation/catalog">Catalog review</Link>
+              </Button>
+            </>
+          ) : null}
+          <ThemeToggle />
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <Button variant="ghost" type="button">
+                Sign in
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button type="button">Sign up</Button>
+            </SignUpButton>
+          </Show>
+        </div>
+
+        <Show when="signed-in">
+          <NotificationBell />
+          <UserButton />
+        </Show>
+
+        <MobileNavSheet />
+      </div>
+    </header>
+  );
+}
