@@ -25,6 +25,7 @@ import { useRecordPascoView } from "@/hooks/api/use-pasco-engagement";
 import { usePasco } from "@/hooks/api/use-pascos";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import { formatDateTime } from "@/lib/dates";
+import { buildPascoCreateHref } from "@/lib/pasco-create-href";
 import {
   getPascoBrowseHref,
   getPascoDisplayDescription,
@@ -79,6 +80,13 @@ export function PascoDetailPage() {
   const isUploaderPending = moderationStatus === "PENDING_REVIEW" && isUploader;
   const isUploaderRejected = moderationStatus === "REJECTED" && isUploader;
   const uploaderLabel = getPascoUploaderLabel(pasco);
+  const uploadAnotherHref =
+    isUploader && course
+      ? buildPascoCreateHref({
+          institutionId: course.institutionId,
+          programId: course.programIds[0],
+        })
+      : null;
 
   return (
     <div className="space-y-8">
@@ -146,6 +154,11 @@ export function PascoDetailPage() {
         actions={
           <>
             <ReportPascoLink pascoId={pascoId} />
+            {uploadAnotherHref ? (
+              <Button type="button" variant="outline" size="sm" asChild>
+                <Link href={uploadAnotherHref}>Upload another</Link>
+              </Button>
+            ) : null}
             {canEdit ? (
               <Button type="button" variant="outline" size="sm" asChild>
                 <Link href={`/pascos/${pascoId}/edit`}>Edit</Link>
