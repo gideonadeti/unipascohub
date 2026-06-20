@@ -3,7 +3,7 @@ import { ATU_INSTITUTION_NAME } from "./lib/atu-seed-constants";
 import { flattenPrograms } from "./lib/parse-program-label";
 import { runSeed } from "./lib/seed-prisma";
 
-await runSeed(async (prisma) => {
+void runSeed(async (prisma) => {
   const institution = await prisma.institution.findUnique({
     where: { name: ATU_INSTITUTION_NAME },
   });

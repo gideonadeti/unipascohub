@@ -4,7 +4,7 @@ import {
 } from "./data/parse-wikipedia-institutions";
 import { runSeed } from "./lib/seed-prisma";
 
-await runSeed(async (prisma) => {
+void runSeed(async (prisma) => {
   const names = loadGhanaInstitutionNames();
 
   for (const name of names) {

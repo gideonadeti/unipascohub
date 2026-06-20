@@ -18,7 +18,7 @@ const LEVEL_100_SEMESTER_1_COURSES = [
   { code: "BEE 117", title: "THERMODYNAMICS" },
 ] as const;
 
-await runSeed(async (prisma) => {
+void runSeed(async (prisma) => {
   const institution = await prisma.institution.findUnique({
     where: { name: ATU_INSTITUTION_NAME },
   });
