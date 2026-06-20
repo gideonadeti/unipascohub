@@ -52,6 +52,8 @@ function getLeadContributor(): SiteContributor | undefined {
   );
 }
 
+export { getLeadContributor };
+
 export function getCreditLine(): string {
   const lead = getLeadContributor();
   const leadName = lead?.name ?? "contributors";
