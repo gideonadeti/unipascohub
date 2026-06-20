@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Pasco detail page shows "Uploaded by {name}" when the uploader account exists; API detail responses include `uploader: { name }` (name only)
 - Contributor contributions hub at `/contributions` (my uploads + catalog request history)
 - Catalog submission queue: contributors request programs/courses; moderators approve into live catalog
 - Hybrid catalog: courses with a linked program auto-approve; programs stay in moderation queue

@@ -461,6 +461,7 @@ Check content hashes against existing pasco files.
   "id": "clx...",
   "courseId": "clx...",
   "uploaderId": "user_...",
+  "uploader": { "name": "Jane Doe" },
   "academicYear": "2024/2025",
   "description": null,
   "educationLevel": "LEVEL_100",
@@ -493,3 +494,5 @@ Check content hashes against existing pasco files.
 ```
 
 Note: `publicId` and `contentHash` are not exposed in API responses.
+
+`uploader` (display name only, no `uploader.id`) is included on detail responses when the uploader account still exists; it is `null` or omitted when the account was removed. List/browse responses do not include `uploader`.
