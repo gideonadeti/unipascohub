@@ -26,7 +26,7 @@ export default function NewPascoPage() {
     <PageContainer width="narrow" className="space-y-8 pb-32 lg:pb-6">
       <PageHeader
         title="Upload pasco"
-        description="Add exam papers for a course. Files are uploaded to Cloudinary before submission."
+        description="Add exam papers for a course."
       />
       <PascoCreateGate>
         <Suspense fallback={<PascoCreateFormFallback />}>
