@@ -28,6 +28,7 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 | `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | `PageHeader`, create form behind contributor gate               |
 | `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | `PascoDetailPage` with enriched title, back nav                 |
 | `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | `PageHeader`, cancel/back nav, edit form + gate                 |
+| `/contributions`         | [`src/app/contributions/page.tsx`](../src/app/contributions/page.tsx)                 | Contributor hub: uploads + catalog requests (`ContributorGate`) |
 | `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Team grid with avatars and GitHub links from `siteContributors` |
 | `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsor cards from `siteSponsors` + optional BMC CTA            |
 | `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                                |
@@ -39,14 +40,14 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 
 ### Shell components
 
-| Component       | File                                                                             | Purpose                                                                  |
-| --------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `SiteHeader`    | [`site-header.tsx`](../src/components/site-header.tsx)                           | Brand link, moderation link, notification bell, theme toggle, Clerk auth |
-| `SkipToContent` | [`skip-to-content.tsx`](../src/components/skip-to-content.tsx)                   | Skip link to main content landmark                                       |
-| `SiteFooter`    | [`site-footer.tsx`](../src/components/site-footer.tsx)                           | Nav groups, credits, social links                                        |
-| `ThemeToggle`   | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx)                         | Light / dark / system picker                                             |
-| `ScrollToTop`   | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx)                       | Fixed scroll-to-top button                                               |
-| `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper                                                    |
+| Component       | File                                                                             | Purpose                                                                                 |
+| --------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `SiteHeader`    | [`site-header.tsx`](../src/components/site-header.tsx)                           | Brand link, contributions/moderation links, notification bell, theme toggle, Clerk auth |
+| `SkipToContent` | [`skip-to-content.tsx`](../src/components/skip-to-content.tsx)                   | Skip link to main content landmark                                                      |
+| `SiteFooter`    | [`site-footer.tsx`](../src/components/site-footer.tsx)                           | Nav groups, credits, social links                                                       |
+| `ThemeToggle`   | [`theme-toggle.tsx`](../src/components/theme-toggle.tsx)                         | Light / dark / system picker                                                            |
+| `ScrollToTop`   | [`scroll-to-top.tsx`](../src/components/scroll-to-top.tsx)                       | Fixed scroll-to-top button                                                              |
+| `ThemeProvider` | [`providers/theme-provider.tsx`](../src/components/providers/theme-provider.tsx) | `next-themes` wrapper                                                                   |
 
 ### Layout and list components
 

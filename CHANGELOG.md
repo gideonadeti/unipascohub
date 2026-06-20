@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Contributor contributions hub at `/contributions` (my uploads + catalog request history)
 - Catalog submission queue: contributors request programs/courses; moderators approve into live catalog
 - Hybrid catalog: courses with a linked program auto-approve; programs stay in moderation queue
 - Institution seed script (`pnpm seed-institutions`) from [Wikipedia's list of universities in Ghana](https://en.wikipedia.org/wiki/List_of_universities_in_Ghana)

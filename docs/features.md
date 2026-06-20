@@ -29,6 +29,7 @@ Retrospective of what has been built, organized by user-facing capability. Cross
 | Course auto-approve when linked to a program             | Done   | [`src/lib/catalog-submissions.ts`](../src/lib/catalog-submissions.ts)                                                                            |
 | Catalog moderation queue (moderator+)                    | Done   | [`src/app/moderation/catalog/page.tsx`](../src/app/moderation/catalog/page.tsx)                                                                  |
 | Request program/course from upload form                  | Done   | [`src/components/pasco-create-form.tsx`](../src/components/pasco-create-form.tsx)                                                                |
+| Contributor contributions hub (`/contributions`)         | Done   | [`src/app/contributions/page.tsx`](../src/app/contributions/page.tsx), [`GET /api/users/me/pascos`](../src/app/api/users/me/pascos/route.ts)     |
 
 Catalog mutations require `ADMIN` role. Reads are public.
 
@@ -111,19 +112,20 @@ See [operations.md](operations.md) for maintenance workflows.
 
 ## Frontend (current state)
 
-| Page           | Path                     | Status                                           |
-| -------------- | ------------------------ | ------------------------------------------------ |
-| Home           | `/`                      | Hero, v1 search, recent + popular pasco sections |
-| Browse pascos  | `/pascos`                | URL filters, sort, pagination                    |
-| Create pasco   | `/pascos/new`            | Functional                                       |
-| Pasco detail   | `/pascos/[pascoId]`      | Functional (course code/title on detail)         |
-| Edit pasco     | `/pascos/[pascoId]/edit` | Functional                                       |
-| Catalog review | `/moderation/catalog`    | Pending/rejected contributor catalog requests    |
-| Contributors   | `/contributors`          | Stub page (reads from `siteCredits`)             |
-| Sponsors       | `/sponsors`              | Stub page                                        |
-| Privacy        | `/privacy`               | Draft placeholder                                |
-| Terms          | `/terms`                 | Draft placeholder                                |
-| Feedback       | `/feedback`              | Feedback hub with anchor sections                |
+| Page             | Path                     | Status                                               |
+| ---------------- | ------------------------ | ---------------------------------------------------- |
+| Home             | `/`                      | Hero, v1 search, recent + popular pasco sections     |
+| Browse pascos    | `/pascos`                | URL filters, sort, pagination                        |
+| Create pasco     | `/pascos/new`            | Functional                                           |
+| Pasco detail     | `/pascos/[pascoId]`      | Functional (course code/title on detail)             |
+| Edit pasco       | `/pascos/[pascoId]/edit` | Functional                                           |
+| My contributions | `/contributions`         | Uploads + catalog request history (contributor gate) |
+| Catalog review   | `/moderation/catalog`    | Pending/rejected contributor catalog requests        |
+| Contributors     | `/contributors`          | Stub page (reads from `siteCredits`)                 |
+| Sponsors         | `/sponsors`              | Stub page                                            |
+| Privacy          | `/privacy`               | Draft placeholder                                    |
+| Terms            | `/terms`                 | Draft placeholder                                    |
+| Feedback         | `/feedback`              | Feedback hub with anchor sections                    |
 
 Infrastructure in place: TanStack Query, shadcn/ui components, toast notifications, basic header with auth.
 

@@ -31,6 +31,33 @@ Get the signed-in user's profile.
 
 ---
 
+### `GET /api/users/me/pascos`
+
+List pasco uploads for the signed-in contributor (all moderation statuses).
+
+**Auth:** Contributor, moderator, or admin
+
+**Query parameters:**
+
+| Param              | Type   | Description                                         |
+| ------------------ | ------ | --------------------------------------------------- |
+| `moderationStatus` | enum   | Optional: `PUBLISHED`, `PENDING_REVIEW`, `REJECTED` |
+| `page`             | number | Page number (default `1`)                           |
+| `limit`            | number | Page size (default `12`, max `100`)                 |
+
+**Response `200`:**
+
+```json
+{
+  "pascos": [{ "...": "same shape as GET /api/pascos list items, with moderationStatus always set" }],
+  "pagination": { "page": 1, "limit": 12, "total": 3, "totalPages": 1 }
+}
+```
+
+**Errors:** `401` unsigned, `403` not a contributor, `400` invalid `moderationStatus`
+
+---
+
 ### `PATCH /api/users/me`
 
 Update profile fields.
