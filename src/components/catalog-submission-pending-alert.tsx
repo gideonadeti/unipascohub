@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useMyCatalogSubmissions } from "@/hooks/api/use-catalog-submissions";
 
@@ -32,6 +34,14 @@ export function CatalogSubmissionPendingAlert({
             </li>
           ))}
         </ul>
+        <p className="mt-3">
+          <Link
+            href="/contributions?tab=catalog"
+            className="underline-offset-4 hover:underline"
+          >
+            View all catalog requests
+          </Link>
+        </p>
       </AlertDescription>
     </Alert>
   );

@@ -16,11 +16,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { isContributorRole } from "@/lib/pasco-permissions";
 
-type PascoCreateGateProps = {
+type ContributorGateProps = {
   children: React.ReactNode;
 };
 
-export function PascoCreateGate({ children }: PascoCreateGateProps) {
+export function ContributorGate({ children }: ContributorGateProps) {
   const { isSignedIn } = useAuth();
   const currentUser = useCurrentUser();
 
@@ -30,7 +30,7 @@ export function PascoCreateGate({ children }: PascoCreateGateProps) {
         <CardHeader>
           <CardTitle>Sign in required</CardTitle>
           <CardDescription>
-            You must be signed in to upload a pasco.
+            You must be signed in to view your contributions.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,7 +64,7 @@ export function PascoCreateGate({ children }: PascoCreateGateProps) {
 
   if (!isContributorRole(role)) {
     return (
-      <ContributorUpgradeCard description="Only contributors can upload pascos. Upgrade your account to continue." />
+      <ContributorUpgradeCard description="Only contributors can view and manage uploads and catalog requests. Upgrade your account to continue." />
     );
   }
 
