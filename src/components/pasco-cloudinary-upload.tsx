@@ -28,8 +28,8 @@ import {
 } from "@/lib/api/pascos";
 import { formatDuplicateFileMessage } from "@/lib/content-hash";
 import {
-  extractCloudinaryWidgetErrorMessage,
   getPascoFileTooLargeMessage,
+  getPascoUploadErrorMessage,
   getPreBatchFileSize,
   isAllowedPascoFileName,
   isPascoFileSizeError,
@@ -72,6 +72,8 @@ type PascoCloudinaryUploadProps = {
 
 const UPLOAD_ERROR_TOAST_ID = "pasco-upload-error";
 const UPLOAD_FILE_SIZE_TOAST_DURATION_MS = 30_000;
+const FILE_UPLOADER_LOAD_FAILED = "Could not load the file uploader";
+const FILE_UPLOADER_LOADING = "File uploader is still loading.";
 
 function showUploadError(message: string) {
   const isFileSizeError = isPascoFileSizeError(message);
@@ -119,7 +121,7 @@ function loadCloudinaryWidgetScript(): Promise<void> {
       existingScript.addEventListener("load", () => resolve(), { once: true });
       existingScript.addEventListener(
         "error",
-        () => reject(new Error("Failed to load Cloudinary Upload Widget")),
+        () => reject(new Error(FILE_UPLOADER_LOAD_FAILED)),
         { once: true },
       );
     });
@@ -130,8 +132,7 @@ function loadCloudinaryWidgetScript(): Promise<void> {
     script.src = CLOUDINARY_WIDGET_SCRIPT;
     script.async = true;
     script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error("Failed to load Cloudinary Upload Widget"));
+    script.onerror = () => reject(new Error(FILE_UPLOADER_LOAD_FAILED));
     document.body.appendChild(script);
   });
 }
@@ -216,7 +217,7 @@ export function PascoCloudinaryUpload({
       if (error) {
         finishOpening();
         setIsWidgetOpen(false);
-        showUploadError(extractCloudinaryWidgetErrorMessage(error));
+        showUploadError(getPascoUploadErrorMessage(error));
         return;
       }
 
@@ -338,17 +339,14 @@ export function PascoCloudinaryUpload({
         setIsScriptReady(true);
       } catch (error) {
         finishOpening();
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load Cloudinary Upload Widget";
+        const message = getPascoUploadErrorMessage(error);
         showUploadError(message);
         return;
       }
     }
 
     if (!window.cloudinary?.createUploadWidget) {
-      showUploadError("Cloudinary Upload Widget is still loading.");
+      showUploadError(FILE_UPLOADER_LOADING);
       finishOpening();
       return;
     }
@@ -489,11 +487,10 @@ export function PascoCloudinaryUpload({
                 callback(results.length === 1 ? results[0] : results);
               })
               .catch((prepareError: unknown) => {
-                const message =
-                  prepareError instanceof Error
-                    ? prepareError.message
-                    : "Could not prepare upload";
-                rejectPrepareUpload(callback, message);
+                rejectPrepareUpload(
+                  callback,
+                  getPascoUploadErrorMessage(prepareError),
+                );
               });
           },
         },
@@ -505,9 +502,7 @@ export function PascoCloudinaryUpload({
       startOpeningFallbackTimer();
     } catch (error) {
       finishOpening();
-      const message =
-        error instanceof Error ? error.message : "Could not open upload widget";
-      showUploadError(message);
+      showUploadError(getPascoUploadErrorMessage(error));
     }
   }, [
     courseId,
