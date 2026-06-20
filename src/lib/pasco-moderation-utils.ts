@@ -65,6 +65,21 @@ export function shouldIncludeModerationSource(
   return isModeratorRole(viewer?.role ?? null);
 }
 
+export function shouldExposeUploaderId(
+  viewer: PascoViewerContext | null | undefined,
+  pasco: Pick<PascoVisibilityFields, "uploaderId">,
+): boolean {
+  if (!viewer?.userId || !pasco.uploaderId) {
+    return false;
+  }
+
+  if (isModeratorRole(viewer.role ?? null)) {
+    return true;
+  }
+
+  return pasco.uploaderId === viewer.userId;
+}
+
 export type PascoModerationDetailFields = PascoVisibilityFields & {
   moderationSource?: PascoModerationSource | null;
   rejectionReason?: string | null;
