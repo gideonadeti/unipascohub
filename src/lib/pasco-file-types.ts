@@ -1,4 +1,60 @@
+import { ApiError } from "@/lib/api/client";
 import type { CloudinaryResourceType } from "@/types/api/pascos";
+
+export const PASCO_UPLOAD_FAILED_MESSAGE = "File upload failed";
+
+const TECHNICAL_UPLOAD_ERROR_MESSAGES: Record<string, string> = {
+  "Cloudinary is not configured":
+    "Uploads are temporarily unavailable. Please try again later.",
+  "Invalid widget upload parameters":
+    "Could not start upload. Please try again.",
+};
+
+function mapTechnicalUploadMessage(message: string): string | null {
+  return TECHNICAL_UPLOAD_ERROR_MESSAGES[message] ?? null;
+}
+
+function sanitizeUploadMessage(message: string): string {
+  const trimmed = message.trim();
+
+  if (!trimmed) {
+    return PASCO_UPLOAD_FAILED_MESSAGE;
+  }
+
+  const mapped = mapTechnicalUploadMessage(trimmed);
+
+  if (mapped) {
+    return mapped;
+  }
+
+  if (/cloudinary/i.test(trimmed)) {
+    return PASCO_UPLOAD_FAILED_MESSAGE;
+  }
+
+  return trimmed;
+}
+
+export function getPascoUploadErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    const mapped = mapTechnicalUploadMessage(error.message);
+
+    if (mapped) {
+      return mapped;
+    }
+  }
+
+  if (error instanceof Error) {
+    const mapped = mapTechnicalUploadMessage(error.message);
+
+    if (mapped) {
+      return mapped;
+    }
+  }
+
+  const fromWidget = extractCloudinaryWidgetErrorMessage(error);
+
+  return sanitizeUploadMessage(fromWidget);
+}
 
 export const PASCO_IMAGE_EXTENSIONS = [
   "jpg",
@@ -82,19 +138,19 @@ export function parseMaxFileSizeBytesFromError(message: string): number | null {
 
 export function extractCloudinaryWidgetErrorMessage(error: unknown): string {
   if (error == null) {
-    return "Cloudinary upload failed";
+    return PASCO_UPLOAD_FAILED_MESSAGE;
   }
 
   if (typeof error === "string") {
     const trimmed = error.trim();
 
-    return trimmed || "Cloudinary upload failed";
+    return trimmed || PASCO_UPLOAD_FAILED_MESSAGE;
   }
 
   if (error instanceof Error) {
     const trimmed = error.message.trim();
 
-    return trimmed || "Cloudinary upload failed";
+    return trimmed || PASCO_UPLOAD_FAILED_MESSAGE;
   }
 
   if (typeof error === "object") {
@@ -112,13 +168,13 @@ export function extractCloudinaryWidgetErrorMessage(error: unknown): string {
     if (record.error != null && record.error !== error) {
       const nested = extractCloudinaryWidgetErrorMessage(record.error);
 
-      if (nested !== "Cloudinary upload failed") {
+      if (nested !== PASCO_UPLOAD_FAILED_MESSAGE) {
         return nested;
       }
     }
   }
 
-  return "Cloudinary upload failed";
+  return PASCO_UPLOAD_FAILED_MESSAGE;
 }
 
 export function resolvePascoFileSizeErrorMessage(
