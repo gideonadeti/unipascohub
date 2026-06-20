@@ -1347,6 +1347,46 @@ export async function listPascos(params: PascoListQuery): Promise<
   };
 }
 
+export type MyPascoListQuery = {
+  uploaderId: string;
+  moderationStatus?: PascoModerationStatusType;
+  page: number;
+  limit: number;
+};
+
+export async function listMyPascos(params: MyPascoListQuery): Promise<{
+  pascos: PascoWithFilesAndCourse[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const where = {
+    uploaderId: params.uploaderId,
+    ...(params.moderationStatus
+      ? { moderationStatus: params.moderationStatus }
+      : {}),
+  };
+  const skip = (params.page - 1) * params.limit;
+
+  const [total, pascos] = await Promise.all([
+    prisma.pasco.count({ where }),
+    prisma.pasco.findMany({
+      where,
+      include: pascoListInclude,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: params.limit,
+    }),
+  ]);
+
+  return {
+    pascos,
+    total,
+    page: params.page,
+    limit: params.limit,
+  };
+}
+
 export async function getPascoById(
   pascoId: string,
   viewer?: PascoViewerContext | null,

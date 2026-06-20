@@ -1,6 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import type {
+  MyPascoListFilters,
+  MyPascoListResponse,
   PascoCreateInput,
   PascoCreateResponse,
   PascoDeleteResponse,
@@ -20,6 +22,12 @@ import { queryKeys } from "./query-keys";
 export function listPascos(filters: PascoListFilters = {}) {
   return apiClient
     .get<PascoListResponse>("/api/pascos", { params: filters })
+    .then((response) => response.data);
+}
+
+export function listMyPascos(filters: MyPascoListFilters = {}) {
+  return apiClient
+    .get<MyPascoListResponse>("/api/users/me/pascos", { params: filters })
     .then((response) => response.data);
 }
 
@@ -70,6 +78,13 @@ export function pascosListOptions(filters: PascoListFilters = {}) {
   return queryOptions({
     queryKey: queryKeys.pascos.list(filters),
     queryFn: () => listPascos(filters),
+  });
+}
+
+export function myPascosListOptions(filters: MyPascoListFilters = {}) {
+  return queryOptions({
+    queryKey: queryKeys.users.mePascos(filters),
+    queryFn: () => listMyPascos(filters),
   });
 }
 

@@ -114,7 +114,7 @@ export async function createCatalogSubmissionRejectedNotification(
       type: NotificationType.CATALOG_SUBMISSION_REJECTED,
       title: "Catalog request rejected",
       body: `"${summary}" was rejected: ${reason}`,
-      link: "/pascos/new",
+      link: "/contributions?tab=catalog",
     },
   });
 }

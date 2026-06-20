@@ -31,6 +31,8 @@ export const queryKeys = {
   },
   users: {
     me: ["users", "me"] as const,
+    mePascos: (filters: Record<string, unknown>) =>
+      [...queryKeys.users.me, "pascos", filters] as const,
   },
   search: {
     all: ["search"] as const,

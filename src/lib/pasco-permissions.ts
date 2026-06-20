@@ -3,6 +3,22 @@ import type { ProfileUser } from "@/types/api/users";
 
 const MODIFY_ROLES = new Set<ProfileUser["role"]>(["MODERATOR", "ADMIN"]);
 
+const CONTRIBUTOR_ROLES = new Set<ProfileUser["role"]>([
+  "CONTRIBUTOR",
+  "MODERATOR",
+  "ADMIN",
+]);
+
+export function isContributorRole(
+  role: ProfileUser["role"] | null | undefined,
+): boolean {
+  if (!role) {
+    return false;
+  }
+
+  return CONTRIBUTOR_ROLES.has(role);
+}
+
 export function isModeratorRole(
   role: ProfileUser["role"] | null | undefined,
 ): boolean {

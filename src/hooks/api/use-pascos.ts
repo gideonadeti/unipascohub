@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   createPasco,
   deletePasco,
+  myPascosListOptions,
   pascoDetailOptions,
   pascosListOptions,
   updatePasco,
@@ -21,6 +22,7 @@ import {
   toPascoUpdateInput,
 } from "@/lib/schemas/pasco-update";
 import type {
+  MyPascoListFilters,
   PascoCreateInput,
   PascoListFilters,
   PascoUpdateInput,
@@ -28,6 +30,10 @@ import type {
 
 export function usePascosList(filters: PascoListFilters = {}) {
   return useQuery(pascosListOptions(filters));
+}
+
+export function useMyPascosList(filters: MyPascoListFilters = {}) {
+  return useQuery(myPascosListOptions(filters));
 }
 
 export function usePasco(id: string) {

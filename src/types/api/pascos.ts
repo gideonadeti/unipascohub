@@ -121,6 +121,22 @@ export type PascoListResponse = {
   appliedCourse?: PascoCourseSummary;
 };
 
+export type MyPascoListFilters = {
+  moderationStatus?: PascoModerationStatus;
+  page?: number;
+  limit?: number;
+};
+
+export type MyPascoListResponse = {
+  pascos: Pasco[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
 export type PascoDetailResponse = {
   pasco: Pasco;
 };
