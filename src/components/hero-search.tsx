@@ -70,6 +70,25 @@ export function HeroSearch() {
   }, []);
 
   useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) {
+      return;
+    }
+
+    const handleViewportChange = () => {
+      if (
+        document.activeElement === containerRef.current?.querySelector("input")
+      ) {
+        setFocused(false);
+        setActiveIndex(-1);
+      }
+    };
+
+    viewport.addEventListener("resize", handleViewportChange);
+    return () => viewport.removeEventListener("resize", handleViewportChange);
+  }, []);
+
+  useEffect(() => {
     const timeout = window.setTimeout(() => {
       setDebouncedValue(value);
       setActiveIndex(-1);

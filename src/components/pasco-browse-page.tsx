@@ -420,7 +420,7 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
               {chip.removable ? (
                 <button
                   type="button"
-                  className="inline-flex size-5 items-center justify-center rounded-full hover:bg-muted"
+                  className="inline-flex size-8 items-center justify-center rounded-full hover:bg-muted -m-1.5"
                   aria-label={`Remove ${chip.label} filter`}
                   onClick={() => clearFilter(chip.key)}
                 >

@@ -18,7 +18,8 @@ import {
 } from "@/lib/pasco-file-types";
 import type { PascoFile } from "@/types/api/pascos";
 
-const COMPACT_BUTTON_CLASS = "sm:h-8 sm:w-auto sm:px-3 sm:gap-1";
+const COMPACT_BUTTON_CLASS =
+  "min-h-11 min-w-11 gap-1.5 sm:min-h-8 sm:min-w-8 sm:px-3 sm:gap-1";
 
 const FILE_TYPE_ICONS: Record<PascoFileViewKind, LucideIcon> = {
   pdf: FileText,
@@ -63,7 +64,7 @@ export function PascoFileActions({
     ) : (
       <>
         <Eye className="size-4" aria-hidden />
-        <span className="hidden sm:inline">View</span>
+        <span>View</span>
       </>
     );
 
@@ -78,7 +79,7 @@ export function PascoFileActions({
             aria-label={viewAriaLabel}
           >
             <Eye className="size-4" aria-hidden />
-            <span className="hidden sm:inline">View</span>
+            <span>View</span>
           </Button>
         </SignInButton>
       );
@@ -115,7 +116,7 @@ export function PascoFileActions({
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="grid shrink-0 grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-1">
         {renderViewButton()}
         <PascoFileDownload pascoId={pascoId} file={file} compact />
       </div>

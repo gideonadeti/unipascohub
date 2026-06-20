@@ -4,6 +4,7 @@ import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { MobileNavSheet } from "@/components/mobile-nav-sheet";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -30,42 +31,41 @@ export function SiteHeader() {
       </Link>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
-        {showContributionsLink ? (
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/contributions">My contributions</Link>
-          </Button>
-        ) : null}
-        {showModerationLink ? (
-          <>
+        <div className="hidden items-center gap-2 lg:flex lg:gap-3">
+          {showContributionsLink ? (
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/moderation/pascos">Pasco review</Link>
+              <Link href="/contributions">My contributions</Link>
             </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/moderation/catalog">Catalog review</Link>
-            </Button>
-          </>
-        ) : null}
-        <ThemeToggle />
-        <Show when="signed-out">
-          <SignInButton mode="modal">
-            <Button
-              variant="ghost"
-              type="button"
-              className="min-h-11 px-3 sm:min-h-0 sm:px-4"
-            >
-              Sign in
-            </Button>
-          </SignInButton>
-          <SignUpButton mode="modal">
-            <Button type="button" className="min-h-11 px-3 sm:min-h-0 sm:px-4">
-              Sign up
-            </Button>
-          </SignUpButton>
-        </Show>
+          ) : null}
+          {showModerationLink ? (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/moderation/pascos">Pasco review</Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/moderation/catalog">Catalog review</Link>
+              </Button>
+            </>
+          ) : null}
+          <ThemeToggle />
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <Button variant="ghost" type="button">
+                Sign in
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button type="button">Sign up</Button>
+            </SignUpButton>
+          </Show>
+        </div>
+
         <Show when="signed-in">
           <NotificationBell />
           <UserButton />
         </Show>
+
+        <MobileNavSheet />
       </div>
     </header>
   );

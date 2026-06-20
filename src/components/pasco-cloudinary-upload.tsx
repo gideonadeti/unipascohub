@@ -206,34 +206,10 @@ export function PascoCloudinaryUpload({
   useEffect(() => {
     return () => {
       clearOpeningFallbackTimer();
-    };
-  }, [clearOpeningFallbackTimer]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    loadCloudinaryWidgetScript()
-      .then(() => {
-        if (!cancelled) {
-          setIsScriptReady(true);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "Failed to load Cloudinary Upload Widget";
-          showUploadError(message);
-        }
-      });
-
-    return () => {
-      cancelled = true;
       widgetRef.current?.destroy();
       widgetRef.current = null;
     };
-  }, []);
+  }, [clearOpeningFallbackTimer]);
 
   const handleWidgetResult = useCallback(
     (error: unknown, result: CloudinaryWidgetResult) => {
@@ -353,8 +329,27 @@ export function PascoCloudinaryUpload({
       return;
     }
 
-    if (!isScriptReady || !window.cloudinary?.createUploadWidget) {
+    if (!isScriptReady) {
+      isOpeningRef.current = true;
+      setIsOpening(true);
+
+      try {
+        await loadCloudinaryWidgetScript();
+        setIsScriptReady(true);
+      } catch (error) {
+        finishOpening();
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load Cloudinary Upload Widget";
+        showUploadError(message);
+        return;
+      }
+    }
+
+    if (!window.cloudinary?.createUploadWidget) {
       showUploadError("Cloudinary Upload Widget is still loading.");
+      finishOpening();
       return;
     }
 
@@ -524,8 +519,7 @@ export function PascoCloudinaryUpload({
     startOpeningFallbackTimer,
   ]);
 
-  const uploadDisabled =
-    disabled || !courseId || isOpening || isWidgetOpen || !isScriptReady;
+  const uploadDisabled = disabled || !courseId || isOpening || isWidgetOpen;
 
   function removeFile(order: number) {
     onFilesChange(files.filter((file) => file.order !== order));
@@ -550,7 +544,8 @@ export function PascoCloudinaryUpload({
       <Button
         type="button"
         variant="outline"
-        onClick={openUploadWidget}
+        className="h-11 w-full"
+        onClick={() => void openUploadWidget()}
         disabled={uploadDisabled}
       >
         {isOpening ? (
@@ -584,7 +579,8 @@ export function PascoCloudinaryUpload({
             <Button
               type="button"
               variant="ghost"
-              size="icon-xs"
+              size="icon-sm"
+              className="min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
               onClick={() => setUploadIssue(null)}
               aria-label="Dismiss upload issue"
             >
@@ -614,7 +610,8 @@ export function PascoCloudinaryUpload({
               <Button
                 type="button"
                 variant="destructive"
-                size="icon-xs"
+                size="icon-sm"
+                className="min-h-11 min-w-11 shrink-0 sm:min-h-0 sm:min-w-0"
                 onClick={() => removeFile(file.order)}
                 disabled={disabled}
                 aria-label={`Remove ${file.fileName}`}

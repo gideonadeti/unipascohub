@@ -57,7 +57,6 @@ export function PascoEmbedPdfViewer({ fileUrl }: PascoEmbedPdfViewerProps) {
     <div
       className="h-full w-full min-h-0"
       onWheel={(event) => event.stopPropagation()}
-      onTouchMove={(event) => event.stopPropagation()}
     >
       <PDFViewer
         ref={viewerRef}

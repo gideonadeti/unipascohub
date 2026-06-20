@@ -40,7 +40,7 @@ export function ScrollToTop() {
           animate={{ opacity: 1, y: 0 }}
           exit={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
           transition={{ duration: 0.2 }}
-          className="fixed right-4 bottom-4 z-40"
+          className="fixed right-4 bottom-20 z-40 lg:bottom-4"
         >
           <Button
             type="button"
@@ -48,7 +48,7 @@ export function ScrollToTop() {
             size="icon"
             onClick={scrollToTop}
             aria-label="Scroll to top"
-            className="size-10 rounded-full bg-background shadow-sm"
+            className="size-11 rounded-full bg-background shadow-sm"
           >
             <ChevronUp className="size-4" />
           </Button>

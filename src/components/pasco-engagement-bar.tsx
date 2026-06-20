@@ -49,7 +49,7 @@ function ReactionButton({
       size="sm"
       disabled={disabled}
       onClick={onClick}
-      className={cn(active && "border-primary/40")}
+      className={cn("min-h-11 sm:min-h-8", active && "border-primary/40")}
       aria-pressed={active}
       aria-label={`${label} (${formatCount(count)})`}
     >
@@ -74,6 +74,7 @@ function SignedOutReactionButton({
         type="button"
         variant="outline"
         size="sm"
+        className="min-h-11 sm:min-h-8"
         aria-label={`${label} (${formatCount(count)}) — sign in required`}
       >
         {icon}

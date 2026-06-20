@@ -54,7 +54,7 @@ export function RecentSearchesList({
               {onRemove ? (
                 <button
                   type="button"
-                  className="mr-2 shrink-0 rounded p-1 text-muted-foreground hover:bg-background hover:text-foreground"
+                  className="mr-1 shrink-0 rounded p-2.5 text-muted-foreground hover:bg-background hover:text-foreground sm:p-1"
                   aria-label={`Remove ${search} from recent searches`}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => onRemove(search)}

@@ -8,7 +8,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { useRecordPascoFileDownload } from "@/hooks/api/use-pasco-engagement";
 import type { PascoFile } from "@/types/api/pascos";
 
-const COMPACT_BUTTON_CLASS = "sm:h-8 sm:w-auto sm:px-3 sm:gap-1";
+const COMPACT_BUTTON_CLASS =
+  "min-h-11 min-w-11 gap-1.5 sm:min-h-8 sm:min-w-8 sm:px-3 sm:gap-1";
 
 type PascoFileDownloadProps = {
   pascoId: string;
@@ -43,11 +44,7 @@ export function PascoFileDownload({
   ) : (
     <>
       <Download className="size-4" aria-hidden />
-      {compact ? (
-        <span className="hidden sm:inline">Download</span>
-      ) : (
-        "Download"
-      )}
+      {compact ? <span>Download</span> : "Download"}
     </>
   );
 

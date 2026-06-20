@@ -24,7 +24,7 @@ export function PageContainer({
       id="main-content"
       tabIndex={-1}
       className={cn(
-        "mx-auto w-full flex-1 px-4 py-6 sm:px-6",
+        "mx-auto w-full flex-1 px-4 py-6 pb-safe sm:px-6 lg:pb-6",
         widthClasses[width],
         className,
       )}
