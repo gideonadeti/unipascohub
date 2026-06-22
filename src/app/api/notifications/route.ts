@@ -1,6 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 
-import { listNotifications, serializeNotification } from "@/lib/notifications";
+import {
+  deleteAllNotifications,
+  deleteSelectedNotifications,
+  listNotifications,
+  serializeNotification,
+} from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -62,6 +67,38 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error("Notification list failed:", err);
+
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  const { isAuthenticated, userId } = await auth();
+
+  if (!isAuthenticated || !userId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    let ids: string[] | undefined;
+
+    try {
+      const text = await req.text();
+      if (text) {
+        const body = JSON.parse(text) as { ids?: string[] };
+        ids = body.ids;
+      }
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const deletedCount = ids
+      ? await deleteSelectedNotifications(userId, ids)
+      : await deleteAllNotifications(userId);
+
+    return Response.json({ deletedCount });
+  } catch (err) {
+    console.error("Delete notifications failed:", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
