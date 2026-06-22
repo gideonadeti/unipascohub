@@ -298,6 +298,25 @@ export async function markAllNotificationsRead(
   return result.count;
 }
 
+export async function deleteAllNotifications(userId: string): Promise<number> {
+  const result = await prisma.notification.deleteMany({
+    where: { userId },
+  });
+
+  return result.count;
+}
+
+export async function deleteSelectedNotifications(
+  userId: string,
+  ids: string[],
+): Promise<number> {
+  const result = await prisma.notification.deleteMany({
+    where: { userId, id: { in: ids } },
+  });
+
+  return result.count;
+}
+
 export function serializeNotification(notification: {
   id: string;
   type: string;

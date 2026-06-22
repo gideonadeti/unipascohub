@@ -6,7 +6,9 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  deleteAllNotifications as deleteAllNotificationsApi,
   deleteNotification as deleteNotificationApi,
+  deleteSelectedNotifications as deleteSelectedNotificationsApi,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -57,6 +59,28 @@ export function useDeleteNotification() {
 
   return useMutation({
     mutationFn: deleteNotificationApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+  });
+}
+
+export function useDeleteAllNotifications() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAllNotificationsApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+  });
+}
+
+export function useDeleteSelectedNotifications() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteSelectedNotificationsApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },

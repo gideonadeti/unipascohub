@@ -37,3 +37,15 @@ export function deleteNotification(notificationId: string) {
     .delete<NotificationDeleteResponse>(`/api/notifications/${notificationId}`)
     .then((response) => response.data);
 }
+
+export function deleteAllNotifications() {
+  return apiClient
+    .delete<{ deletedCount: number }>("/api/notifications")
+    .then((response) => response.data);
+}
+
+export function deleteSelectedNotifications(ids: string[]) {
+  return apiClient
+    .delete<{ deletedCount: number }>("/api/notifications", { data: { ids } })
+    .then((response) => response.data);
+}
