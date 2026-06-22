@@ -1599,6 +1599,20 @@ export async function updatePasco(
     }
   }
 
+  if (
+    triggeredById &&
+    existing.uploaderId === triggeredById &&
+    existing.moderationStatus === PascoModerationStatus.REJECTED
+  ) {
+    await prisma.pasco.update({
+      where: { id: pascoId },
+      data: {
+        moderationStatus: PascoModerationStatus.PENDING_REVIEW,
+        rejectionReason: null,
+      },
+    });
+  }
+
   const hasMetadataUpdate =
     input.courseId !== undefined ||
     input.academicYear !== undefined ||

@@ -1,4 +1,5 @@
 import type {
+  NotificationDeleteResponse,
   NotificationListResponse,
   NotificationReadAllResponse,
   NotificationReadResponse,
@@ -8,6 +9,7 @@ import { apiClient } from "./client";
 export type NotificationListFilters = {
   unreadOnly?: boolean;
   limit?: number;
+  offset?: number;
 };
 
 export function listNotifications(filters: NotificationListFilters = {}) {
@@ -27,5 +29,11 @@ export function markNotificationRead(notificationId: string) {
 export function markAllNotificationsRead() {
   return apiClient
     .patch<NotificationReadAllResponse>("/api/notifications/read-all")
+    .then((response) => response.data);
+}
+
+export function deleteNotification(notificationId: string) {
+  return apiClient
+    .delete<NotificationDeleteResponse>(`/api/notifications/${notificationId}`)
     .then((response) => response.data);
 }

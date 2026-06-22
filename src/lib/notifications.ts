@@ -222,6 +222,7 @@ export type NotificationListQuery = {
   userId: string;
   unreadOnly?: boolean;
   limit: number;
+  offset?: number;
 };
 
 export async function listNotifications(query: NotificationListQuery) {
@@ -230,11 +231,12 @@ export async function listNotifications(query: NotificationListQuery) {
     ...(query.unreadOnly ? { readAt: null } : {}),
   };
 
-  const [notifications, unreadCount] = await Promise.all([
+  const [notifications, unreadCount, totalCount] = await Promise.all([
     prisma.notification.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: query.limit,
+      skip: query.offset ?? 0,
     }),
     prisma.notification.count({
       where: {
@@ -242,9 +244,10 @@ export async function listNotifications(query: NotificationListQuery) {
         readAt: null,
       },
     }),
+    prisma.notification.count({ where }),
   ]);
 
-  return { notifications, unreadCount };
+  return { notifications, unreadCount, totalCount };
 }
 
 export async function markNotificationRead(
@@ -259,6 +262,20 @@ export async function markNotificationRead(
     },
     data: {
       readAt: new Date(),
+    },
+  });
+
+  return result.count > 0;
+}
+
+export async function deleteNotification(
+  notificationId: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await prisma.notification.deleteMany({
+    where: {
+      id: notificationId,
+      userId,
     },
   });
 
