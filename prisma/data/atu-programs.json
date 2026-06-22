@@ -1,0 +1,179 @@
+{
+  "faculties": [
+    {
+      "faculty_name": "Faculty of Engineering",
+      "departments": [
+        {
+          "department_name": "Department of Mechanical Engineering",
+          "programs": [
+            "4-Year BTech Mechanical Engineering",
+            "4-Year BTech Automotive Engineering",
+            "2-Year BTech (Top-Up) Mechanical Engineering",
+            "2-Year BTech (Top-Up) Automobile Engineering",
+            "HND Mechanical Engineering",
+            "Mechanical Engineering Technician Part I",
+            "Motor Vehicle Technician Part I"
+          ]
+        },
+        {
+          "department_name": "Department of Electrical/Electronic Engineering",
+          "programs": [
+            "4-Year BTech Electrical and Electronic Engineering",
+            "4-Year BTech Renewable Energy Technology",
+            "2-Year BTech (Top-Up) Electrical/Electronics Engineering",
+            "HND Electrical/Electronics Engineering",
+            "Electrical Engineering Technician Part I & II",
+            "Refrigeration Technician Part II"
+          ]
+        },
+        {
+          "department_name": "Department of Civil Engineering",
+          "programs": [
+            "4-Year BTech Civil Engineering",
+            "4-Year BTech Water and Sanitation Engineering",
+            "2-Year BTech (Top-Up) Civil Engineering",
+            "HND Civil Engineering"
+          ]
+        }
+      ]
+    },
+    {
+      "faculty_name": "Faculty of Built Environment",
+      "departments": [
+        {
+          "department_name": "Department of Building Technology",
+          "programs": [
+            "4-Year BTech Construction Engineering Management",
+            "4-Year BTech Architectural Technology",
+            "4-Year BTech Facilities Management",
+            "2-Year BTech (Top-Up) Building Technology",
+            "HND Building Technology"
+          ]
+        },
+        {
+          "department_name": "Department of Interior Design and Upholstery Technology",
+          "programs": [
+            "4-Year BTech Interior Design and Technology",
+            "2-Year BTech (Top-Up) Interior Design Technology",
+            "HND Interior Design and Technology (Furniture Design and Production)"
+          ]
+        }
+      ]
+    },
+    {
+      "faculty_name": "Faculty of Applied Sciences",
+      "departments": [
+        {
+          "department_name": "Department of Applied Mathematics and Statistics",
+          "programs": [
+            "4-Year BTech Applied Statistics",
+            "4-Year BTech Data Science and Analytics",
+            "4-Year BSc Economics and Finance",
+            "2-Year BTech (Top-Up) Statistics",
+            "HND Statistics"
+          ]
+        },
+        {
+          "department_name": "Department of Computer Science",
+          "programs": [
+            "4-Year BTech Computer Science",
+            "4-Year BTech Cyber Security",
+            "4-Year BTech Applied Informatics",
+            "2-Year BTech (Top-Up) Computer Science",
+            "HND Computer Science"
+          ]
+        },
+        {
+          "department_name": "Department of Science Laboratory Technology (SLT)",
+          "programs": [
+            "4-Year BTech Science Laboratory Technology",
+            "4-Year BTech Food Manufacturing Technology",
+            "4-Year BTech Chemical and Process Engineering",
+            "2-Year BTech (Top-Up) Science Laboratory Technology",
+            "HND Science Laboratory Technology",
+            "Science Laboratory Technician Part I"
+          ]
+        },
+        {
+          "department_name": "Department of Medical Laboratory Technology",
+          "programs": [
+            "4-Year BTech Medical Laboratory Science",
+            "4-Year BTech Medical Imaging Technology",
+            "4-Year BTech Biomedical Equipment Technology",
+            "4-Year BTech Veterinary Laboratory Science",
+            "2-Year BTech (Top-Up) Medical Laboratory Science"
+          ]
+        }
+      ]
+    },
+    {
+      "faculty_name": "Faculty of Applied Arts",
+      "departments": [
+        {
+          "department_name": "Department of Hotel Catering & Institutional Management (HCIM)",
+          "programs": [
+            "4-Year BTech Hospitality Management and Catering Technology",
+            "2-Year BTech (Top-Up) Hospitality Management",
+            "HND Hotel Catering & Institutional Management (HCIM)"
+          ]
+        },
+        {
+          "department_name": "Department of Fashion Design & Textile Technology",
+          "programs": [
+            "4-Year BTech Fashion Design and Textiles",
+            "2-Year BTech (Top-Up) Fashion Design and Textiles",
+            "HND Fashion Design and Textiles"
+          ]
+        },
+        {
+          "department_name": "Department of Liberal Studies and Communications Technology",
+          "programs": [
+            "4-Year BTech Public Relations with Digital Communication",
+            "4-Year BTech Multimedia Communication",
+            "4-Year BTech Graphic Communication"
+          ]
+        }
+      ]
+    },
+    {
+      "faculty_name": "Faculty of Business",
+      "departments": [
+        {
+          "department_name": "Department of Accountancy and Finance",
+          "programs": [
+            "4-Year BTech Accounting and Finance Analytics",
+            "2-Year BTech (Top-Up) Accounting",
+            "2-Year BTech (Top-Up) Banking and Finance",
+            "HND Accountancy"
+          ]
+        },
+        {
+          "department_name": "Department of Management and Public Administration",
+          "programs": [
+            "4-Year BTech Secretaryship and Administrative Practice",
+            "2-Year BTech (Top-Up) Secretaryship and Management Studies",
+            "HND Secretaryship & Management Studies",
+            "HND Bilingual Secretaryship & Management Studies"
+          ]
+        },
+        {
+          "department_name": "Department of Procurement and Supply Chain Management",
+          "programs": [
+            "4-Year BTech Procurement and Supply Chain Management",
+            "4-Year BTech Logistics and Transport Management",
+            "2-Year BTech (Top-Up) Procurement & Supply Chain Management",
+            "HND Purchasing & Supply"
+          ]
+        },
+        {
+          "department_name": "Department of Marketing",
+          "programs": [
+            "4-Year BTech Marketing",
+            "2-Year BTech (Top-Up) Marketing",
+            "HND Marketing"
+          ]
+        }
+      ]
+    }
+  ]
+}

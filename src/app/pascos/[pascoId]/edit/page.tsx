@@ -25,7 +25,7 @@ export default async function EditPascoPage({ params }: EditPascoPageProps) {
     <PageContainer width="narrow" className="space-y-8 pb-32 lg:pb-6">
       <PageHeader
         title="Edit pasco"
-        description="Update metadata or manage files for this pasco."
+        description="Update details or manage files for this pasco."
         actions={
           <Button variant="outline" size="sm" asChild>
             <Link href={`/pascos/${pascoId}`}>Cancel</Link>

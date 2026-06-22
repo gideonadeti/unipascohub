@@ -63,6 +63,7 @@ export function PascoDownloadAll({
           type="button"
           variant="outline"
           size="sm"
+          className="w-full sm:w-auto"
           aria-label={ariaLabel}
         >
           <Download className="size-4" aria-hidden />
@@ -78,6 +79,7 @@ export function PascoDownloadAll({
       type="button"
       variant="outline"
       size="sm"
+      className="w-full sm:w-auto"
       aria-label={ariaLabel}
       disabled={downloadAllMutation.isPending}
       onClick={() => void handleDownloadAll()}

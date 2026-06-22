@@ -107,7 +107,7 @@ export function useDeletePasco(pascoId: string) {
         data.storageCleanupFailures.length > 0
       ) {
         toast.warning(
-          "Pasco deleted, but some files could not be removed from storage.",
+          "Pasco deleted, but some attached files could not be removed.",
         );
       } else {
         toast.success("Pasco deleted");

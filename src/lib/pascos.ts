@@ -12,6 +12,7 @@ import type { PascoListQuery } from "@/lib/pasco-list-query";
 import {
   canViewPasco,
   type PascoViewerContext,
+  shouldExposeUploaderId,
   shouldIncludeModerationSource,
   shouldIncludeModerationStatus,
 } from "@/lib/pasco-moderation-utils";
@@ -205,7 +206,6 @@ type PascoFileSyncError =
 
 const pascoInclude = {
   files: { orderBy: { order: "asc" as const } },
-  uploader: { select: { name: true } },
 } satisfies Prisma.PascoInclude;
 
 const pascoListInclude = {
@@ -1050,7 +1050,6 @@ function serializePascoFile(file: PascoFile) {
 export function serializePasco(
   pasco: PascoWithFiles & {
     course?: PascoCourseForSerialize | null;
-    uploader?: { name: string } | null;
   },
   options?: {
     viewerReaction?: PascoReactionTypeValue | null;
@@ -1060,7 +1059,9 @@ export function serializePasco(
   const serialized = {
     id: pasco.id,
     courseId: pasco.courseId,
-    uploaderId: pasco.uploaderId,
+    ...(shouldExposeUploaderId(options?.viewer, pasco)
+      ? { uploaderId: pasco.uploaderId }
+      : {}),
     academicYear: pasco.academicYear,
     description: pasco.description,
     educationLevel: pasco.educationLevel,
@@ -1079,11 +1080,6 @@ export function serializePasco(
     ...(pasco.course && {
       course: serializeCourseSummary(pasco.course),
     }),
-    ...(pasco.uploader !== undefined
-      ? {
-          uploader: pasco.uploader ? { name: pasco.uploader.name } : null,
-        }
-      : {}),
     ...(shouldIncludeModerationStatus(options?.viewer, pasco)
       ? {
           moderationStatus: pasco.moderationStatus as PascoModerationStatusType,

@@ -471,7 +471,7 @@ export function PascoBrowseFilters({
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
             {filterFields}
           </div>
-          <SheetFooter className="shrink-0 flex-row border-t px-4 py-4">
+          <SheetFooter className="shrink-0 border-t px-4 py-4">
             {filterActions}
           </SheetFooter>
         </SheetContent>

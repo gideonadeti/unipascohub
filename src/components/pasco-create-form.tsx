@@ -4,7 +4,7 @@ import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { CatalogCourseRequestDialog } from "@/components/catalog-course-request-dialog";
 import { CatalogProgramRequestDialog } from "@/components/catalog-program-request-dialog";
@@ -51,6 +51,10 @@ import {
   getPascoFileDuplicatesFromError,
 } from "@/lib/pasco-duplicate-error";
 import {
+  getLastUploadCatalogContext,
+  saveLastUploadCatalogContext,
+} from "@/lib/pasco-upload-context";
+import {
   EDUCATION_LEVELS,
   PASCO_CONTENT_TYPES,
   PASCO_TYPES,
@@ -67,6 +71,17 @@ export function PascoCreateForm() {
   const deepLinkInstitutionId = searchParams.get("institutionId") ?? "";
   const deepLinkProgramId = searchParams.get("programId") ?? "";
   const deepLinkCourseId = searchParams.get("courseId") ?? "";
+
+  const hasUrlCatalogParams = Boolean(
+    deepLinkInstitutionId || deepLinkProgramId || deepLinkCourseId,
+  );
+  const storedPrefill = useMemo(
+    () => (hasUrlCatalogParams ? null : getLastUploadCatalogContext()),
+    [hasUrlCatalogParams],
+  );
+  const targetInstitutionId =
+    deepLinkInstitutionId || storedPrefill?.institutionId || "";
+  const targetProgramId = deepLinkProgramId || storedPrefill?.programId || "";
 
   const form = useForm<PascoCreateFormValues>({
     resolver: standardSchemaResolver(pascoCreateFormSchema),
@@ -110,43 +125,43 @@ export function PascoCreateForm() {
     : null;
 
   useEffect(() => {
-    if (!institutions.data || deepLinkInstitutionId.length === 0) {
+    if (!institutions.data || targetInstitutionId.length === 0) {
       return;
     }
 
     const institutionExists = institutions.data.institutions.some(
-      (institution) => institution.id === deepLinkInstitutionId,
+      (institution) => institution.id === targetInstitutionId,
     );
 
     if (!institutionExists) {
       return;
     }
 
-    if (form.getValues("institutionId") !== deepLinkInstitutionId) {
-      form.setValue("institutionId", deepLinkInstitutionId);
+    if (form.getValues("institutionId") !== targetInstitutionId) {
+      form.setValue("institutionId", targetInstitutionId);
       form.setValue("programId", "");
       form.setValue("courseId", "");
     }
-  }, [deepLinkInstitutionId, form, institutions.data]);
+  }, [form, institutions.data, targetInstitutionId]);
 
   useEffect(() => {
-    if (!programs.data || deepLinkProgramId.length === 0) {
+    if (!programs.data || targetProgramId.length === 0) {
       return;
     }
 
     const programExists = programs.data.programs.some(
-      (program) => program.id === deepLinkProgramId,
+      (program) => program.id === targetProgramId,
     );
 
     if (!programExists) {
       return;
     }
 
-    if (form.getValues("programId") !== deepLinkProgramId) {
-      form.setValue("programId", deepLinkProgramId);
+    if (form.getValues("programId") !== targetProgramId) {
+      form.setValue("programId", targetProgramId);
       form.setValue("courseId", "");
     }
-  }, [deepLinkProgramId, form, programs.data]);
+  }, [form, programs.data, targetProgramId]);
 
   useEffect(() => {
     if (!courses.data || deepLinkCourseId.length === 0) {
@@ -168,6 +183,10 @@ export function PascoCreateForm() {
 
   async function onSubmit(values: PascoCreateFormValues) {
     await createPasco.submit(values);
+    saveLastUploadCatalogContext({
+      institutionId: values.institutionId,
+      programId: values.programId,
+    });
   }
 
   const submitButtonContent = createPasco.isSuccess ? (

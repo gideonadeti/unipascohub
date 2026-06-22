@@ -6,11 +6,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "prisma generate && pnpm db:deploy && next build",
+    "db:deploy": "prisma migrate deploy && pnpm seed-institutions && pnpm seed-atu-programs && pnpm seed-atu-eee-courses",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
     "seed-institutions": "tsx prisma/seed-institutions.ts",
+    "seed-atu-programs": "tsx prisma/seed-atu-programs.ts",
+    "seed-atu-eee-courses": "tsx prisma/seed-atu-eee-courses.ts",
     "cleanup:cloudinary-orphans": "tsx scripts/cleanup-cloudinary-orphans.ts",
     "prepare": "node .husky/install.mjs"
   },

@@ -42,7 +42,9 @@ export function Section({
               ) : null}
             </div>
           ) : null}
-          {actions ? <div className="shrink-0">{actions}</div> : null}
+          {actions ? (
+            <div className="w-full shrink-0 sm:w-auto">{actions}</div>
+          ) : null}
         </div>
       ) : null}
       {children}

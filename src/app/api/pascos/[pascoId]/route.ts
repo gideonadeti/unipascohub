@@ -282,7 +282,7 @@ export async function PATCH(
     }
 
     return Response.json({
-      pasco: serializePasco(result.pasco),
+      pasco: serializePasco(result.pasco, { viewer }),
       ...(result.storageCleanupFailures !== undefined && {
         storageCleanupFailures: result.storageCleanupFailures,
       }),

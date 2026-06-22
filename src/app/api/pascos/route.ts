@@ -401,7 +401,11 @@ export async function POST(req: Request) {
     }
 
     return Response.json(
-      { pasco: serializePasco(result.pasco) },
+      {
+        pasco: serializePasco(result.pasco, {
+          viewer: { userId, role: contributorResult.user.role },
+        }),
+      },
       { status: 201 },
     );
   } catch (err) {

@@ -19,7 +19,7 @@ import {
 import type { PascoFile } from "@/types/api/pascos";
 
 const COMPACT_BUTTON_CLASS =
-  "min-h-11 min-w-11 gap-1.5 sm:min-h-8 sm:min-w-8 sm:px-3 sm:gap-1";
+  "min-h-11 w-full gap-1.5 sm:min-h-8 sm:w-auto sm:min-w-8 sm:px-3 sm:gap-1";
 
 const FILE_TYPE_ICONS: Record<PascoFileViewKind, LucideIcon> = {
   pdf: FileText,
@@ -101,8 +101,8 @@ export function PascoFileActions({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-      <div className="flex min-w-0 flex-1 items-start gap-2.5">
+    <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-start gap-2.5 sm:flex-1">
         <TypeIcon
           className="mt-0.5 size-4 shrink-0 text-muted-foreground"
           aria-hidden
@@ -116,7 +116,13 @@ export function PascoFileActions({
           </p>
         </div>
       </div>
-      <div className="grid shrink-0 grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-1">
+      <div
+        className={
+          canView
+            ? "grid w-full grid-cols-2 gap-1.5 sm:flex sm:w-auto sm:shrink-0 sm:items-center sm:gap-1"
+            : "flex w-full justify-end sm:w-auto sm:shrink-0"
+        }
+      >
         {renderViewButton()}
         <PascoFileDownload pascoId={pascoId} file={file} compact />
       </div>

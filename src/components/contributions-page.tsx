@@ -18,6 +18,7 @@ import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { useMyPascosList } from "@/hooks/api/use-pascos";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import { formatDateTime } from "@/lib/dates";
+import { buildPascoCreateHref } from "@/lib/pasco-create-href";
 import { canUserModifyPasco } from "@/lib/pasco-permissions";
 import type {
   CatalogSubmission,
@@ -52,19 +53,11 @@ function getCatalogUploadHref(submission: CatalogSubmission): string | null {
     return null;
   }
 
-  const params = new URLSearchParams({
+  return buildPascoCreateHref({
     institutionId: submission.institutionId,
+    programId: submission.approvedProgramId ?? undefined,
+    courseId: submission.approvedCourseId ?? undefined,
   });
-
-  if (submission.approvedProgramId) {
-    params.set("programId", submission.approvedProgramId);
-  }
-
-  if (submission.approvedCourseId) {
-    params.set("courseId", submission.approvedCourseId);
-  }
-
-  return `/pascos/new?${params.toString()}`;
 }
 
 function moderationStatusLabel(status: PascoModerationStatus): string {
