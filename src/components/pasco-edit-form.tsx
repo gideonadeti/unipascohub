@@ -280,7 +280,16 @@ function PascoEditFormFields({
   return (
     <>
       <Card className="w-full">
-        <CardContent className="pt-6">
+        <CardContent className="space-y-6 pt-6">
+          {pasco.moderationStatus === "REJECTED" ? (
+            <Alert>
+              <AlertTitle>Previously rejected</AlertTitle>
+              <AlertDescription>
+                This pasco was rejected. Saving changes will resubmit it for
+                moderator review.
+              </AlertDescription>
+            </Alert>
+          ) : null}
           <form
             id="pasco-edit-form"
             className="space-y-6"

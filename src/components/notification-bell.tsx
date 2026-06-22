@@ -31,7 +31,10 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export function NotificationBell() {
-  const notificationsQuery = useNotificationsList({ limit: 20 });
+  const notificationsQuery = useNotificationsList({
+    limit: 20,
+    unreadOnly: true,
+  });
   const markReadMutation = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
   const [isPushSupported, setIsPushSupported] = useState(false);
@@ -128,9 +131,15 @@ export function NotificationBell() {
             <Spinner aria-hidden />
           </div>
         ) : notifications.length === 0 ? (
-          <p className="px-2 py-4 text-sm text-muted-foreground">
-            No notifications yet.
-          </p>
+          <div className="space-y-1 px-2 py-4 text-center text-sm text-muted-foreground">
+            <p>No new notifications.</p>
+            <Link
+              href="/notifications"
+              className="block text-primary hover:underline"
+            >
+              View history
+            </Link>
+          </div>
         ) : (
           notifications.map((notification) => (
             <DropdownMenuItem
@@ -160,6 +169,17 @@ export function NotificationBell() {
             </DropdownMenuItem>
           ))
         )}
+        {notifications.length > 0 ? (
+          <>
+            <DropdownMenuSeparator />
+            <Link
+              href="/notifications"
+              className="block px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              See all notifications →
+            </Link>
+          </>
+        ) : null}
         {isPushSupported ? (
           <>
             <DropdownMenuSeparator />

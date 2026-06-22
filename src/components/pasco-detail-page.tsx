@@ -102,10 +102,22 @@ export function PascoDetailPage() {
       {isUploaderRejected ? (
         <Alert variant="destructive">
           <AlertTitle>Not published</AlertTitle>
-          <AlertDescription>
-            {pasco.rejectionReason
-              ? `Moderators rejected this pasco: ${pasco.rejectionReason}`
-              : "Moderators rejected this pasco. It is hidden from other students."}
+          <AlertDescription className="space-y-2">
+            {pasco.rejectionReason ? (
+              <p>Moderators rejected this pasco: {pasco.rejectionReason}</p>
+            ) : (
+              <p>Moderators rejected this pasco.</p>
+            )}
+            <p>
+              You can{" "}
+              <Link
+                href={`/pascos/${pascoId}/edit`}
+                className="font-medium underline underline-offset-4"
+              >
+                edit it
+              </Link>{" "}
+              and resubmit for review.
+            </p>
           </AlertDescription>
         </Alert>
       ) : null}
