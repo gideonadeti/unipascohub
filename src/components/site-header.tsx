@@ -45,6 +45,9 @@ export function SiteHeader() {
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/moderation/catalog">Catalog review</Link>
               </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/moderation/feedback">Feedback</Link>
+              </Button>
             </>
           ) : null}
           <ThemeToggle />
