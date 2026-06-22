@@ -56,6 +56,11 @@ export const roleNavLinks: RoleNavLink[] = [
     href: "/moderation/catalog",
     requiresModerator: true,
   },
+  {
+    label: "Feedback",
+    href: "/moderation/feedback",
+    requiresModerator: true,
+  },
 ];
 
 export const sheetNavGroups = footerNav;

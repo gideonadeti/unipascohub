@@ -79,7 +79,6 @@ export const siteLinks = {
   github: readPublicUrl(process.env.NEXT_PUBLIC_GITHUB_URL),
   twitter: readPublicUrl(process.env.NEXT_PUBLIC_TWITTER_URL),
   linkedin: readPublicUrl(process.env.NEXT_PUBLIC_LINKEDIN_URL),
-  feedback: readPublicUrl(process.env.NEXT_PUBLIC_FEEDBACK_URL),
 } as const;
 
 export const footerNav: FooterNavGroup[] = [
@@ -102,7 +101,7 @@ export const footerNav: FooterNavGroup[] = [
   {
     title: "Community",
     links: [
-      { label: "Feedback", href: "/feedback#feedback" },
+      { label: "Feedback", href: "/feedback" },
       { label: "Report an issue", href: "/feedback#report" },
       { label: "Testimonials", href: "/feedback#testimonials" },
     ],
