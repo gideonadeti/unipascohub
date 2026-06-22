@@ -21,6 +21,20 @@ function parseLimit(value: string | null): number {
   return Math.min(parsed, MAX_LIMIT);
 }
 
+function parseOffset(value: string | null): number {
+  if (!value) {
+    return 0;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return parsed;
+}
+
 export async function GET(req: Request) {
   const { isAuthenticated, userId } = await auth();
 
@@ -31,17 +45,20 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const unreadOnly = searchParams.get("unreadOnly") === "true";
   const limit = parseLimit(searchParams.get("limit"));
+  const offset = parseOffset(searchParams.get("offset"));
 
   try {
     const result = await listNotifications({
       userId,
       unreadOnly,
       limit,
+      offset,
     });
 
     return Response.json({
       notifications: result.notifications.map(serializeNotification),
       unreadCount: result.unreadCount,
+      totalCount: result.totalCount,
     });
   } catch (err) {
     console.error("Notification list failed:", err);
