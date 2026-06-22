@@ -10,6 +10,7 @@ export const NotificationType = {
   CATALOG_SUBMISSION_APPROVED: "CATALOG_SUBMISSION_APPROVED",
   CATALOG_SUBMISSION_REJECTED: "CATALOG_SUBMISSION_REJECTED",
   CATALOG_COURSE_AUTO_APPROVED: "CATALOG_COURSE_AUTO_APPROVED",
+  NEW_FEEDBACK: "NEW_FEEDBACK",
 } as const;
 
 type NotificationTypeValue =
@@ -97,6 +98,47 @@ export async function createUploaderApprovedNotification(
     uploaderId,
     "Pasco approved",
     `"${title}" has been approved and is now live.`,
+  );
+}
+
+export async function createFeedbackSubmittedNotification(
+  category: string,
+  subject: string,
+): Promise<void> {
+  const moderators = await prisma.user.findMany({
+    where: {
+      role: {
+        in: [UserRole.MODERATOR, UserRole.ADMIN],
+      },
+    },
+    select: { id: true },
+  });
+
+  if (moderators.length === 0) {
+    return;
+  }
+
+  const label = category
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  const body = subject.length > 80 ? `${subject.slice(0, 77)}...` : subject;
+
+  await prisma.notification.createMany({
+    data: moderators.map((moderator) => ({
+      userId: moderator.id,
+      type: NotificationType.NEW_FEEDBACK,
+      title: `New feedback — ${label}`,
+      body,
+      link: "/moderation/feedback",
+    })),
+  });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(mod.id, `New feedback — ${label}`, body),
+    ),
   );
 }
 

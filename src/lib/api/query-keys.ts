@@ -57,4 +57,9 @@ export const queryKeys = {
     mine: (filters: Record<string, unknown>) =>
       [...queryKeys.catalogSubmissions.all, "mine", filters] as const,
   },
+  feedback: {
+    all: ["feedback"] as const,
+    list: (filters: Record<string, unknown>) =>
+      [...queryKeys.feedback.all, "list", filters] as const,
+  },
 } as const;
