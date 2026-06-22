@@ -32,6 +32,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
+  metadataBase: new URL("https://unipascohub.com"),
   icons: {
     icon: "/favicon.ico",
     apple: [
