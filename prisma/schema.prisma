@@ -29,6 +29,14 @@ enum EducationLevel {
   LEVEL_400
 }
 
+enum StudyMode {
+  FULL_TIME
+  PART_TIME
+  DISTANCE
+  EVENING
+  WEEKEND
+}
+
 enum SemesterType {
   FIRST_SEMESTER
   SECOND_SEMESTER
@@ -163,6 +171,7 @@ model Pasco {
   academicYear         String // e.g., "2024/2025"
   description          String?
   educationLevel       EducationLevel
+  studyMode           StudyMode @default(FULL_TIME)
   semesterType         SemesterType
   type                 PascoType
   contentType          PascoContentType
@@ -187,7 +196,7 @@ model Pasco {
   downloads                PascoDownload[]
   storageCleanupFailures   StorageCleanupFailure[]
 
-  @@index([courseId, educationLevel, academicYear])
+  @@index([courseId, educationLevel, studyMode, academicYear])
   @@index([uploaderId])
   @@index([createdAt(sort: Desc)])
   @@index([likeCount(sort: Desc)])
