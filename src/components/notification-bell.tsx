@@ -70,9 +70,12 @@ export function NotificationBell() {
     try {
       const registration = await navigator.serviceWorker.ready;
       const sub = await registration.pushManager.getSubscription();
-      if (sub) await sub.unsubscribe();
+      if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
+        await unsubscribeUser(endpoint);
+      }
       setIsSubscribed(false);
-      await unsubscribeUser();
     } catch {
       // unsubscribe failed
     }
