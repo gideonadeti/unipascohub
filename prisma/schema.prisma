@@ -117,6 +117,7 @@ model User {
   storageCleanupRuns        StorageCleanupRun[]
   searchQueries             SearchQuery[]
   notifications             Notification[]
+  pushSubscriptions          PushSubscription[]
   catalogSubmissionsSubmitted CatalogSubmission[] @relation("CatalogSubmissionSubmitter")
   catalogSubmissionsReviewed  CatalogSubmission[] @relation("CatalogSubmissionReviewer")
 }
@@ -329,6 +330,20 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt, createdAt(sort: Desc)])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model CatalogSubmission {
