@@ -2,6 +2,7 @@ import type {
   EducationLevel,
   PascoType,
   SemesterType,
+  StudyMode,
 } from "@/types/api/pascos";
 
 export const PASCO_TYPE_SYNONYMS: ReadonlyArray<{
@@ -107,6 +108,43 @@ export const EDUCATION_LEVEL_PATTERNS: ReadonlyArray<{
     pattern: /\b400\s+level\b/i,
     level: "LEVEL_400",
     label: "Level 400",
+  },
+];
+
+export const STUDY_MODE_SYNONYMS: ReadonlyArray<{
+  pattern: RegExp;
+  value: StudyMode;
+  label: string;
+}> = [
+  {
+    pattern: /\bfull\s*time\b/i,
+    value: "FULL_TIME",
+    label: "Full time",
+  },
+  {
+    pattern: /\bregular\b/i,
+    value: "FULL_TIME",
+    label: "Full time",
+  },
+  {
+    pattern: /\bpart\s*time\b/i,
+    value: "PART_TIME",
+    label: "Part time",
+  },
+  {
+    pattern: /\bdistance\b/i,
+    value: "DISTANCE",
+    label: "Distance",
+  },
+  {
+    pattern: /\bweekend\b/i,
+    value: "WEEKEND",
+    label: "Weekend",
+  },
+  {
+    pattern: /\bevening\b/i,
+    value: "EVENING",
+    label: "Evening",
   },
 ];
 

@@ -36,6 +36,8 @@ import {
   SolutionCompleteness,
   type SolutionCompleteness as SolutionCompletenessType,
   StorageCleanupSource,
+  StudyMode,
+  type StudyMode as StudyModeType,
 } from "../../generated/prisma/enums";
 
 const MAX_DESCRIPTION_LENGTH = 1000;
@@ -54,6 +56,7 @@ const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
 const SOLUTION_COMPLETENESS_VALUES = new Set<string>(
   Object.values(SolutionCompleteness),
 );
+const STUDY_MODES = new Set<string>(Object.values(StudyMode));
 
 export type PascoCreateInput = {
   courseId: string;
@@ -61,6 +64,7 @@ export type PascoCreateInput = {
   academicYear: string;
   description?: string;
   educationLevel: EducationLevelType;
+  studyMode: StudyModeType;
   semesterType: SemesterTypeType;
   type: PascoTypeType;
   contentType: PascoContentTypeType;
@@ -94,6 +98,7 @@ export type PascoUpdateInput = {
   academicYear?: string;
   description?: string | null;
   educationLevel?: EducationLevelType;
+  studyMode?: StudyModeType;
   semesterType?: SemesterTypeType;
   type?: PascoTypeType;
   contentType?: PascoContentTypeType;
@@ -156,6 +161,7 @@ type PascoCreateParseError =
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
+  | "invalid_study_mode"
   | "invalid_semester_type"
   | "invalid_type"
   | "invalid_content_type"
@@ -174,6 +180,7 @@ type PascoUpdateParseError =
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
+  | "invalid_study_mode"
   | "invalid_semester_type"
   | "invalid_type"
   | "invalid_content_type"
@@ -712,6 +719,10 @@ function isEducationLevel(value: string): value is EducationLevelType {
   return EDUCATION_LEVELS.has(value);
 }
 
+function isStudyMode(value: string): value is StudyModeType {
+  return STUDY_MODES.has(value);
+}
+
 function isSemesterType(value: string): value is SemesterTypeType {
   return SEMESTER_TYPES.has(value);
 }
@@ -787,6 +798,7 @@ export function parsePascoCreate(
     "files",
     "academicYear",
     "educationLevel",
+    "studyMode",
     "semesterType",
     "type",
     "contentType",
@@ -823,6 +835,10 @@ export function parsePascoCreate(
     !isEducationLevel(record.educationLevel)
   ) {
     return { success: false, error: "invalid_education_level" };
+  }
+
+  if (typeof record.studyMode !== "string" || !isStudyMode(record.studyMode)) {
+    return { success: false, error: "invalid_study_mode" };
   }
 
   if (
@@ -879,6 +895,7 @@ export function parsePascoCreate(
       files: filesResult.data,
       academicYear,
       educationLevel: record.educationLevel,
+      studyMode: record.studyMode,
       semesterType: record.semesterType,
       type: record.type,
       contentType: record.contentType,
@@ -947,6 +964,19 @@ export function parsePascoUpdate(
     }
 
     data.educationLevel = record.educationLevel;
+  }
+
+  if ("studyMode" in record) {
+    hasUpdate = true;
+
+    if (
+      typeof record.studyMode !== "string" ||
+      !isStudyMode(record.studyMode)
+    ) {
+      return { success: false, error: "invalid_study_mode" };
+    }
+
+    data.studyMode = record.studyMode;
   }
 
   if ("semesterType" in record) {
@@ -1065,6 +1095,7 @@ export function serializePasco(
     academicYear: pasco.academicYear,
     description: pasco.description,
     educationLevel: pasco.educationLevel,
+    studyMode: pasco.studyMode,
     semesterType: pasco.semesterType,
     type: pasco.type,
     contentType: pasco.contentType,
@@ -1318,6 +1349,7 @@ export async function listPascos(params: PascoListQuery): Promise<
       ? { courseId: { in: params.courseIds } }
       : {}),
     ...(params.educationLevel ? { educationLevel: params.educationLevel } : {}),
+    ...(params.studyMode ? { studyMode: params.studyMode } : {}),
     ...(params.academicYear ? { academicYear: params.academicYear } : {}),
     ...(params.semesterType ? { semesterType: params.semesterType } : {}),
     ...(params.type ? { type: params.type } : {}),
@@ -1492,6 +1524,7 @@ export async function createPasco(
         academicYear: input.academicYear,
         description: input.description ?? null,
         educationLevel: input.educationLevel,
+        studyMode: input.studyMode,
         semesterType: input.semesterType,
         type: input.type,
         contentType: input.contentType,
@@ -1571,6 +1604,7 @@ export async function updatePasco(
     input.academicYear !== undefined ||
     input.description !== undefined ||
     input.educationLevel !== undefined ||
+    input.studyMode !== undefined ||
     input.semesterType !== undefined ||
     input.type !== undefined ||
     input.contentType !== undefined ||
@@ -1590,6 +1624,9 @@ export async function updatePasco(
         }),
         ...(input.educationLevel !== undefined && {
           educationLevel: input.educationLevel,
+        }),
+        ...(input.studyMode !== undefined && {
+          studyMode: input.studyMode,
         }),
         ...(input.semesterType !== undefined && {
           semesterType: input.semesterType,

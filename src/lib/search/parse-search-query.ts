@@ -9,6 +9,7 @@ import {
   EDUCATION_LEVEL_PATTERNS,
   PASCO_TYPE_SYNONYMS,
   SEMESTER_TYPE_SYNONYMS,
+  STUDY_MODE_SYNONYMS,
 } from "./search-synonyms";
 
 const BARE_LEVEL_PATTERN = /^(100|200|300|400)$/;
@@ -154,6 +155,34 @@ function parseSemesterType(
   return working;
 }
 
+function parseStudyMode(
+  text: string,
+  filters: Partial<PascoListFilters>,
+  tokens: ParsedToken[],
+): string {
+  let working = text;
+
+  for (const entry of STUDY_MODE_SYNONYMS) {
+    const match = entry.pattern.exec(working);
+
+    if (!match) {
+      continue;
+    }
+
+    filters.studyMode = entry.value;
+    tokens.push({
+      key: "studyMode",
+      value: entry.value,
+      label: entry.label,
+    });
+
+    working = removeSpan(working, match.index, match[0].length);
+    break;
+  }
+
+  return working;
+}
+
 function consumeBareLeftoverFilters(
   text: string,
   filters: Partial<PascoListFilters>,
@@ -280,6 +309,7 @@ export function parseSearchQuery(raw: string): ParseSearchQueryResult {
   let working = trimmed;
   working = parseAcademicYearToken(working, filters, tokens);
   working = parseEducationLevel(working, filters, tokens);
+  working = parseStudyMode(working, filters, tokens);
   working = parsePascoType(working, filters, tokens);
   working = parseSemesterType(working, filters, tokens);
 

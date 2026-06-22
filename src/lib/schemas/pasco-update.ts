@@ -11,6 +11,7 @@ import {
   pascoFileCreateSchema,
   SEMESTER_TYPES,
   SOLUTION_COMPLETENESS_VALUES,
+  STUDY_MODES,
 } from "@/lib/schemas/pasco-create";
 import type {
   Pasco,
@@ -48,6 +49,7 @@ export const pascoEditFormSchema = z
       "Select an academic year",
     ),
     educationLevel: z.enum(EDUCATION_LEVELS),
+    studyMode: z.enum(STUDY_MODES),
     semesterType: z.enum(SEMESTER_TYPES),
     type: z.enum(PASCO_TYPES),
     contentType: z.enum(PASCO_CONTENT_TYPES),
@@ -134,6 +136,7 @@ export function pascoToEditFormValues(
     courseId: pasco.courseId,
     academicYear: pasco.academicYear,
     educationLevel: pasco.educationLevel,
+    studyMode: pasco.studyMode,
     semesterType: pasco.semesterType,
     type: pasco.type,
     contentType: pasco.contentType,
@@ -172,6 +175,7 @@ export function toPascoUpdateInput(
     courseId: values.courseId,
     academicYear: values.academicYear,
     educationLevel: values.educationLevel,
+    studyMode: values.studyMode,
     semesterType: values.semesterType,
     type: values.type,
     contentType: values.contentType,
