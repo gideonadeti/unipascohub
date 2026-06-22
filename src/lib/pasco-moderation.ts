@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getModerationDislikeThreshold } from "@/lib/moderation-settings";
 import {
   createModeratorQueueNotifications,
+  createUploaderApprovedNotification,
   createUploaderRejectedNotification,
 } from "@/lib/notifications";
 import type { Prisma } from "../../generated/prisma/client";
@@ -104,6 +105,7 @@ export type ModeratePascoSuccess = {
   moderationStatus: PascoModerationStatusValue;
   notifyModerators: boolean;
   notifyUploader: { uploaderId: string; reason: string } | null;
+  notifyUploaderApproved: { uploaderId: string } | null;
   pascoTitle: string;
 };
 
@@ -171,6 +173,9 @@ export async function moderatePasco(
           moderationStatus: updated.moderationStatus,
           notifyModerators: false,
           notifyUploader: null,
+          notifyUploaderApproved: pasco.uploaderId
+            ? { uploaderId: pasco.uploaderId }
+            : null,
           pascoTitle,
         },
       };
@@ -207,6 +212,7 @@ export async function moderatePasco(
           moderationStatus: updated.moderationStatus,
           notifyModerators: false,
           notifyUploader,
+          notifyUploaderApproved: null,
           pascoTitle,
         },
       };
@@ -234,6 +240,7 @@ export async function moderatePasco(
           moderationStatus: updated.moderationStatus,
           notifyModerators: false,
           notifyUploader: null,
+          notifyUploaderApproved: null,
           pascoTitle,
         },
       };
@@ -269,6 +276,7 @@ export async function moderatePasco(
           moderationStatus: updated.moderationStatus,
           notifyModerators,
           notifyUploader: null,
+          notifyUploaderApproved: null,
           pascoTitle,
         },
       };
@@ -289,6 +297,14 @@ export async function runModerationSideEffects(
       result.pascoId,
       result.pascoTitle,
       result.notifyUploader.reason,
+    );
+  }
+
+  if (result.notifyUploaderApproved) {
+    await createUploaderApprovedNotification(
+      result.notifyUploaderApproved.uploaderId,
+      result.pascoId,
+      result.pascoTitle,
     );
   }
 }

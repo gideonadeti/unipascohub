@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/db";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { UserRole } from "../../generated/prisma/enums";
 
 export const NotificationType = {
   PASCO_PENDING_REVIEW: "PASCO_PENDING_REVIEW",
   PASCO_REJECTED: "PASCO_REJECTED",
+  PASCO_APPROVED: "PASCO_APPROVED",
   CATALOG_SUBMISSION_PENDING: "CATALOG_SUBMISSION_PENDING",
   CATALOG_SUBMISSION_APPROVED: "CATALOG_SUBMISSION_APPROVED",
   CATALOG_SUBMISSION_REJECTED: "CATALOG_SUBMISSION_REJECTED",
@@ -41,6 +43,16 @@ export async function createModeratorQueueNotifications(
       link: `${link}?highlight=${pascoId}`,
     })),
   });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(
+        mod.id,
+        "Pasco pending review",
+        `"${title}" needs moderation review.`,
+      ),
+    ),
+  );
 }
 
 export async function createUploaderRejectedNotification(
@@ -58,6 +70,34 @@ export async function createUploaderRejectedNotification(
       link: `/pascos/${pascoId}`,
     },
   });
+
+  await sendPushNotification(
+    uploaderId,
+    "Pasco rejected",
+    `"${title}" was rejected: ${reason}`,
+  );
+}
+
+export async function createUploaderApprovedNotification(
+  uploaderId: string,
+  pascoId: string,
+  title: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: uploaderId,
+      type: NotificationType.PASCO_APPROVED,
+      title: "Pasco approved",
+      body: `"${title}" has been approved and is now live.`,
+      link: `/pascos/${pascoId}`,
+    },
+  });
+
+  await sendPushNotification(
+    uploaderId,
+    "Pasco approved",
+    `"${title}" has been approved and is now live.`,
+  );
 }
 
 export async function createCatalogSubmissionPendingNotifications(
@@ -85,6 +125,16 @@ export async function createCatalogSubmissionPendingNotifications(
       link: "/moderation/catalog",
     })),
   });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(
+        mod.id,
+        "Catalog submission pending",
+        `"${summary}" needs catalog review.`,
+      ),
+    ),
+  );
 }
 
 export async function createCatalogSubmissionApprovedNotification(
@@ -101,6 +151,12 @@ export async function createCatalogSubmissionApprovedNotification(
       link,
     },
   });
+
+  await sendPushNotification(
+    submitterId,
+    "Catalog request approved",
+    `"${summary}" was added to the catalog. You can continue uploading.`,
+  );
 }
 
 export async function createCatalogSubmissionRejectedNotification(
@@ -117,6 +173,12 @@ export async function createCatalogSubmissionRejectedNotification(
       link: "/contributions?tab=catalog",
     },
   });
+
+  await sendPushNotification(
+    submitterId,
+    "Catalog request rejected",
+    `"${summary}" was rejected: ${reason}`,
+  );
 }
 
 export async function createCatalogCourseAutoApprovedNotification(
@@ -144,6 +206,16 @@ export async function createCatalogCourseAutoApprovedNotification(
       link: "/moderation/catalog",
     })),
   });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(
+        mod.id,
+        "Course added to catalog",
+        `"${summary}" was added by a contributor. Review if needed.`,
+      ),
+    ),
+  );
 }
 
 export type NotificationListQuery = {

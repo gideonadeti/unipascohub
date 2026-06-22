@@ -1,44 +1,35 @@
 "use server";
 
-import webpush from "web-push";
+import { auth } from "@clerk/nextjs/server";
+import type webpush from "web-push";
 
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY ?? "";
-
-webpush.setVapidDetails(
-  "mailto:gideonadeti0@gmail.com",
-  vapidPublicKey,
-  vapidPrivateKey,
-);
-
-let subscription: webpush.PushSubscription | null = null;
+import {
+  removeAllUserSubscriptions,
+  removeSubscription,
+  saveSubscription,
+} from "@/lib/push-notifications";
 
 export async function subscribeUser(sub: webpush.PushSubscription) {
-  subscription = sub;
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  await saveSubscription(userId, sub);
   return { success: true };
 }
 
-export async function unsubscribeUser() {
-  subscription = null;
+export async function unsubscribeUser(endpoint?: string) {
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  if (endpoint) {
+    await removeSubscription(userId, endpoint);
+  } else {
+    await removeAllUserSubscriptions(userId);
+  }
+
   return { success: true };
-}
-
-export async function sendNotification(message: string) {
-  if (!subscription) {
-    return { success: false, error: "No subscription available" };
-  }
-
-  try {
-    await webpush.sendNotification(
-      subscription,
-      JSON.stringify({
-        title: "Uni Pasco Hub",
-        body: message,
-        icon: "/android-chrome-192x192.png",
-      }),
-    );
-    return { success: true };
-  } catch {
-    return { success: false, error: "Failed to send notification" };
-  }
 }
