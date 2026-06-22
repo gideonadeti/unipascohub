@@ -209,6 +209,10 @@ export function PascoDetailPage() {
                 <dd>{formatEnumLabel(pasco.educationLevel)}</dd>
               </div>
               <div>
+                <dt className="text-muted-foreground">Study mode</dt>
+                <dd>{formatEnumLabel(pasco.studyMode)}</dd>
+              </div>
+              <div>
                 <dt className="text-muted-foreground">Semester</dt>
                 <dd>{formatEnumLabel(pasco.semesterType)}</dd>
               </div>

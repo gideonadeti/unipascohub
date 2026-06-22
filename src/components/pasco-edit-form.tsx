@@ -55,6 +55,7 @@ import {
   PASCO_TYPES,
   SEMESTER_TYPES,
   SOLUTION_COMPLETENESS_VALUES,
+  STUDY_MODES,
 } from "@/lib/schemas/pasco-create";
 import {
   getNewUploadFiles,
@@ -472,6 +473,41 @@ function PascoEditFormFields({
                             {EDUCATION_LEVELS.map((level) => (
                               <SelectItem key={level} value={level}>
                                 {formatEnumLabel(level)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="studyMode"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="pasco-edit-study-mode">
+                          Study mode
+                        </FieldLabel>
+                        <Select
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger
+                            id="pasco-edit-study-mode"
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STUDY_MODES.map((mode) => (
+                              <SelectItem key={mode} value={mode}>
+                                {formatEnumLabel(mode)}
                               </SelectItem>
                             ))}
                           </SelectContent>

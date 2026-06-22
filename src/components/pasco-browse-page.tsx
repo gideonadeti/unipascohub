@@ -47,6 +47,7 @@ import type {
 
 const PARSE_ERROR_MESSAGES: Record<PascoListParseError, string> = {
   invalid_education_level: "Invalid education level in the URL.",
+  invalid_study_mode: "Invalid study mode in the URL.",
   invalid_semester_type: "Invalid semester type in the URL.",
   invalid_type: "Invalid pasco type in the URL.",
   invalid_content_type: "Invalid content type in the URL.",
@@ -138,6 +139,20 @@ function buildActiveChips(
     chips.push({
       key: "educationLevel",
       label: formatEnumLabel(searchMeta.parsedFilters.educationLevel),
+      removable: false,
+    });
+  }
+
+  if (filters.studyMode) {
+    chips.push({
+      key: "studyMode",
+      label: formatEnumLabel(filters.studyMode),
+      removable: true,
+    });
+  } else if (searchMeta?.parsedFilters.studyMode) {
+    chips.push({
+      key: "studyMode",
+      label: formatEnumLabel(searchMeta.parsedFilters.studyMode),
       removable: false,
     });
   }
@@ -377,6 +392,8 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
                       educationLevel:
                         filters.educationLevel ??
                         searchMeta.parsedFilters.educationLevel,
+                      studyMode:
+                        filters.studyMode ?? searchMeta.parsedFilters.studyMode,
                       semesterType:
                         filters.semesterType ??
                         searchMeta.parsedFilters.semesterType,
