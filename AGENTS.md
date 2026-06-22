@@ -42,9 +42,10 @@ pnpm dev
 - **Cloudinary** for file storage (unsigned upload preset); all view/download URLs are time-limited and signed. PDFs must use `resourceType: IMAGE`. Spreadsheets are not allowed.
 - **Redis** for distributed rate limiting (optional — falls back to in-memory store)
 - **TanStack Query** on the client (`src/hooks/api/` → `src/lib/api/` wrappers)
-- **shadcn/ui** (Radix Maia style) with **Tailwind CSS 4**
+- **shadcn/ui** (Radix Maia style) with **Tailwind CSS 4** (`postcss.config.mjs` uses `@tailwindcss/postcss` — no `tailwind.config.*`)
 - **Biome** for lint + format; **Husky + lint-staged** pre-commit
 - **React Compiler** enabled in `next.config.ts`
+- **Server Actions** in `src/app/actions.ts` (push notification subscriptions)
 
 ## Code conventions
 
@@ -60,9 +61,16 @@ pnpm dev
 ## Database
 
 - Migrations: `pnpm prisma migrate dev --name <desc>` then `pnpm prisma generate`
-- Seeds: `prisma/seed-*.ts` files, each registered as `pnpm seed-<name>` in `package.json` (no `prisma db seed`)
+- Seeds: `prisma/seed-*.ts` files run via `tsx`, each registered as `pnpm seed-<name>` (no `prisma db seed`)
 - Never edit applied migration files
-- DB password stored in `secrets/postgres_password.txt` (Docker secret)
+- DB password stored in `secrets/postgres_password.txt` (Docker secret; path also in `.gitignore` as `/secrets`)
+
+## Gotchas
+
+- `pnpm-workspace.yaml` only configures allowed builds (`prisma`, `esbuild`, `sharp`) — **not a monorepo**; do not use `workspace:` protocol
+- All `.env*` files are gitignored — `.env.example` is excluded by git; provide its content manually on fresh clones
+- `generated/prisma/` is gitignored — run `pnpm prisma generate` after every migration or `git pull`
+- Pre-commit: `.husky/pre-commit` runs `lint-staged` only (Biome check on staged files via `.lintstagedrc.json`)
 
 ## Docker
 
