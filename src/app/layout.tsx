@@ -6,6 +6,7 @@ import { EnsureUserSynced } from "@/components/ensure-user-synced";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { PwaInstallPill } from "@/components/pwa-install-pill";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -74,6 +75,7 @@ export default function RootLayout({
               <SiteFooter />
               <MobileBottomNav />
               <ScrollToTop />
+              <PwaInstallPill />
               <Toaster richColors closeButton position="top-center" />
             </QueryProvider>
           </ThemeProvider>

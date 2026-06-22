@@ -1,8 +1,10 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
+import { subscribeUser, unsubscribeUser } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,10 +23,60 @@ import {
 import { formatDateTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from(rawData, (c) => c.charCodeAt(0));
+}
+
 export function NotificationBell() {
   const notificationsQuery = useNotificationsList({ limit: 20 });
   const markReadMutation = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
+  const [isPushSupported, setIsPushSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
+    setIsPushSupported(true);
+
+    navigator.serviceWorker
+      .register("/sw.js", { scope: "/", updateViaCache: "none" })
+      .then(() => navigator.serviceWorker.ready)
+      .then((registration) => registration.pushManager.getSubscription())
+      .then((sub) => setIsSubscribed(sub !== null))
+      .catch(() => {});
+  }, []);
+
+  const handleSubscribe = useCallback(async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const sub = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "",
+        ) as BufferSource,
+      });
+      setIsSubscribed(true);
+      await subscribeUser(JSON.parse(JSON.stringify(sub)));
+    } catch {
+      // subscription failed
+    }
+  }, []);
+
+  const handleUnsubscribe = useCallback(async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const sub = await registration.pushManager.getSubscription();
+      if (sub) await sub.unsubscribe();
+      setIsSubscribed(false);
+      await unsubscribeUser();
+    } catch {
+      // unsubscribe failed
+    }
+  }, []);
 
   const unreadCount = notificationsQuery.data?.unreadCount ?? 0;
   const notifications = notificationsQuery.data?.notifications ?? [];
@@ -105,6 +157,46 @@ export function NotificationBell() {
             </DropdownMenuItem>
           ))
         )}
+        {isPushSupported ? (
+          <>
+            <DropdownMenuSeparator />
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2 text-sm">
+                {isSubscribed ? (
+                  <BellOff className="size-4 text-muted-foreground" />
+                ) : (
+                  <Bell className="size-4 text-muted-foreground" />
+                )}
+                <span className="text-muted-foreground">
+                  {isSubscribed
+                    ? "Push notifications on"
+                    : "Push notifications"}
+                </span>
+              </div>
+              {isSubscribed ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-2 py-1 text-xs"
+                  onClick={handleUnsubscribe}
+                >
+                  Turn off
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  className="h-auto px-3 py-1 text-xs"
+                  onClick={handleSubscribe}
+                >
+                  Enable
+                </Button>
+              )}
+            </div>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
