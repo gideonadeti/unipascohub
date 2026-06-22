@@ -8,20 +8,25 @@ cp .env.example .env                  # fill in Clerk + Cloudinary values
 echo "postgres" > secrets/postgres_password.txt
 docker compose -f compose.yaml -f compose.local.yaml up -d
 pnpm prisma migrate dev && pnpm prisma generate
-pnpm seed-institutions
+pnpm seed-institutions && pnpm seed-atu-programs && pnpm seed-atu-eee-courses
 pnpm dev
 ```
 
 ## Commands
 
-| Command                           | What it does                                              |
-| --------------------------------- | --------------------------------------------------------- |
-| `pnpm dev`                        | Next.js dev server                                        |
-| `pnpm lint`                       | Biome check (lint+format)                                 |
-| `pnpm format`                     | Biome write                                               |
-| `pnpm typecheck`                  | `tsc --noEmit`                                            |
-| `pnpm build`                      | `next build` (CI runs this last)                          |
-| `pnpm cleanup:cloudinary-orphans` | Scan/delete orphan Cloudinary assets (dry-run by default) |
+| Command                           | What it does                                                    |
+| --------------------------------- | --------------------------------------------------------------- |
+| `pnpm dev`                        | Next.js dev server                                              |
+| `pnpm lint`                       | Biome check (lint+format)                                       |
+| `pnpm format`                     | Biome write                                                     |
+| `pnpm typecheck`                  | `tsc --noEmit`                                                  |
+| `pnpm build`                      | `next build` (CI runs this last)                                |
+| `pnpm seed-institutions`          | Upsert Ghanaian institutions from Wikipedia                     |
+| `pnpm seed-atu-programs`          | Upsert ATU programs                                             |
+| `pnpm seed-atu-eee-courses`       | Upsert ATU EEE Level 100 Semester 1 courses                     |
+| `pnpm db:deploy`                  | Production: `prisma migrate deploy` then all three seeds        |
+| `pnpm vercel-build`               | Vercel build: `prisma generate` → `pnpm db:deploy` → next build |
+| `pnpm cleanup:cloudinary-orphans` | Scan/delete orphan Cloudinary assets (dry-run by default)       |
 
 **Pre-commit order**: lint-staged runs `biome check --write` on staged files.
 
