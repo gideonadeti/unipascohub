@@ -24,23 +24,32 @@ import {
 import type {
   MyPascoListFilters,
   PascoCreateInput,
+  PascoDetailResponse,
   PascoListFilters,
+  PascoListResponse,
   PascoUpdateInput,
 } from "@/types/api/pascos";
 
-export function usePascosList(filters: PascoListFilters = {}) {
-  return useQuery(pascosListOptions(filters));
+export function usePasco(id: string, initialData?: PascoDetailResponse) {
+  return useQuery({
+    ...pascoDetailOptions(id),
+    enabled: id.length > 0,
+    initialData,
+  });
+}
+
+export function usePascosList(
+  filters: PascoListFilters = {},
+  initialData?: PascoListResponse,
+) {
+  return useQuery({
+    ...pascosListOptions(filters),
+    initialData,
+  });
 }
 
 export function useMyPascosList(filters: MyPascoListFilters = {}) {
   return useQuery(myPascosListOptions(filters));
-}
-
-export function usePasco(id: string) {
-  return useQuery({
-    ...pascoDetailOptions(id),
-    enabled: id.length > 0,
-  });
 }
 
 export function useCreatePasco() {

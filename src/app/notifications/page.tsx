@@ -7,6 +7,7 @@ import { NotificationsPage } from "@/components/notifications-page";
 export const metadata: Metadata = {
   title: "Notifications",
   description: "View your notification history.",
+  robots: { index: false },
 };
 
 export default function NotificationsRoute() {

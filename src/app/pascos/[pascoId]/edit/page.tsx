@@ -12,6 +12,7 @@ import { siteDescription } from "@/config/site";
 export const metadata: Metadata = {
   title: "Edit pasco",
   description: siteDescription,
+  robots: { index: false },
 };
 
 type EditPascoPageProps = {

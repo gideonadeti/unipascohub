@@ -8,6 +8,8 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           "/api/",
+          "/pascos/new",
+          "/pascos/",
           "/notifications/",
           "/moderation/",
           "/contributions/",

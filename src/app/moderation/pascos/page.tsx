@@ -8,6 +8,7 @@ import { ModerationPascosPage } from "@/components/moderation-pascos-page";
 export const metadata: Metadata = {
   title: "Moderation",
   description: "Review pascos flagged for moderation.",
+  robots: { index: false },
 };
 
 export default function ModerationPascosRoute() {

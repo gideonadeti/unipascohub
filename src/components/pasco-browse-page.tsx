@@ -40,6 +40,7 @@ import {
 import { buildBrowseHref } from "@/lib/search/build-browse-href";
 import type {
   PascoListFilters,
+  PascoListResponse,
   PascoListSearchMeta,
   PascoListSortBy,
   PascoListSortOrder,
@@ -206,6 +207,7 @@ function buildActiveChips(
 
 type PascoBrowsePageContentProps = {
   filters: PascoListFilters;
+  initialData?: PascoListResponse;
 };
 
 function PascoBrowseSearchBar({
@@ -291,10 +293,13 @@ function PascoBrowseSearchBar({
   );
 }
 
-function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
+function PascoBrowsePageContent({
+  filters,
+  initialData,
+}: PascoBrowsePageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const pascosQuery = usePascosList(filters);
+  const pascosQuery = usePascosList(filters, initialData);
   const searchMeta = pascosQuery.data?.search;
   const courseLabel = resolveCourseChipLabel({
     filters,
@@ -541,7 +546,11 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
   );
 }
 
-export function PascoBrowsePage() {
+type PascoBrowsePageProps = {
+  initialData?: PascoListResponse;
+};
+
+export function PascoBrowsePage({ initialData }: PascoBrowsePageProps) {
   const searchParams = useSearchParams();
   const parsed = searchParamsToFilters(searchParams, {
     defaultLimit: BROWSE_DEFAULT_LIMIT,
@@ -561,5 +570,10 @@ export function PascoBrowsePage() {
     );
   }
 
-  return <PascoBrowsePageContent filters={parsed.filters} />;
+  return (
+    <PascoBrowsePageContent
+      filters={parsed.filters}
+      initialData={initialData}
+    />
+  );
 }

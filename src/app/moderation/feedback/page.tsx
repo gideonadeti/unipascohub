@@ -8,6 +8,7 @@ import { ModerationGate } from "@/components/moderation-gate";
 export const metadata: Metadata = {
   title: "Feedback",
   description: "Review feedback submitted by users.",
+  robots: { index: false },
 };
 
 export default function ModerationFeedbackRoute() {

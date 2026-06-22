@@ -33,6 +33,18 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   metadataBase: new URL("https://unipascohub.com"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName,
+    title: siteName,
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteName,
+    description: siteDescription,
+  },
   icons: {
     icon: "/favicon.ico",
     apple: [

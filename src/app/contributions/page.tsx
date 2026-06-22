@@ -10,6 +10,7 @@ import { PascoListSkeleton } from "@/components/pasco-list-skeleton";
 export const metadata: Metadata = {
   title: "My contributions",
   description: "View and manage your pasco uploads and catalog requests.",
+  robots: { index: false },
 };
 
 export default function ContributionsRoute() {

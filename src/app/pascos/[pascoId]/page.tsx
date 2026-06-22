@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { cache } from "react";
 
 import { PageContainer } from "@/components/layout/page-container";
@@ -7,8 +8,10 @@ import { formatEnumLabel } from "@/lib/catalog-labels";
 import { getCourseById } from "@/lib/courses";
 import { prisma } from "@/lib/db";
 import { getPascoDisplayTitle } from "@/lib/pasco-display";
-import { getPascoById } from "@/lib/pascos";
+import { getPascoById, serializePasco } from "@/lib/pascos";
 import { breadcrumbJsonLd, pascoJsonLd } from "@/lib/seo/json-ld";
+
+import type { PascoDetailResponse } from "@/types/api/pascos";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -78,36 +81,37 @@ export default async function PascoDetailRoute({
   const { pascoId } = await params;
   const data = await getPascoData(pascoId);
 
-  const breadcrumb = data
-    ? breadcrumbJsonLd([
-        { name: "Home", href: "/" },
-        { name: "Browse pascos", href: "/pascos" },
-        {
-          name: getPascoDisplayTitle(data.pasco, data.course),
-          href: `/pascos/${pascoId}`,
-        },
-      ])
-    : null;
+  if (!data) {
+    notFound();
+  }
 
-  const pascoSchema = data ? pascoJsonLd(data.pasco, data.course) : null;
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", href: "/" },
+    { name: "Browse pascos", href: "/pascos" },
+    {
+      name: getPascoDisplayTitle(data.pasco, data.course),
+      href: `/pascos/${pascoId}`,
+    },
+  ]);
+
+  const pascoSchema = pascoJsonLd(data.pasco, data.course);
+
+  const serialized = serializePasco(data.pasco);
+  const initialData: PascoDetailResponse = { pasco: serialized };
 
   return (
     <PageContainer width="narrow" className="space-y-8">
-      {breadcrumb ? (
-        <script
-          type="application/ld+json"
-          /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
-        />
-      ) : null}
-      {pascoSchema ? (
-        <script
-          type="application/ld+json"
-          /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(pascoSchema) }}
-        />
-      ) : null}
-      <PascoDetailPage />
+      <script
+        type="application/ld+json"
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pascoSchema) }}
+      />
+      <PascoDetailPage initialData={initialData} />
     </PageContainer>
   );
 }

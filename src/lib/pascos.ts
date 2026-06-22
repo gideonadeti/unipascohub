@@ -16,7 +16,11 @@ import {
   shouldIncludeModerationSource,
   shouldIncludeModerationStatus,
 } from "@/lib/pasco-moderation-utils";
-import type { PascoFileDuplicate } from "@/types/api/pascos";
+import type {
+  PascoFileDuplicate,
+  PascoListResponse,
+  PascoListSearchMeta,
+} from "@/types/api/pascos";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import {
@@ -1143,6 +1147,37 @@ export function serializePasco(
 
 export type SerializedPasco = ReturnType<typeof serializePasco>;
 
+export function serializePascoListItem(pasco: PascoWithFilesAndCourse) {
+  return serializePasco(pasco);
+}
+
+export function serializePascoListResponse(
+  result: {
+    pascos: PascoWithFilesAndCourse[];
+    total: number;
+    page: number;
+    limit: number;
+  },
+  extras?: {
+    appliedCourse?: PascoCourseSummaryFields;
+    search?: PascoListSearchMeta;
+  },
+): PascoListResponse {
+  const totalPages = Math.ceil(result.total / result.limit);
+
+  return {
+    pascos: result.pascos.map(serializePascoListItem),
+    pagination: {
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      totalPages,
+    },
+    ...(extras?.appliedCourse ? { appliedCourse: extras.appliedCourse } : {}),
+    ...(extras?.search ? { search: extras.search } : {}),
+  };
+}
+
 function isDuplicatePublicIdError(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -1382,6 +1417,27 @@ export async function listPascos(params: PascoListQuery): Promise<
     page: params.page,
     limit: params.limit,
   };
+}
+
+export async function getPascoListResponse(
+  query: PascoListQuery,
+): Promise<PascoListResponse | null> {
+  const result = await listPascos(query);
+
+  if (!result.success) {
+    return null;
+  }
+
+  const appliedCourse = query.courseId
+    ? await prisma.course.findUnique({
+        where: { id: query.courseId },
+        select: { code: true, title: true },
+      })
+    : null;
+
+  return serializePascoListResponse(result, {
+    ...(appliedCourse ? { appliedCourse } : {}),
+  });
 }
 
 export type MyPascoListQuery = {
