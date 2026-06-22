@@ -115,6 +115,8 @@ export async function PATCH(
           { error: "Invalid educationLevel" },
           { status: 400 },
         );
+      case "invalid_study_mode":
+        return Response.json({ error: "Invalid studyMode" }, { status: 400 });
       case "invalid_semester_type":
         return Response.json(
           { error: "Invalid semesterType" },

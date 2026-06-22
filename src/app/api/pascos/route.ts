@@ -52,6 +52,8 @@ export async function GET(req: Request) {
           { error: "Invalid educationLevel" },
           { status: 400 },
         );
+      case "invalid_study_mode":
+        return Response.json({ error: "Invalid studyMode" }, { status: 400 });
       case "invalid_semester_type":
         return Response.json(
           { error: "Invalid semesterType" },
@@ -109,6 +111,7 @@ export async function GET(req: Request) {
       courseId: resolvedFilters.courseId,
       courseIds: resolvedFilters.courseIds,
       educationLevel: resolvedFilters.educationLevel,
+      studyMode: resolvedFilters.studyMode,
       academicYear: resolvedFilters.academicYear,
       semesterType: resolvedFilters.semesterType,
       type: resolvedFilters.type,
@@ -312,6 +315,8 @@ export async function POST(req: Request) {
           { error: "Invalid educationLevel" },
           { status: 400 },
         );
+      case "invalid_study_mode":
+        return Response.json({ error: "Invalid studyMode" }, { status: 400 });
       case "invalid_semester_type":
         return Response.json(
           { error: "Invalid semesterType" },
