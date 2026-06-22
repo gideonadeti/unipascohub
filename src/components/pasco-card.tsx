@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCount } from "@/lib/numbers";
 import {
   formatPascoRelativeDate,
   getPascoCardBadges,
@@ -31,10 +32,6 @@ type MetaItem = {
   value: string;
   emphasized?: boolean;
 };
-
-function formatCount(count: number): string {
-  return count.toLocaleString();
-}
 
 function formatFileCount(count: number): string {
   return count === 1 ? "1 file" : `${count} files`;

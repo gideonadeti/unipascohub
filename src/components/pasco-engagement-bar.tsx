@@ -5,6 +5,7 @@ import { Download, Eye, ThumbsDown, ThumbsUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useSetPascoReaction } from "@/hooks/api/use-pasco-engagement";
+import { formatCount, formatCountLong } from "@/lib/numbers";
 import { getNextReaction } from "@/lib/pasco-reaction";
 import { cn } from "@/lib/utils";
 import type { Pasco, PascoReactionType } from "@/types/api/pascos";
@@ -20,10 +21,6 @@ type PascoEngagementBarProps = {
     | "viewerReaction"
   >;
 };
-
-function formatCount(count: number): string {
-  return count.toLocaleString();
-}
 
 type ReactionButtonProps = {
   label: string;
@@ -51,7 +48,7 @@ function ReactionButton({
       onClick={onClick}
       className={cn("min-h-11 sm:min-h-8", active && "border-primary/40")}
       aria-pressed={active}
-      aria-label={`${label} (${formatCount(count)})`}
+      aria-label={`${label} (${formatCountLong(count)})`}
     >
       {icon}
       <span>{formatCount(count)}</span>
@@ -75,7 +72,7 @@ function SignedOutReactionButton({
         variant="outline"
         size="sm"
         className="min-h-11 sm:min-h-8"
-        aria-label={`${label} (${formatCount(count)}) — sign in required`}
+        aria-label={`${label} (${formatCountLong(count)}) — sign in required`}
       >
         {icon}
         <span>{formatCount(count)}</span>
