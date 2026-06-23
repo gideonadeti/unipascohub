@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -90,6 +91,7 @@ export default function RootLayout({
               <ScrollToTop />
               <PwaInstallPill />
               <Toaster richColors closeButton position="top-center" />
+              <Analytics />
             </QueryProvider>
           </ThemeProvider>
         </ClerkProvider>

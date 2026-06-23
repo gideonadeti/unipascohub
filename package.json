@@ -27,6 +27,7 @@
     "@prisma/client": "^7.8.0",
     "@sentry/nextjs": "^10.59.0",
     "@tanstack/react-query": "^5.101.0",
+    "@vercel/analytics": "^2.0.1",
     "archiver": "^8.0.0",
     "axios": "^1.18.0",
     "class-variance-authority": "^0.7.1",
