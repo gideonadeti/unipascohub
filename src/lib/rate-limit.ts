@@ -236,3 +236,26 @@ export function getPascoListRateLimitOptions(): RateLimitOptions {
     windowMs: parsePositiveInt(process.env.PASCO_LIST_RATE_WINDOW_MS, 900_000),
   };
 }
+
+export function getCatalogSubmissionCreateRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(
+      process.env.CATALOG_SUBMISSION_CREATE_RATE_LIMIT,
+      10,
+    ),
+    windowMs: parsePositiveInt(
+      process.env.CATALOG_SUBMISSION_CREATE_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}
+
+export function getUpgradeToContributorRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(process.env.UPGRADE_TO_CONTRIBUTOR_RATE_LIMIT, 3),
+    windowMs: parsePositiveInt(
+      process.env.UPGRADE_TO_CONTRIBUTOR_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}

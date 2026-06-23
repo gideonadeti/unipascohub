@@ -7,6 +7,10 @@ import {
   serializeCatalogSubmission,
 } from "@/lib/catalog-submissions";
 import { logError } from "@/lib/logger";
+import {
+  checkRateLimit,
+  getCatalogSubmissionCreateRateLimitOptions,
+} from "@/lib/rate-limit";
 import { requireContributor } from "@/lib/require-contributor";
 import { CatalogSubmissionStatus } from "../../../../generated/prisma/enums";
 
@@ -96,6 +100,23 @@ export async function POST(req: Request) {
       default:
         return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+  }
+
+  const createRateLimit = await checkRateLimit(
+    `catalog-submission-create:${userId}`,
+    getCatalogSubmissionCreateRateLimitOptions(),
+  );
+
+  if (createRateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: createRateLimit.retryAfterSeconds
+          ? { "Retry-After": String(createRateLimit.retryAfterSeconds) }
+          : undefined,
+      },
+    );
   }
 
   let body: unknown;

@@ -1,5 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { logError } from "@/lib/logger";
+import {
+  checkRateLimit,
+  getUpgradeToContributorRateLimitOptions,
+} from "@/lib/rate-limit";
 import { upgradeUserToContributor } from "@/lib/user-roles";
 
 export const runtime = "nodejs";
@@ -9,6 +13,23 @@ export async function POST(_req: Request) {
 
   if (!isAuthenticated || !userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const upgradeRateLimit = await checkRateLimit(
+    `upgrade-to-contributor:${userId}`,
+    getUpgradeToContributorRateLimitOptions(),
+  );
+
+  if (upgradeRateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: upgradeRateLimit.retryAfterSeconds
+          ? { "Retry-After": String(upgradeRateLimit.retryAfterSeconds) }
+          : undefined,
+      },
+    );
   }
 
   try {
