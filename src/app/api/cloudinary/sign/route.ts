@@ -26,6 +26,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 

@@ -1,4 +1,5 @@
 import { createClient, type RedisClientType } from "redis";
+import { logError } from "@/lib/logger";
 
 type RateLimitOptions = {
   limit: number;
@@ -54,7 +55,7 @@ async function getRedisClient(): Promise<RedisClientType | null> {
     const client = createClient({ url: redisUrl });
 
     client.on("error", (error) => {
-      console.error("Redis rate limit error:", error);
+      logError("Redis rate limit error", error);
     });
 
     await client.connect();
@@ -66,7 +67,7 @@ async function getRedisClient(): Promise<RedisClientType | null> {
   try {
     return await redisConnectPromise;
   } catch (error) {
-    console.error("Failed to connect to Redis for rate limiting:", error);
+    logError("Failed to connect to Redis for rate limiting", error);
     redisConnectPromise = null;
     redisClient = null;
 

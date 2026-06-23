@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import { deleteNotification } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -28,7 +28,7 @@ export async function DELETE(
 
     return Response.json({ success: true });
   } catch (err) {
-    console.error("Delete notification failed:", err);
+    logError("Delete notification failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

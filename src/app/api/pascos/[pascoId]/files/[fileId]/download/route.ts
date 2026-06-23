@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
+import { logError } from "@/lib/logger";
 import { recordPascoDownload } from "@/lib/pasco-engagement";
 import { getPascoViewerContext } from "@/lib/pascos";
 import {
@@ -71,7 +71,7 @@ export async function POST(
       fileName: result.fileName,
     });
   } catch (err) {
-    console.error("Pasco download record failed:", err);
+    logError("Pasco download record failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

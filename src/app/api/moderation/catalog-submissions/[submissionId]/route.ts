@@ -4,6 +4,7 @@ import {
   moderateCatalogSubmission,
   runCatalogSubmissionSideEffects,
 } from "@/lib/catalog-submissions";
+import { logError } from "@/lib/logger";
 import { requireModerator } from "@/lib/require-moderator";
 import type { ModerationCatalogSubmissionAction } from "@/types/api/catalog-submissions";
 
@@ -54,6 +55,8 @@ export async function PATCH(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -130,7 +133,7 @@ export async function PATCH(
 
     return Response.json({ status: result.result.status });
   } catch (err) {
-    console.error("Moderation catalog submission update failed:", err);
+    logError("Moderation catalog submission update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 import { PascoModerationStatus } from "../../../../../generated/prisma/enums";
 
@@ -21,6 +22,8 @@ export async function GET() {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -54,7 +57,7 @@ export async function GET() {
       unresolvedFailures,
     });
   } catch (err) {
-    console.error("Admin stats fetch failed:", err);
+    logError("Admin stats fetch failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

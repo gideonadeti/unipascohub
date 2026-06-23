@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { logError } from "@/lib/logger";
 import { canDeletePasco } from "@/lib/pasco-delete-permissions";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
@@ -45,7 +46,7 @@ export async function GET(
       }),
     });
   } catch (err) {
-    console.error("Pasco fetch failed:", err);
+    logError("Pasco fetch failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -78,6 +79,8 @@ export async function PATCH(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -290,7 +293,7 @@ export async function PATCH(
       }),
     });
   } catch (err) {
-    console.error("Pasco update failed:", err);
+    logError("Pasco update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -340,7 +343,7 @@ export async function DELETE(
       }),
     });
   } catch (err) {
-    console.error("Pasco delete failed:", err);
+    logError("Pasco delete failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

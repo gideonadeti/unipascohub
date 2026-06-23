@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
 import { updateFeedbackStatus } from "@/lib/feedback";
+import { logError } from "@/lib/logger";
 import { requireModerator } from "@/lib/require-moderator";
 
 export const runtime = "nodejs";
@@ -55,7 +56,7 @@ export async function PATCH(
       return Response.json({ error: "Feedback not found" }, { status: 404 });
     }
 
-    console.error("Update feedback status failed:", err);
+    logError("Update feedback status failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

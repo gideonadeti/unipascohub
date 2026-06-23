@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
+import { logError } from "@/lib/logger";
 import {
   parsePascoReactionBody,
   setPascoReaction,
@@ -86,7 +86,7 @@ export async function PUT(
       viewerReaction: result.viewerReaction,
     });
   } catch (err) {
-    console.error("Pasco reaction update failed:", err);
+    logError("Pasco reaction update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

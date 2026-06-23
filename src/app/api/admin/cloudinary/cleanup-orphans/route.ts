@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
 import { cleanupOrphanCloudinaryAssets } from "@/lib/cloudinary-orphans";
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
@@ -20,6 +21,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -78,7 +81,7 @@ export async function POST(req: Request) {
       deleteFailures: result.deleteFailures,
     });
   } catch (err) {
-    console.error("Cloudinary orphan cleanup failed:", err);
+    logError("Cloudinary orphan cleanup failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

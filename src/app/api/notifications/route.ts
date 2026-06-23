@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { logError } from "@/lib/logger";
 import {
   deleteAllNotifications,
   deleteSelectedNotifications,
@@ -66,7 +67,7 @@ export async function GET(req: Request) {
       totalCount: result.totalCount,
     });
   } catch (err) {
-    console.error("Notification list failed:", err);
+    logError("Notification list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -98,7 +99,7 @@ export async function DELETE(req: Request) {
 
     return Response.json({ deletedCount });
   } catch (err) {
-    console.error("Delete notifications failed:", err);
+    logError("Delete notifications failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

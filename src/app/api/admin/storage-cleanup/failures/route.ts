@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 import { listStorageCleanupFailures } from "@/lib/storage-cleanup-log";
 import { serializeStorageCleanupFailure } from "@/types/api/storage-cleanup";
@@ -33,6 +33,8 @@ export async function GET(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -46,7 +48,7 @@ export async function GET(req: Request) {
       failures: failures.map(serializeStorageCleanupFailure),
     });
   } catch (err) {
-    console.error("Failed to list storage cleanup failures:", err);
+    logError("Failed to list storage cleanup failures", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

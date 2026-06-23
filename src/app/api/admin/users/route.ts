@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 import { UserRole } from "../../../../../generated/prisma/enums";
 
@@ -39,6 +40,8 @@ export async function GET(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -67,7 +70,7 @@ export async function GET(req: Request) {
 
     return Response.json({ users, total });
   } catch (err) {
-    console.error("Admin users list failed:", err);
+    logError("Admin users list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

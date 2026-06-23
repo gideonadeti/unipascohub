@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import {
   buildPascoZipFilename,
   createPascoDownloadAllZipStream,
@@ -108,7 +109,7 @@ export async function POST(
       },
     });
   } catch (err) {
-    console.error("Pasco download-all failed:", err);
+    logError("Pasco download-all failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

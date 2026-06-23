@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import { promoteUserToModerator } from "@/lib/user-roles";
 
 export const runtime = "nodejs";
@@ -50,7 +50,7 @@ export async function POST(
       },
     });
   } catch (err) {
-    console.error("Moderator promotion failed:", err);
+    logError("Moderator promotion failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

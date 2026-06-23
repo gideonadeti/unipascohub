@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import { upgradeUserToContributor } from "@/lib/user-roles";
 
 export const runtime = "nodejs";
@@ -35,7 +35,7 @@ export async function POST(_req: Request) {
       },
     });
   } catch (err) {
-    console.error("Contributor upgrade failed:", err);
+    logError("Contributor upgrade failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

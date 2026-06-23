@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
+import { logError } from "@/lib/logger";
 import {
   recordStorageCleanupFailures,
   resolveStorageCleanupFailures,
@@ -600,7 +601,7 @@ export async function createSignedCloudinaryDownloadUrl(
       ),
     };
   } catch (error) {
-    console.error("Cloudinary signed download URL failed:", {
+    logError("Cloudinary signed download URL failed", {
       publicId: input.publicId,
       error,
     });
@@ -715,10 +716,10 @@ export async function deleteCloudinaryAsset(
       return { success: true };
     }
 
-    console.error("Cloudinary delete failed:", { publicId, result });
+    logError("Cloudinary delete failed", { publicId, result });
     return { success: false, error: "cloudinary_delete_failed" };
   } catch (error) {
-    console.error("Cloudinary delete error:", { publicId, error });
+    logError("Cloudinary delete error", { publicId, error });
     return { success: false, error: "cloudinary_delete_failed" };
   }
 }

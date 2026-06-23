@@ -5,6 +5,7 @@ import {
   resubmitCatalogSubmission,
   type UpdateCatalogSubmissionFields,
 } from "@/lib/catalog-submissions";
+import { logError } from "@/lib/logger";
 import { createCatalogSubmissionPendingNotifications } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -63,7 +64,7 @@ export async function PATCH(
 
     return Response.json({ status: result.result.status });
   } catch (err) {
-    console.error("Resubmit catalog submission failed:", err);
+    logError("Resubmit catalog submission failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -106,7 +107,7 @@ export async function DELETE(
 
     return new Response(null, { status: 204 });
   } catch (err) {
-    console.error("Delete catalog submission failed:", err);
+    logError("Delete catalog submission failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
+import { logError } from "@/lib/logger";
 import {
   getPascoViewCount,
   getRequestViewerKey,
@@ -73,7 +73,7 @@ export async function POST(
       recorded: true,
     });
   } catch (err) {
-    console.error("Pasco view record failed:", err);
+    logError("Pasco view record failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

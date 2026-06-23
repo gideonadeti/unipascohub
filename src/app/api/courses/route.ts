@@ -6,6 +6,7 @@ import {
   parseCourseCreate,
   serializeCourse,
 } from "@/lib/courses";
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
       courses: result.courses.map(serializeCourse),
     });
   } catch (err) {
-    console.error("Course list failed:", err);
+    logError("Course list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -50,6 +51,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -114,7 +117,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("Course create failed:", err);
+    logError("Course create failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

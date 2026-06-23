@@ -6,6 +6,7 @@ import {
   parseCatalogSubmissionCreate,
   serializeCatalogSubmission,
 } from "@/lib/catalog-submissions";
+import { logError } from "@/lib/logger";
 import { requireContributor } from "@/lib/require-contributor";
 import { CatalogSubmissionStatus } from "../../../../generated/prisma/enums";
 
@@ -38,6 +39,8 @@ export async function GET(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -69,7 +72,7 @@ export async function GET(req: Request) {
       submissions: submissions.map(serializeCatalogSubmission),
     });
   } catch (err) {
-    console.error("Catalog submission list failed:", err);
+    logError("Catalog submission list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -90,6 +93,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -160,7 +165,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("Catalog submission create failed:", err);
+    logError("Catalog submission create failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

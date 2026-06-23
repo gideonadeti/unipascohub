@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 
 import { getClientIp } from "@/lib/client-ip";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
   type PascoListQuery,
@@ -210,7 +211,7 @@ export async function GET(req: Request) {
         : {}),
     });
   } catch (err) {
-    console.error("Pasco list failed:", err);
+    logError("Pasco list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -231,6 +232,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -414,7 +417,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("Pasco create failed:", err);
+    logError("Pasco create failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

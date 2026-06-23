@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import { markNotificationRead } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -28,7 +28,7 @@ export async function PATCH(
 
     return Response.json({ success: true });
   } catch (err) {
-    console.error("Mark notification read failed:", err);
+    logError("Mark notification read failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

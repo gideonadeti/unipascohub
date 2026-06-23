@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { getClientIp } from "@/lib/client-ip";
+import { logError } from "@/lib/logger";
 import { MAX_SEARCH_QUERY_LENGTH } from "@/lib/pasco-list-query";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { parseSearchQuery } from "@/lib/search/parse-search-query";
@@ -90,7 +91,7 @@ export async function GET(req: Request) {
       tokens: parsed.tokens,
     });
   } catch (error) {
-    console.error("Search suggest failed:", error);
+    logError("Search suggest failed", error);
 
     return NextResponse.json(
       { error: "Internal server error" },

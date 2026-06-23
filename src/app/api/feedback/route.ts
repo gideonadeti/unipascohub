@@ -1,7 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { getClientIp } from "@/lib/client-ip";
 import { createFeedback, listFeedback } from "@/lib/feedback";
+import { logError } from "@/lib/logger";
 import { createFeedbackSubmittedNotification } from "@/lib/notifications";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { requireModerator } from "@/lib/require-moderator";
 
 export const runtime = "nodejs";
@@ -34,13 +37,49 @@ export async function GET(req: Request) {
 
     return Response.json(result);
   } catch (err) {
-    console.error("List feedback failed:", err);
+    logError("List feedback failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
+  const origin = req.headers.get("origin");
+  const referer = req.headers.get("referer");
+
+  if (origin || referer) {
+    const allowedOrigins = [
+      "http://localhost:3000",
+      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+      process.env.NEXT_PUBLIC_APP_URL,
+    ].filter(Boolean) as string[];
+
+    const requestOrigin = (origin ?? referer ?? "").replace(/\/+$/, "");
+    const isAllowed = allowedOrigins.some(
+      (allowed) =>
+        requestOrigin === allowed || requestOrigin.startsWith(allowed + "/"),
+    );
+
+    if (!isAllowed) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  const rateLimit = await checkRateLimit(`feedback:${getClientIp(req)}`, {
+    limit: 10,
+    windowMs: 60_000,
+  });
+
+  if (rateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
+    );
+  }
+
   let body: Record<string, unknown>;
 
   try {
@@ -74,7 +113,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.error("Create feedback failed:", err);
+    logError("Create feedback failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

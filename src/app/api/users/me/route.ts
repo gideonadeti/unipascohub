@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { logError } from "@/lib/logger";
 import {
   getUserProfile,
   parseProfileUpdate,
@@ -25,7 +26,7 @@ export async function GET() {
 
     return Response.json({ user: serializeProfileUser(result.user) });
   } catch (err) {
-    console.error("Profile fetch failed:", err);
+    logError("Profile fetch failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -69,7 +70,7 @@ export async function PATCH(req: Request) {
 
     return Response.json({ user: serializeProfileUser(result.user) });
   } catch (err) {
-    console.error("Profile update failed:", err);
+    logError("Profile update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

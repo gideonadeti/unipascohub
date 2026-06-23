@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import type {
   Prisma,
   SearchQuerySource,
@@ -34,6 +35,6 @@ export function recordSearchQuery(input: RecordSearchQueryInput): void {
       },
     })
     .catch((error) => {
-      console.error("Search analytics insert failed:", error);
+      logError("Search analytics insert failed", error);
     });
 }
