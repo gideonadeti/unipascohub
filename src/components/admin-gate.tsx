@@ -1,6 +1,7 @@
 "use client";
 
 import { SignInButton, useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
+import { cn } from "@/lib/utils";
 
 type AdminGateProps = {
   children: React.ReactNode;
@@ -24,7 +26,7 @@ export function AdminGate({ children }: AdminGateProps) {
 
   if (isSignedIn !== true) {
     return (
-      <Card className="w-full">
+      <Card className={cn("w-full max-w-md", "mx-auto mt-16")}>
         <CardHeader>
           <CardTitle>Sign in required</CardTitle>
           <CardDescription>
@@ -62,13 +64,18 @@ export function AdminGate({ children }: AdminGateProps) {
 
   if (!user || user.role !== "ADMIN") {
     return (
-      <Card className="w-full">
+      <Card className={cn("w-full max-w-md", "mx-auto mt-16")}>
         <CardHeader>
           <CardTitle>Not allowed</CardTitle>
           <CardDescription>
             Only administrators can access this page.
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <Button variant="outline" asChild>
+            <Link href="/">Go home</Link>
+          </Button>
+        </CardContent>
       </Card>
     );
   }

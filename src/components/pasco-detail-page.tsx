@@ -68,12 +68,11 @@ export function PascoDetailPage({
   }
 
   const pasco = pascoQuery.data.pasco;
-  const course = courseQuery.data?.course;
+  const displayCourse = initialData?.course ?? null;
+  const course = courseQuery.data?.course ?? displayCourse;
   const courseLabel = course
     ? `${course.code} — ${course.title}`
-    : courseQuery.isPending
-      ? "Loading course details…"
-      : pasco.courseId;
+    : pasco.courseId;
   const user = currentUser.data?.user;
   const canEdit = user && canUserModifyPasco(user, pasco);
   const canDelete = user && canUserDeletePasco(user, pasco);
@@ -83,10 +82,10 @@ export function PascoDetailPage({
   const isUploaderPending = moderationStatus === "PENDING_REVIEW" && isUploader;
   const isUploaderRejected = moderationStatus === "REJECTED" && isUploader;
   const uploadAnotherHref =
-    isUploader && course
+    isUploader && courseQuery.data?.course
       ? buildPascoCreateHref({
-          institutionId: course.institutionId,
-          programId: course.programIds[0],
+          institutionId: courseQuery.data.course.institutionId,
+          programId: courseQuery.data.course.programIds[0],
         })
       : null;
 

@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -6,32 +7,18 @@ import { PageContainer } from "@/components/layout/page-container";
 import { PascoDetailPage } from "@/components/pasco-detail-page";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import { getCourseById } from "@/lib/courses";
-import { prisma } from "@/lib/db";
 import { getPascoDisplayTitle } from "@/lib/pasco-display";
+import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import { getPascoById, serializePasco } from "@/lib/pascos";
 import { breadcrumbJsonLd, pascoJsonLd } from "@/lib/seo/json-ld";
 
 import type { PascoDetailResponse } from "@/types/api/pascos";
-
-export const revalidate = 3600;
-export const dynamicParams = true;
 
 const getCachedPascoById = cache(getPascoById);
 
 type PascoDetailRouteProps = {
   params: Promise<{ pascoId: string }>;
 };
-
-export async function generateStaticParams() {
-  const pascos = await prisma.pasco.findMany({
-    where: { moderationStatus: "PUBLISHED" },
-    orderBy: { viewCount: "desc" },
-    take: 100,
-    select: { id: true },
-  });
-
-  return pascos.map((pasco) => ({ pascoId: pasco.id }));
-}
 
 export async function generateMetadata({
   params,
@@ -85,6 +72,12 @@ export default async function PascoDetailRoute({
     notFound();
   }
 
+  const { userId } = await auth();
+  const viewerReaction = userId
+    ? ((await getViewerReactionsForPascos(userId, [pascoId])).get(pascoId) ??
+      null)
+    : undefined;
+
   const breadcrumb = breadcrumbJsonLd([
     { name: "Home", href: "/" },
     { name: "Browse pascos", href: "/pascos" },
@@ -96,9 +89,16 @@ export default async function PascoDetailRoute({
 
   const pascoSchema = pascoJsonLd(data.pasco, data.course);
 
-  const serialized = serializePasco(data.pasco);
+  const serialized = serializePasco(data.pasco, { viewerReaction });
   const displayTitle = getPascoDisplayTitle(data.pasco, data.course);
-  const initialData: PascoDetailResponse = { pasco: serialized, displayTitle };
+  const course = data.course
+    ? { code: data.course.code, title: data.course.title }
+    : null;
+  const initialData: PascoDetailResponse = {
+    pasco: serialized,
+    displayTitle,
+    course,
+  };
 
   return (
     <PageContainer width="narrow" className="space-y-8">
