@@ -38,14 +38,15 @@ const nextConfig: NextConfig = {
   },
 };
 
-const config = process.env.SENTRY_DSN
-  ? withSentryConfig(nextConfig, {
-      org: process.env.SENTRY_ORG ?? "",
-      project: process.env.SENTRY_PROJECT ?? "",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      tunnelRoute: "/sentry-tunnel",
-      silent: !process.env.CI,
-    })
-  : nextConfig;
+const config =
+  process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN
+    ? withSentryConfig(nextConfig, {
+        org: process.env.SENTRY_ORG ?? "",
+        project: process.env.SENTRY_PROJECT ?? "",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        tunnelRoute: "/sentry-tunnel",
+        silent: !process.env.CI,
+      })
+    : nextConfig;
 
 export default config;
