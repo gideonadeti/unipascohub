@@ -62,4 +62,19 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) =>
       [...queryKeys.feedback.all, "list", filters] as const,
   },
+  admin: {
+    all: ["admin"] as const,
+    stats: () => [...queryKeys.admin.all, "stats"] as const,
+    storage: {
+      runs: (limit: number) =>
+        [...queryKeys.admin.all, "storage", "runs", limit] as const,
+      failures: (resolved: boolean) =>
+        [...queryKeys.admin.all, "storage", "failures", resolved] as const,
+    },
+    users: {
+      all: ["admin", "users"] as const,
+      list: (filters: Record<string, unknown>) =>
+        [...queryKeys.admin.users.all, "list", filters] as const,
+    },
+  },
 } as const;
