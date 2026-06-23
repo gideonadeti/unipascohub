@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 const STATIC_ROUTES = [
   { url: "/", priority: 1.0, changeFrequency: "daily" as const },
   { url: "/pascos", priority: 0.9, changeFrequency: "hourly" as const },
