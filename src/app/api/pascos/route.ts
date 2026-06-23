@@ -17,7 +17,11 @@ import {
   parsePascoCreate,
   serializePasco,
 } from "@/lib/pascos";
-import { checkRateLimit, getPascoListRateLimitOptions } from "@/lib/rate-limit";
+import {
+  checkRateLimit,
+  getPascoCreateRateLimitOptions,
+  getPascoListRateLimitOptions,
+} from "@/lib/rate-limit";
 import { requireContributor } from "@/lib/require-contributor";
 import { resolvePascoListFromSearch } from "@/lib/search/merge-search-filters";
 import { recordSearchQuery } from "@/lib/search/record-search-query";
@@ -235,6 +239,23 @@ export async function POST(req: Request) {
       default:
         return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+  }
+
+  const createRateLimit = await checkRateLimit(
+    `pasco-create:${userId}`,
+    getPascoCreateRateLimitOptions(),
+  );
+
+  if (createRateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: createRateLimit.retryAfterSeconds
+          ? { "Retry-After": String(createRateLimit.retryAfterSeconds) }
+          : undefined,
+      },
+    );
   }
 
   let body: unknown;

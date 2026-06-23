@@ -23,9 +23,12 @@ export async function GET(req: Request) {
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 
-    return Response.json({
-      programs: result.programs.map(serializeProgram),
-    });
+    return Response.json(
+      {
+        programs: result.programs.map(serializeProgram),
+      },
+      { headers: { "Cache-Control": "public, max-age=3600" } },
+    );
   } catch (err) {
     logError("Program list failed", err);
 

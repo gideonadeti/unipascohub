@@ -26,9 +26,12 @@ export async function GET(req: Request) {
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 
-    return Response.json({
-      courses: result.courses.map(serializeCourse),
-    });
+    return Response.json(
+      {
+        courses: result.courses.map(serializeCourse),
+      },
+      { headers: { "Cache-Control": "public, max-age=3600" } },
+    );
   } catch (err) {
     logError("Course list failed", err);
 

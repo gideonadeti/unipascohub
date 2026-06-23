@@ -19,9 +19,12 @@ export async function GET() {
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 
-    return Response.json({
-      institutions: result.institutions.map(serializeInstitution),
-    });
+    return Response.json(
+      {
+        institutions: result.institutions.map(serializeInstitution),
+      },
+      { headers: { "Cache-Control": "public, max-age=3600" } },
+    );
   } catch (err) {
     logError("Institution list failed", err);
 

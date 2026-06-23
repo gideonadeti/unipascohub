@@ -220,6 +220,16 @@ export function getPascoViewGlobalRateLimitOptions(): RateLimitOptions {
   };
 }
 
+export function getPascoCreateRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(process.env.PASCO_CREATE_RATE_LIMIT, 10),
+    windowMs: parsePositiveInt(
+      process.env.PASCO_CREATE_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}
+
 export function getPascoListRateLimitOptions(): RateLimitOptions {
   return {
     limit: parsePositiveInt(process.env.PASCO_LIST_RATE_LIMIT, 120),
