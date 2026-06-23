@@ -25,29 +25,27 @@ void runSeed(async (prisma) => {
 
   let upserted = 0;
 
-  await prisma.$transaction(
-    programs.map(({ name, type }) =>
-      prisma.program
-        .upsert({
-          where: {
-            institutionId_name_type: {
-              institutionId: institution.id,
-              name,
-              type,
-            },
-          },
-          update: {},
-          create: {
+  await prisma.$transaction(async (tx) => {
+    for (const { name, type } of programs) {
+      await tx.program.upsert({
+        where: {
+          institutionId_name_type: {
             institutionId: institution.id,
             name,
             type,
           },
-        })
-        .then(() => {
-          upserted++;
-        }),
-    ),
-  );
+        },
+        update: {},
+        create: {
+          institutionId: institution.id,
+          name,
+          type,
+        },
+      });
+
+      upserted++;
+    }
+  });
 
   const count = await prisma.program.count({
     where: { institutionId: institution.id },
