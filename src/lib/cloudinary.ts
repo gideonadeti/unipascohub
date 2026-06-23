@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
+import * as Sentry from "@sentry/nextjs";
 import { v2 as cloudinary } from "cloudinary";
 import { logError } from "@/lib/logger";
+import { parseNonEmptyString } from "@/lib/parse";
 import {
   recordStorageCleanupFailures,
   resolveStorageCleanupFailures,
@@ -74,6 +76,28 @@ type CloudinaryResourceResponse = {
   secure_url?: string;
   type?: string;
 };
+
+async function fetchCloudinaryResource(
+  publicId: string,
+  apiResourceType: "image" | "raw",
+): Promise<
+  | { success: true; asset: CloudinaryResourceResponse }
+  | { success: false; error: "asset_not_found" }
+> {
+  try {
+    const asset = (await cloudinary.api.resource(publicId, {
+      resource_type: apiResourceType,
+    })) as CloudinaryResourceResponse;
+
+    return { success: true, asset };
+  } catch (error) {
+    if (isCloudinaryNotFoundError(error)) {
+      return { success: false, error: "asset_not_found" };
+    }
+
+    throw error;
+  }
+}
 
 function resolveAssetDownloadFormat(
   asset: CloudinaryResourceResponse,
@@ -255,7 +279,7 @@ export function toCloudinaryApiResourceType(
   return resourceType === CloudinaryResourceType.RAW ? "raw" : "image";
 }
 
-function fromCloudinaryApiResourceType(
+export function fromCloudinaryApiResourceType(
   resourceType: string,
 ): CloudinaryResourceTypeType | null {
   if (resourceType === "image") {
@@ -269,7 +293,7 @@ function fromCloudinaryApiResourceType(
   return null;
 }
 
-function isCloudinaryNotFoundError(error: unknown): boolean {
+export function isCloudinaryNotFoundError(error: unknown): boolean {
   if (error === null || typeof error !== "object") {
     return false;
   }
@@ -293,6 +317,12 @@ export function signUploadParams(
 ):
   | { success: true; data: SignedUploadParams }
   | { success: false; error: SignUploadError } {
+  Sentry.addBreadcrumb({
+    category: "cloudinary",
+    message: "Signing upload params",
+    data: { courseId: input.courseId, fileName: input.fileName },
+  });
+
   const uploadPreset = getUploadPreset();
   const apiSecret = cloudinary.config().api_secret;
   const cloudName = cloudinary.config().cloud_name;
@@ -373,20 +403,6 @@ function parsePositiveInt(value: unknown): number | null {
   }
 
   return Math.trunc(value);
-}
-
-function parseNonEmptyString(value: unknown, maxLength: number): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-
-  if (trimmed.length === 0 || trimmed.length > maxLength) {
-    return null;
-  }
-
-  return trimmed;
 }
 
 function getMaxPascoFileSizeBytes(): number {
@@ -478,19 +494,16 @@ export async function verifyCloudinaryFile(
 ): Promise<{ success: true } | { success: false; error: VerifyFileError }> {
   const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
 
-  let asset: CloudinaryResourceResponse;
+  const fetched = await fetchCloudinaryResource(
+    input.publicId,
+    apiResourceType,
+  );
 
-  try {
-    asset = (await cloudinary.api.resource(input.publicId, {
-      resource_type: apiResourceType,
-    })) as CloudinaryResourceResponse;
-  } catch (error) {
-    if (isCloudinaryNotFoundError(error)) {
-      return { success: false, error: "asset_not_found" };
-    }
-
-    throw error;
+  if (!fetched.success) {
+    return fetched;
   }
+
+  const asset = fetched.asset;
 
   if (asset.asset_folder !== input.expectedAssetFolder) {
     return { success: false, error: "asset_folder_mismatch" };
@@ -569,19 +582,16 @@ export async function createSignedCloudinaryDownloadUrl(
 > {
   const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
 
-  let asset: CloudinaryResourceResponse;
+  const fetched = await fetchCloudinaryResource(
+    input.publicId,
+    apiResourceType,
+  );
 
-  try {
-    asset = (await cloudinary.api.resource(input.publicId, {
-      resource_type: apiResourceType,
-    })) as CloudinaryResourceResponse;
-  } catch (error) {
-    if (isCloudinaryNotFoundError(error)) {
-      return { success: false, error: "asset_not_found" };
-    }
-
-    throw error;
+  if (!fetched.success) {
+    return fetched;
   }
+
+  const asset = fetched.asset;
 
   const apiSecret = cloudinary.config().api_secret;
   const cloudName = cloudinary.config().cloud_name;
@@ -625,21 +635,24 @@ export async function hashCloudinaryFile(
   | { success: true; contentHash: string }
   | { success: false; error: HashCloudinaryFileError }
 > {
+  Sentry.addBreadcrumb({
+    category: "cloudinary",
+    message: "Hashing Cloudinary file",
+    data: { publicId: input.publicId, fileName: input.fileName },
+  });
+
   const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
 
-  let asset: CloudinaryResourceResponse;
+  const fetched = await fetchCloudinaryResource(
+    input.publicId,
+    apiResourceType,
+  );
 
-  try {
-    asset = (await cloudinary.api.resource(input.publicId, {
-      resource_type: apiResourceType,
-    })) as CloudinaryResourceResponse;
-  } catch (error) {
-    if (isCloudinaryNotFoundError(error)) {
-      return { success: false, error: "asset_not_found" };
-    }
-
-    throw error;
+  if (!fetched.success) {
+    return fetched;
   }
+
+  const asset = fetched.asset;
 
   if (asset.asset_folder !== input.expectedAssetFolder) {
     return { success: false, error: "asset_folder_mismatch" };

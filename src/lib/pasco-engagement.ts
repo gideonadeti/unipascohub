@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { createSignedCloudinaryDownloadUrl } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
 import { getModerationDislikeThreshold } from "@/lib/moderation-settings";
@@ -85,6 +86,12 @@ export async function recordPascoView(
   | { success: true; viewCount: number }
   | { success: false; error: RecordPascoViewError }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Recording pasco view",
+    data: { pascoId, viewerId: viewer?.userId ?? null },
+  });
+
   const pasco = await prisma.pasco.findUnique({
     where: { id: pascoId },
     select: { id: true, uploaderId: true, moderationStatus: true },
@@ -184,6 +191,12 @@ export async function setPascoReaction(
     }
   | { success: false; error: SetPascoReactionError }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Setting pasco reaction",
+    data: { pascoId, userId, reactionType },
+  });
+
   const [pasco, user] = await Promise.all([
     prisma.pasco.findUnique({
       where: { id: pascoId },
@@ -396,6 +409,12 @@ export async function recordPascoDownload(
     }
   | { success: false; error: RecordPascoDownloadError }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Recording pasco download",
+    data: { pascoId, fileId, userId },
+  });
+
   const [pasco, user, file] = await Promise.all([
     prisma.pasco.findUnique({
       where: { id: pascoId },

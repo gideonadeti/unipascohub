@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 import { getClientIp } from "@/lib/client-ip";
 import { createFeedback, listFeedback } from "@/lib/feedback";
@@ -47,6 +48,12 @@ export async function POST(req: Request) {
   const origin = req.headers.get("origin");
   const referer = req.headers.get("referer");
 
+  Sentry.addBreadcrumb({
+    category: "feedback",
+    message: "Creating feedback",
+    data: { origin, referer },
+  });
+
   if (origin || referer) {
     const allowedOrigins = [
       "http://localhost:3000",
@@ -57,7 +64,7 @@ export async function POST(req: Request) {
     const requestOrigin = (origin ?? referer ?? "").replace(/\/+$/, "");
     const isAllowed = allowedOrigins.some(
       (allowed) =>
-        requestOrigin === allowed || requestOrigin.startsWith(allowed + "/"),
+        requestOrigin === allowed || requestOrigin.startsWith(`${allowed}/`),
     );
 
     if (!isAllowed) {

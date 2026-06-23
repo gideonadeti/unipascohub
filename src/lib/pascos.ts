@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { academicYearValidationMessage } from "@/lib/academic-year";
 import {
   deleteCloudinaryAssets,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/cloudinary";
 import { isValidContentHash, normalizeContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
+import { parseNonEmptyString } from "@/lib/parse";
 import { findDuplicatePascoFiles } from "@/lib/pasco-file-hash";
 import type { PascoListQuery } from "@/lib/pasco-list-query";
 import {
@@ -329,20 +331,6 @@ function parseCourseId(value: unknown): string | null {
   }
 
   return courseId;
-}
-
-function parseNonEmptyString(value: unknown, maxLength: number): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-
-  if (trimmed.length === 0 || trimmed.length > maxLength) {
-    return null;
-  }
-
-  return trimmed;
 }
 
 function parseFileSize(value: unknown): number | null {
@@ -1533,6 +1521,12 @@ export async function createPasco(
       duplicates?: PascoFileDuplicate[];
     }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Creating pasco",
+    data: { courseId: input.courseId, fileCount: input.files.length },
+  });
+
   const course = await prisma.course.findUnique({
     where: { id: input.courseId },
   });
@@ -1627,6 +1621,12 @@ export async function updatePasco(
       duplicates?: PascoFileDuplicate[];
     }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Updating pasco",
+    data: { pascoId },
+  });
+
   const existing = await prisma.pasco.findUnique({
     where: { id: pascoId },
     include: pascoInclude,
@@ -1756,6 +1756,12 @@ export async function deletePasco(
   | { success: true; storageCleanupFailures?: string[] }
   | { success: false; error: "not_found" }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Deleting pasco",
+    data: { pascoId },
+  });
+
   const existing = await prisma.pasco.findUnique({
     where: { id: pascoId },
     include: { files: true },

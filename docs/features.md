@@ -82,6 +82,8 @@ See [file-uploads.md](file-uploads.md) for the end-to-end upload pipeline.
 | Auto-unflag on dislike drop (DISLIKES)     | Done   | [`src/lib/pasco-engagement.ts`](../src/lib/pasco-engagement.ts)                                                                                                          |
 | In-app notifications (queue + reject)      | Done   | [`src/lib/notifications.ts`](../src/lib/notifications.ts), [`src/components/notification-bell.tsx`](../src/components/notification-bell.tsx)                             |
 | Admin-configurable dislike threshold       | Done   | [`src/lib/moderation-settings.ts`](../src/lib/moderation-settings.ts), [`src/components/admin-moderation-settings.tsx`](../src/components/admin-moderation-settings.tsx) |
+| Feedback submission (signed-in users)      | Done   | [`src/app/api/feedback/route.ts`](../src/app/api/feedback/route.ts), [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                                       |
+| Feedback management (moderator+)           | Done   | [`src/app/api/feedback/`](../src/app/api/feedback/), [`src/app/moderation/feedback/page.tsx`](../src/app/moderation/feedback/page.tsx)                                 |
 
 ## Permissions
 

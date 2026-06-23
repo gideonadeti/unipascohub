@@ -20,6 +20,7 @@ let redisClient: RedisClientType | null = null;
 let redisConnectPromise: Promise<RedisClientType | null> | null = null;
 let warnedMemoryFallback = false;
 
+const MEMORY_STORE_MAX = 10_000;
 const memoryStore = new Map<string, MemoryEntry>();
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
@@ -86,20 +87,39 @@ async function checkRedisRateLimit(
   }
 
   const windowSeconds = Math.max(1, Math.ceil(options.windowMs / 1000));
-  const count = await client.incr(key);
 
-  if (count === 1) {
-    await client.expire(key, windowSeconds);
-  }
+  const created = await client.set(key, 1, { NX: true, EX: windowSeconds });
 
-  if (count > options.limit) {
-    const ttl = await client.ttl(key);
-    const retryAfterSeconds = ttl > 0 ? ttl : windowSeconds;
+  if (created === null) {
+    const count = await client.incr(key);
 
-    return { rateLimited: true, retryAfterSeconds };
+    if (count > options.limit) {
+      const ttl = await client.ttl(key);
+      const retryAfterSeconds = ttl > 0 ? ttl : windowSeconds;
+
+      return { rateLimited: true, retryAfterSeconds };
+    }
   }
 
   return { rateLimited: false };
+}
+
+function evictMemoryStore(): void {
+  if (memoryStore.size < MEMORY_STORE_MAX) return;
+
+  let oldestKey: string | undefined;
+  let oldestResetAt = Infinity;
+
+  for (const [key, entry] of memoryStore) {
+    if (entry.resetAt < oldestResetAt) {
+      oldestResetAt = entry.resetAt;
+      oldestKey = key;
+    }
+  }
+
+  if (oldestKey) {
+    memoryStore.delete(oldestKey);
+  }
 }
 
 function checkMemoryRateLimit(
@@ -117,6 +137,7 @@ function checkMemoryRateLimit(
   const existing = memoryStore.get(key);
 
   if (existing === undefined || now >= existing.resetAt) {
+    evictMemoryStore();
     memoryStore.set(key, { count: 1, resetAt: now + options.windowMs });
 
     return { rateLimited: false };

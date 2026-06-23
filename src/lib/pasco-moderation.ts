@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db";
 import { getModerationDislikeThreshold } from "@/lib/moderation-settings";
 import {
@@ -130,6 +131,12 @@ export async function moderatePasco(
   | { success: true; result: ModeratePascoSuccess }
   | { success: false; error: ModeratePascoError }
 > {
+  Sentry.addBreadcrumb({
+    category: "moderation",
+    message: "Moderating pasco",
+    data: { pascoId: input.pascoId, action: input.action },
+  });
+
   const pasco = await prisma.pasco.findUnique({
     where: { id: input.pascoId },
     select: {

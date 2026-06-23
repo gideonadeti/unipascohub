@@ -16,7 +16,7 @@ Authoritative UI/UX conventions for Uni Pasco Hub. All new frontend work must fo
 | Theming       | `next-themes` + CSS variables in [globals.css](../src/app/globals.css) | Default: **system**; user can pick light or dark                                              |
 | Data          | TanStack Query hooks in `src/hooks/api/`                               | Never raw `fetch` in components                                                               |
 
-Install new shadcn components via `pnpm dlx shadcn@latest add <name>`.
+Install new shadcn components via `pnpm dlx shadcn add <name>`.
 
 ---
 

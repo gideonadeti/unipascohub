@@ -45,26 +45,28 @@ void runSeed(async (prisma) => {
     );
   }
 
-  for (const course of LEVEL_100_SEMESTER_1_COURSES) {
-    await prisma.course.upsert({
-      where: {
-        institutionId_code: {
+  await prisma.$transaction(
+    LEVEL_100_SEMESTER_1_COURSES.map((course) =>
+      prisma.course.upsert({
+        where: {
+          institutionId_code: {
+            institutionId: institution.id,
+            code: course.code,
+          },
+        },
+        update: {
+          title: course.title,
+          programs: { connect: { id: program.id } },
+        },
+        create: {
           institutionId: institution.id,
           code: course.code,
+          title: course.title,
+          programs: { connect: { id: program.id } },
         },
-      },
-      update: {
-        title: course.title,
-        programs: { connect: { id: program.id } },
-      },
-      create: {
-        institutionId: institution.id,
-        code: course.code,
-        title: course.title,
-        programs: { connect: { id: program.id } },
-      },
-    });
-  }
+      }),
+    ),
+  );
 
   console.log(
     `Seeded ${LEVEL_100_SEMESTER_1_COURSES.length} Level 100 Semester 1 courses for ${program.name} at ${ATU_INSTITUTION_NAME}.`,
