@@ -2,14 +2,16 @@ import webpush from "web-push";
 
 import { prisma } from "@/lib/db";
 
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY ?? "";
-
-webpush.setVapidDetails(
-  "mailto:gideonadeti0@gmail.com",
-  vapidPublicKey,
-  vapidPrivateKey,
-);
+function ensureVapidDetails(): void {
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!publicKey || !privateKey) return;
+  webpush.setVapidDetails(
+    "mailto:gideonadeti0@gmail.com",
+    publicKey,
+    privateKey,
+  );
+}
 
 export async function saveSubscription(
   userId: string,
@@ -57,6 +59,8 @@ export async function sendPushNotification(
     body,
     icon: "/android-chrome-192x192.png",
   });
+
+  ensureVapidDetails();
 
   const results = await Promise.allSettled(
     subs.map((sub) =>
