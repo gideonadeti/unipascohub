@@ -4,7 +4,8 @@
 
 ```bash
 pnpm install
-cp .env.example .env                  # fill in Clerk + Cloudinary values
+cp .env.example .env                  # production config
+cp .env.example .env.local           # local dev overrides (localhost DB, test keys, etc.)
 echo "postgres" > secrets/postgres_password.txt
 docker compose -f compose.yaml -f compose.local.yaml up -d
 pnpm prisma migrate dev && pnpm prisma generate
