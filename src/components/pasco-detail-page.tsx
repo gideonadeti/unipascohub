@@ -163,7 +163,7 @@ export function PascoDetailPage({
       ) : null}
 
       <PageHeader
-        title={getPascoDisplayTitle(pasco, course)}
+        title={initialData?.displayTitle ?? getPascoDisplayTitle(pasco, course)}
         description={getPascoDisplayDescription(pasco, course)}
         actions={
           <>

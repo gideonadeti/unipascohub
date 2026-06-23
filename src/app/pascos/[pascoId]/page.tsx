@@ -97,7 +97,8 @@ export default async function PascoDetailRoute({
   const pascoSchema = pascoJsonLd(data.pasco, data.course);
 
   const serialized = serializePasco(data.pasco);
-  const initialData: PascoDetailResponse = { pasco: serialized };
+  const displayTitle = getPascoDisplayTitle(data.pasco, data.course);
+  const initialData: PascoDetailResponse = { pasco: serialized, displayTitle };
 
   return (
     <PageContainer width="narrow" className="space-y-8">

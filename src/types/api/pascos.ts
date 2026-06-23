@@ -148,6 +148,7 @@ export type MyPascoListResponse = {
 
 export type PascoDetailResponse = {
   pasco: Pasco;
+  displayTitle: string;
 };
 
 export type PascoFileCreateInput = {
