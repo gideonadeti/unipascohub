@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 import { logError } from "@/lib/logger";
 import {
   checkRateLimit,
@@ -14,6 +15,12 @@ export async function POST(_req: Request) {
   if (!isAuthenticated || !userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  Sentry.addBreadcrumb({
+    category: "user",
+    message: "Upgrading user to contributor",
+    data: { userId },
+  });
 
   const upgradeRateLimit = await checkRateLimit(
     `upgrade-to-contributor:${userId}`,

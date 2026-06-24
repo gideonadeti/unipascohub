@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 import {
   createCatalogSubmission,
@@ -101,6 +102,12 @@ export async function POST(req: Request) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
+
+  Sentry.addBreadcrumb({
+    category: "catalog-submission",
+    message: "Creating catalog submission",
+    data: { userId, contributorRole: contributorResult.user.role },
+  });
 
   const createRateLimit = await checkRateLimit(
     `catalog-submission-create:${userId}`,
