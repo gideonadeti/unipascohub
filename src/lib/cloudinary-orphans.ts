@@ -1,6 +1,10 @@
 import { v2 as cloudinary } from "cloudinary";
 
-import { deleteCloudinaryAsset } from "@/lib/cloudinary";
+import {
+  deleteCloudinaryAsset,
+  fromCloudinaryApiResourceType,
+  isCloudinaryNotFoundError,
+} from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
 import {
   recordOrphanCleanupRun,
@@ -8,7 +12,6 @@ import {
   resolveStorageCleanupFailures,
 } from "@/lib/storage-cleanup-log";
 import {
-  CloudinaryResourceType,
   type CloudinaryResourceType as CloudinaryResourceTypeType,
   StorageCleanupSource,
 } from "../../generated/prisma/enums";
@@ -23,29 +26,6 @@ type ResourcesByAssetFolderResponse = {
   next_cursor?: string | null;
 };
 
-function mapCloudinaryResourceType(
-  apiResourceType: string,
-): CloudinaryResourceTypeType | null {
-  if (apiResourceType === "image") {
-    return CloudinaryResourceType.IMAGE;
-  }
-
-  if (apiResourceType === "raw") {
-    return CloudinaryResourceType.RAW;
-  }
-
-  return null;
-}
-
-function isCloudinaryFolderNotFoundError(error: unknown): boolean {
-  if (error === null || typeof error !== "object") {
-    return false;
-  }
-
-  const record = error as { error?: { http_code?: number } };
-  return record.error?.http_code === 404;
-}
-
 async function listAssetsInFolder(assetFolder: string): Promise<OrphanAsset[]> {
   const assets: OrphanAsset[] = [];
   let nextCursor: string | undefined;
@@ -59,7 +39,7 @@ async function listAssetsInFolder(assetFolder: string): Promise<OrphanAsset[]> {
         ...(nextCursor !== undefined && { next_cursor: nextCursor }),
       })) as ResourcesByAssetFolderResponse;
     } catch (error) {
-      if (isCloudinaryFolderNotFoundError(error)) {
+      if (isCloudinaryNotFoundError(error)) {
         return assets;
       }
 
@@ -67,7 +47,9 @@ async function listAssetsInFolder(assetFolder: string): Promise<OrphanAsset[]> {
     }
 
     for (const resource of response.resources ?? []) {
-      const resourceType = mapCloudinaryResourceType(resource.resource_type);
+      const resourceType = fromCloudinaryApiResourceType(
+        resource.resource_type,
+      );
 
       if (resourceType !== null) {
         assets.push({

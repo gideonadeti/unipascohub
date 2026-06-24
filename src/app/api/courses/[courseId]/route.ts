@@ -8,6 +8,7 @@ import {
   serializeCourseDetail,
   updateCourse,
 } from "@/lib/courses";
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
@@ -29,7 +30,7 @@ export async function GET(
       course: serializeCourseDetail(result.course),
     });
   } catch (err) {
-    console.error("Course fetch failed:", err);
+    logError("Course fetch failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -53,6 +54,8 @@ export async function PATCH(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -113,7 +116,7 @@ export async function PATCH(
         );
     }
   } catch (err) {
-    console.error("Course update failed:", err);
+    logError("Course update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -137,6 +140,8 @@ export async function DELETE(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -159,7 +164,7 @@ export async function DELETE(
         );
     }
   } catch (err) {
-    console.error("Course delete failed:", err);
+    logError("Course delete failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import { listMyPascos, serializePasco } from "@/lib/pascos";
 import { requireContributor } from "@/lib/require-contributor";
 import { PascoModerationStatus } from "../../../../../../generated/prisma/enums";
@@ -55,6 +55,8 @@ export async function GET(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -108,7 +110,7 @@ export async function GET(req: Request) {
       },
     });
   } catch (err) {
-    console.error("My pasco list failed:", err);
+    logError("My pasco list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

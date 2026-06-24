@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 
 import { getClientIp } from "@/lib/client-ip";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import {
   type PascoListQuery,
@@ -16,7 +17,11 @@ import {
   parsePascoCreate,
   serializePasco,
 } from "@/lib/pascos";
-import { checkRateLimit, getPascoListRateLimitOptions } from "@/lib/rate-limit";
+import {
+  checkRateLimit,
+  getPascoCreateRateLimitOptions,
+  getPascoListRateLimitOptions,
+} from "@/lib/rate-limit";
 import { requireContributor } from "@/lib/require-contributor";
 import { resolvePascoListFromSearch } from "@/lib/search/merge-search-filters";
 import { recordSearchQuery } from "@/lib/search/record-search-query";
@@ -52,6 +57,8 @@ export async function GET(req: Request) {
           { error: "Invalid educationLevel" },
           { status: 400 },
         );
+      case "invalid_study_mode":
+        return Response.json({ error: "Invalid studyMode" }, { status: 400 });
       case "invalid_semester_type":
         return Response.json(
           { error: "Invalid semesterType" },
@@ -109,6 +116,7 @@ export async function GET(req: Request) {
       courseId: resolvedFilters.courseId,
       courseIds: resolvedFilters.courseIds,
       educationLevel: resolvedFilters.educationLevel,
+      studyMode: resolvedFilters.studyMode,
       academicYear: resolvedFilters.academicYear,
       semesterType: resolvedFilters.semesterType,
       type: resolvedFilters.type,
@@ -207,7 +215,7 @@ export async function GET(req: Request) {
         : {}),
     });
   } catch (err) {
-    console.error("Pasco list failed:", err);
+    logError("Pasco list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -228,7 +236,26 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+  }
+
+  const createRateLimit = await checkRateLimit(
+    `pasco-create:${userId}`,
+    getPascoCreateRateLimitOptions(),
+  );
+
+  if (createRateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: createRateLimit.retryAfterSeconds
+          ? { "Retry-After": String(createRateLimit.retryAfterSeconds) }
+          : undefined,
+      },
+    );
   }
 
   let body: unknown;
@@ -312,6 +339,8 @@ export async function POST(req: Request) {
           { error: "Invalid educationLevel" },
           { status: 400 },
         );
+      case "invalid_study_mode":
+        return Response.json({ error: "Invalid studyMode" }, { status: 400 });
       case "invalid_semester_type":
         return Response.json(
           { error: "Invalid semesterType" },
@@ -409,7 +438,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("Pasco create failed:", err);
+    logError("Pasco create failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

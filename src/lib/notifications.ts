@@ -1,13 +1,16 @@
 import { prisma } from "@/lib/db";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { UserRole } from "../../generated/prisma/enums";
 
 export const NotificationType = {
   PASCO_PENDING_REVIEW: "PASCO_PENDING_REVIEW",
   PASCO_REJECTED: "PASCO_REJECTED",
+  PASCO_APPROVED: "PASCO_APPROVED",
   CATALOG_SUBMISSION_PENDING: "CATALOG_SUBMISSION_PENDING",
   CATALOG_SUBMISSION_APPROVED: "CATALOG_SUBMISSION_APPROVED",
   CATALOG_SUBMISSION_REJECTED: "CATALOG_SUBMISSION_REJECTED",
   CATALOG_COURSE_AUTO_APPROVED: "CATALOG_COURSE_AUTO_APPROVED",
+  NEW_FEEDBACK: "NEW_FEEDBACK",
 } as const;
 
 type NotificationTypeValue =
@@ -41,6 +44,16 @@ export async function createModeratorQueueNotifications(
       link: `${link}?highlight=${pascoId}`,
     })),
   });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(
+        mod.id,
+        "Pasco pending review",
+        `"${title}" needs moderation review.`,
+      ),
+    ),
+  );
 }
 
 export async function createUploaderRejectedNotification(
@@ -58,6 +71,75 @@ export async function createUploaderRejectedNotification(
       link: `/pascos/${pascoId}`,
     },
   });
+
+  await sendPushNotification(
+    uploaderId,
+    "Pasco rejected",
+    `"${title}" was rejected: ${reason}`,
+  );
+}
+
+export async function createUploaderApprovedNotification(
+  uploaderId: string,
+  pascoId: string,
+  title: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: uploaderId,
+      type: NotificationType.PASCO_APPROVED,
+      title: "Pasco approved",
+      body: `"${title}" has been approved and is now live.`,
+      link: `/pascos/${pascoId}`,
+    },
+  });
+
+  await sendPushNotification(
+    uploaderId,
+    "Pasco approved",
+    `"${title}" has been approved and is now live.`,
+  );
+}
+
+export async function createFeedbackSubmittedNotification(
+  category: string,
+  subject: string,
+): Promise<void> {
+  const moderators = await prisma.user.findMany({
+    where: {
+      role: {
+        in: [UserRole.MODERATOR, UserRole.ADMIN],
+      },
+    },
+    select: { id: true },
+  });
+
+  if (moderators.length === 0) {
+    return;
+  }
+
+  const label = category
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  const body = subject.length > 80 ? `${subject.slice(0, 77)}...` : subject;
+
+  await prisma.notification.createMany({
+    data: moderators.map((moderator) => ({
+      userId: moderator.id,
+      type: NotificationType.NEW_FEEDBACK,
+      title: `New feedback — ${label}`,
+      body,
+      link: "/moderation/feedback",
+    })),
+  });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(mod.id, `New feedback — ${label}`, body),
+    ),
+  );
 }
 
 export async function createCatalogSubmissionPendingNotifications(
@@ -85,6 +167,16 @@ export async function createCatalogSubmissionPendingNotifications(
       link: "/moderation/catalog",
     })),
   });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(
+        mod.id,
+        "Catalog submission pending",
+        `"${summary}" needs catalog review.`,
+      ),
+    ),
+  );
 }
 
 export async function createCatalogSubmissionApprovedNotification(
@@ -101,6 +193,12 @@ export async function createCatalogSubmissionApprovedNotification(
       link,
     },
   });
+
+  await sendPushNotification(
+    submitterId,
+    "Catalog request approved",
+    `"${summary}" was added to the catalog. You can continue uploading.`,
+  );
 }
 
 export async function createCatalogSubmissionRejectedNotification(
@@ -117,6 +215,12 @@ export async function createCatalogSubmissionRejectedNotification(
       link: "/contributions?tab=catalog",
     },
   });
+
+  await sendPushNotification(
+    submitterId,
+    "Catalog request rejected",
+    `"${summary}" was rejected: ${reason}`,
+  );
 }
 
 export async function createCatalogCourseAutoApprovedNotification(
@@ -144,12 +248,23 @@ export async function createCatalogCourseAutoApprovedNotification(
       link: "/moderation/catalog",
     })),
   });
+
+  await Promise.all(
+    moderators.map((mod) =>
+      sendPushNotification(
+        mod.id,
+        "Course added to catalog",
+        `"${summary}" was added by a contributor. Review if needed.`,
+      ),
+    ),
+  );
 }
 
 export type NotificationListQuery = {
   userId: string;
   unreadOnly?: boolean;
   limit: number;
+  offset?: number;
 };
 
 export async function listNotifications(query: NotificationListQuery) {
@@ -158,11 +273,12 @@ export async function listNotifications(query: NotificationListQuery) {
     ...(query.unreadOnly ? { readAt: null } : {}),
   };
 
-  const [notifications, unreadCount] = await Promise.all([
+  const [notifications, unreadCount, totalCount] = await Promise.all([
     prisma.notification.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: query.limit,
+      skip: query.offset ?? 0,
     }),
     prisma.notification.count({
       where: {
@@ -170,9 +286,10 @@ export async function listNotifications(query: NotificationListQuery) {
         readAt: null,
       },
     }),
+    prisma.notification.count({ where }),
   ]);
 
-  return { notifications, unreadCount };
+  return { notifications, unreadCount, totalCount };
 }
 
 export async function markNotificationRead(
@@ -193,6 +310,20 @@ export async function markNotificationRead(
   return result.count > 0;
 }
 
+export async function deleteNotification(
+  notificationId: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await prisma.notification.deleteMany({
+    where: {
+      id: notificationId,
+      userId,
+    },
+  });
+
+  return result.count > 0;
+}
+
 export async function markAllNotificationsRead(
   userId: string,
 ): Promise<number> {
@@ -204,6 +335,25 @@ export async function markAllNotificationsRead(
     data: {
       readAt: new Date(),
     },
+  });
+
+  return result.count;
+}
+
+export async function deleteAllNotifications(userId: string): Promise<number> {
+  const result = await prisma.notification.deleteMany({
+    where: { userId },
+  });
+
+  return result.count;
+}
+
+export async function deleteSelectedNotifications(
+  userId: string,
+  ids: string[],
+): Promise<number> {
+  const result = await prisma.notification.deleteMany({
+    where: { userId, id: { in: ids } },
   });
 
   return result.count;

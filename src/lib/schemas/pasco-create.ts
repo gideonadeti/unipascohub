@@ -13,7 +13,16 @@ import type {
   PascoType,
   SemesterType,
   SolutionCompleteness,
+  StudyMode,
 } from "@/types/api/pascos";
+
+export const STUDY_MODES = [
+  "FULL_TIME",
+  "PART_TIME",
+  "DISTANCE",
+  "EVENING",
+  "WEEKEND",
+] as const satisfies readonly StudyMode[];
 
 export const EDUCATION_LEVELS = [
   "LEVEL_100",
@@ -79,6 +88,7 @@ export const pascoCreateFormSchema = z
       "Select an academic year",
     ),
     educationLevel: z.enum(EDUCATION_LEVELS),
+    studyMode: z.enum(STUDY_MODES),
     semesterType: z.enum(SEMESTER_TYPES),
     type: z.enum(PASCO_TYPES),
     contentType: z.enum(PASCO_CONTENT_TYPES),

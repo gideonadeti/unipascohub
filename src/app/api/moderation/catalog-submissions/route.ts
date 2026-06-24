@@ -4,6 +4,7 @@ import {
   listModerationCatalogSubmissions,
   serializeCatalogSubmission,
 } from "@/lib/catalog-submissions";
+import { logError } from "@/lib/logger";
 import { requireModerator } from "@/lib/require-moderator";
 import { CatalogSubmissionStatus } from "../../../../../generated/prisma/enums";
 
@@ -91,7 +92,7 @@ export async function GET(req: Request) {
       },
     });
   } catch (err) {
-    console.error("Moderation catalog submission list failed:", err);
+    logError("Moderation catalog submission list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

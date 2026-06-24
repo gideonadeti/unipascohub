@@ -135,6 +135,7 @@ export function patchPascoDetailEngagement(
           ...current.pasco,
           ...patch,
         },
+        displayTitle: current.displayTitle,
       };
     },
   );

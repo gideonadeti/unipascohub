@@ -5,6 +5,8 @@ import type {
   CatalogSubmissionCreateResponse,
   CatalogSubmissionListFilters,
   CatalogSubmissionListResponse,
+  CatalogSubmissionUpdateRequest,
+  CatalogSubmissionUpdateResponse,
   ModerationCatalogSubmissionListFilters,
   ModerationCatalogSubmissionListResponse,
   ModerationCatalogSubmissionUpdateRequest,
@@ -42,6 +44,32 @@ export function listModerationCatalogSubmissions(
       "/api/moderation/catalog-submissions",
       { params: filters },
     )
+    .then((response) => response.data);
+}
+
+export function resubmitCatalogSubmission(submissionId: string) {
+  return apiClient
+    .patch<CatalogSubmissionUpdateResponse>(
+      `/api/catalog-submissions/${submissionId}`,
+    )
+    .then((response) => response.data);
+}
+
+export function updateCatalogSubmission(
+  submissionId: string,
+  payload: CatalogSubmissionUpdateRequest,
+) {
+  return apiClient
+    .patch<CatalogSubmissionUpdateResponse>(
+      `/api/catalog-submissions/${submissionId}`,
+      payload,
+    )
+    .then((response) => response.data);
+}
+
+export function deleteCatalogSubmission(submissionId: string) {
+  return apiClient
+    .delete(`/api/catalog-submissions/${submissionId}`)
     .then((response) => response.data);
 }
 

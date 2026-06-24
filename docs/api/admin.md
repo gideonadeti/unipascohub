@@ -124,3 +124,25 @@ List storage cleanup failures (assets that failed to delete).
 `source`: `PASCO_SYNC` | `PASCO_DELETE` | `ORPHAN_BATCH`
 
 There is no API to mark failures as resolved yet; update `resolvedAt` directly in the database or via Prisma Studio.
+
+---
+
+## Moderation settings
+
+### `GET /api/admin/settings/moderation`
+
+Read the dislike threshold for auto-moderation.
+
+**Auth:** Moderator or admin
+
+**Response `200`:** `{ "dislikeThreshold": 5 }`
+
+### `PATCH /api/admin/settings/moderation`
+
+Update the dislike threshold.
+
+**Auth:** Admin
+
+**Body:** `{ "dislikeThreshold": 5 }`
+
+**Response `200`:** `{ "dislikeThreshold": 5 }`

@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import {
   getModerationSettingsForApi,
   setModerationDislikeThreshold,
@@ -38,6 +38,8 @@ export async function GET() {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -46,7 +48,7 @@ export async function GET() {
 
     return Response.json(settings);
   } catch (err) {
-    console.error("Moderation settings read failed:", err);
+    logError("Moderation settings read failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -67,6 +69,8 @@ export async function PATCH(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -92,7 +96,7 @@ export async function PATCH(req: Request) {
 
     return Response.json({ dislikeThreshold });
   } catch (err) {
-    console.error("Moderation settings update failed:", err);
+    logError("Moderation settings update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

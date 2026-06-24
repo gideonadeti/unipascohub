@@ -48,6 +48,7 @@ import {
   PASCO_CONTENT_TYPES,
   PASCO_TYPES,
   SEMESTER_TYPES,
+  STUDY_MODES,
 } from "@/lib/schemas/pasco-create";
 import type { Program } from "@/types/api/catalog";
 import type { PascoListFilters } from "@/types/api/pascos";
@@ -66,6 +67,7 @@ type DraftFilters = {
   courseId: string;
   academicYear: string;
   educationLevel: string;
+  studyMode: string;
   semesterType: string;
   type: string;
   contentType: string;
@@ -79,6 +81,7 @@ function filtersToDraft(filters: PascoListFilters): DraftFilters {
     courseId: filters.courseId ?? "",
     academicYear: filters.academicYear ?? "",
     educationLevel: filters.educationLevel ?? ANY_VALUE,
+    studyMode: filters.studyMode ?? ANY_VALUE,
     semesterType: filters.semesterType ?? ANY_VALUE,
     type: filters.type ?? ANY_VALUE,
     contentType: filters.contentType ?? ANY_VALUE,
@@ -102,6 +105,10 @@ function draftToFilters(
       draft.educationLevel === ANY_VALUE
         ? undefined
         : (draft.educationLevel as PascoListFilters["educationLevel"]),
+    studyMode:
+      draft.studyMode === ANY_VALUE
+        ? undefined
+        : (draft.studyMode as PascoListFilters["studyMode"]),
     semesterType:
       draft.semesterType === ANY_VALUE
         ? undefined
@@ -129,6 +136,7 @@ function countActiveFilters(filters: PascoListFilters): number {
   if (filters.courseId) count += 1;
   if (filters.academicYear) count += 1;
   if (filters.educationLevel) count += 1;
+  if (filters.studyMode) count += 1;
   if (filters.semesterType) count += 1;
   if (filters.type) count += 1;
   if (filters.contentType) count += 1;
@@ -312,6 +320,28 @@ export function PascoBrowseFilters({
             {EDUCATION_LEVELS.map((level) => (
               <SelectItem key={level} value={level}>
                 {formatEnumLabel(level)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="browse-study-mode">Study mode</FieldLabel>
+        <Select
+          value={draft.studyMode}
+          onValueChange={(value) => {
+            setDraft((current) => ({ ...current, studyMode: value }));
+          }}
+        >
+          <SelectTrigger id="browse-study-mode" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_VALUE}>Any mode</SelectItem>
+            {STUDY_MODES.map((mode) => (
+              <SelectItem key={mode} value={mode}>
+                {formatEnumLabel(mode)}
               </SelectItem>
             ))}
           </SelectContent>

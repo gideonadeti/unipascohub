@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -6,6 +7,7 @@ import { EnsureUserSynced } from "@/components/ensure-user-synced";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { PwaInstallPill } from "@/components/pwa-install-pill";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -31,6 +33,29 @@ export const metadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
+  metadataBase: new URL("https://unipascohub.com"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName,
+    title: siteName,
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteName,
+    description: siteDescription,
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: [
+      {
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
@@ -64,7 +89,9 @@ export default function RootLayout({
               <SiteFooter />
               <MobileBottomNav />
               <ScrollToTop />
+              <PwaInstallPill />
               <Toaster richColors closeButton position="top-center" />
+              <Analytics />
             </QueryProvider>
           </ThemeProvider>
         </ClerkProvider>

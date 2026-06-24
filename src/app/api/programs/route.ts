@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import {
   createProgram,
   listPrograms,
@@ -23,11 +23,14 @@ export async function GET(req: Request) {
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 
-    return Response.json({
-      programs: result.programs.map(serializeProgram),
-    });
+    return Response.json(
+      {
+        programs: result.programs.map(serializeProgram),
+      },
+      { headers: { "Cache-Control": "public, max-age=3600" } },
+    );
   } catch (err) {
-    console.error("Program list failed:", err);
+    logError("Program list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -48,6 +51,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -103,7 +108,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("Program create failed:", err);
+    logError("Program create failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

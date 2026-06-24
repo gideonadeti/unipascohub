@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import { Prisma } from "../../../generated/prisma/client";
 import { PascoModerationStatus } from "../../../generated/prisma/enums";
 
@@ -290,8 +291,8 @@ export async function searchCourses(
       error instanceof Prisma.PrismaClientKnownRequestError ||
       error instanceof Error
     ) {
-      console.error(
-        "Trigram course search failed, falling back to Prisma findMany:",
+      logError(
+        "Trigram course search failed, falling back to Prisma findMany",
         error,
       );
     }

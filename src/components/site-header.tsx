@@ -11,13 +11,16 @@ import { Button } from "@/components/ui/button";
 import { siteName } from "@/config/site";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { isContributorRole, isModeratorRole } from "@/lib/pasco-permissions";
+import { UserRole } from "../../generated/prisma/enums";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const currentUser = useCurrentUser();
-  const showModerationLink = isModeratorRole(currentUser.data?.user?.role);
-  const showContributionsLink = isContributorRole(currentUser.data?.user?.role);
+  const userRole = currentUser.data?.user?.role;
+  const showModerationLink = isModeratorRole(userRole);
+  const showContributionsLink = isContributorRole(userRole);
+  const showAdminLink = userRole === UserRole.ADMIN;
 
   return (
     <header className="sticky top-0 z-50 flex h-14 items-center border-b border-border bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/80 sm:h-16 sm:px-6">
@@ -37,6 +40,11 @@ export function SiteHeader() {
               <Link href="/contributions">My contributions</Link>
             </Button>
           ) : null}
+          {showAdminLink ? (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/admin">Admin</Link>
+            </Button>
+          ) : null}
           {showModerationLink ? (
             <>
               <Button variant="ghost" size="sm" asChild>
@@ -44,6 +52,9 @@ export function SiteHeader() {
               </Button>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/moderation/catalog">Catalog review</Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/moderation/feedback">Feedback</Link>
               </Button>
             </>
           ) : null}

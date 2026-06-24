@@ -2,6 +2,7 @@
 
 import { ChevronUp } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,13 @@ export function ScrollToTop() {
       window.removeEventListener("scroll", onScroll);
     };
   }, []);
+
+  const pathname = usePathname();
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll must reset on route change, even if pathname isn't read inside the callback
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   const scrollToTop = () => {
     window.scrollTo({

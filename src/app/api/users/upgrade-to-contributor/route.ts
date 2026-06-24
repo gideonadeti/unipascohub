@@ -1,5 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
-
+import * as Sentry from "@sentry/nextjs";
+import { logError } from "@/lib/logger";
+import {
+  checkRateLimit,
+  getUpgradeToContributorRateLimitOptions,
+} from "@/lib/rate-limit";
 import { upgradeUserToContributor } from "@/lib/user-roles";
 
 export const runtime = "nodejs";
@@ -9,6 +14,29 @@ export async function POST(_req: Request) {
 
   if (!isAuthenticated || !userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  Sentry.addBreadcrumb({
+    category: "user",
+    message: "Upgrading user to contributor",
+    data: { userId },
+  });
+
+  const upgradeRateLimit = await checkRateLimit(
+    `upgrade-to-contributor:${userId}`,
+    getUpgradeToContributorRateLimitOptions(),
+  );
+
+  if (upgradeRateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: upgradeRateLimit.retryAfterSeconds
+          ? { "Retry-After": String(upgradeRateLimit.retryAfterSeconds) }
+          : undefined,
+      },
+    );
   }
 
   try {
@@ -35,7 +63,7 @@ export async function POST(_req: Request) {
       },
     });
   } catch (err) {
-    console.error("Contributor upgrade failed:", err);
+    logError("Contributor upgrade failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

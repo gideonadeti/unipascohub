@@ -1,6 +1,6 @@
 import { verifyWebhook, type WebhookEvent } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
-
+import { logError } from "@/lib/logger";
 import { deleteUserById, upsertUserFromClerk } from "@/lib/user-sync";
 
 export const runtime = "nodejs";
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     evt = await verifyWebhook(req);
   } catch (err) {
-    console.error("Webhook verification failed:", err);
+    logError("Webhook verification failed", err);
 
     return new Response("Verification failed", { status: 400 });
   }
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       await deleteUserById(evt.data.id);
     }
   } catch (err) {
-    console.error("Webhook handler failed:", err);
+    logError("Webhook handler failed", err);
 
     return new Response("Webhook handler failed", { status: 500 });
   }

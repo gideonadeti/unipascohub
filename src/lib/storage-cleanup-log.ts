@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 import type {
   CloudinaryResourceType as CloudinaryResourceTypeType,
   StorageCleanupSource,
@@ -52,7 +53,7 @@ export async function recordStorageCleanupFailures(
       ),
     );
   } catch (error) {
-    console.error("Failed to record storage cleanup failures:", error);
+    logError("Failed to record storage cleanup failures", error);
   }
 }
 
@@ -74,7 +75,7 @@ export async function resolveStorageCleanupFailures(
       },
     });
   } catch (error) {
-    console.error("Failed to resolve storage cleanup failures:", error);
+    logError("Failed to resolve storage cleanup failures", error);
   }
 }
 
@@ -102,7 +103,7 @@ export async function recordOrphanCleanupRun(input: {
       },
     });
   } catch (error) {
-    console.error("Failed to record orphan cleanup run:", error);
+    logError("Failed to record orphan cleanup run", error);
   }
 }
 

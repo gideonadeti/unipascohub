@@ -667,6 +667,99 @@ export async function moderateCatalogSubmission(input: {
   };
 }
 
+export type UpdateCatalogSubmissionFields = {
+  programName?: string;
+  programType?: string;
+  courseCode?: string;
+  courseTitle?: string;
+};
+
+export async function resubmitCatalogSubmission(
+  submissionId: string,
+  submitterId: string,
+  data?: UpdateCatalogSubmissionFields,
+): Promise<
+  | { success: true; result: { submissionId: string; status: string } }
+  | { success: false; error: "not_found" | "not_rejected" | "not_owner" }
+> {
+  const submission = await prisma.catalogSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      status: true,
+      submitterId: true,
+      programName: true,
+      programType: true,
+      courseCode: true,
+      courseTitle: true,
+    },
+  });
+
+  if (!submission) {
+    return { success: false, error: "not_found" };
+  }
+
+  if (submission.status !== CatalogSubmissionStatus.REJECTED) {
+    return { success: false, error: "not_rejected" };
+  }
+
+  if (submission.submitterId !== submitterId) {
+    return { success: false, error: "not_owner" };
+  }
+
+  const updateData: Record<string, unknown> = {
+    status: CatalogSubmissionStatus.PENDING,
+    rejectionReason: null,
+    reviewerId: null,
+    reviewedAt: null,
+  };
+
+  if (data) {
+    if (data.programName !== undefined) {
+      const trimmed = data.programName.trim();
+      if (!trimmed) {
+        return { success: false, error: "not_found" as const };
+      }
+      updateData.programName = trimmed;
+    }
+
+    if (data.programType !== undefined) {
+      if (!PROGRAM_TYPES.has(data.programType)) {
+        return { success: false, error: "not_found" as const };
+      }
+      updateData.programType = data.programType;
+    }
+
+    if (data.courseCode !== undefined) {
+      const trimmed = data.courseCode.trim();
+      if (!trimmed) {
+        return { success: false, error: "not_found" as const };
+      }
+      updateData.courseCode = trimmed;
+    }
+
+    if (data.courseTitle !== undefined) {
+      const trimmed = data.courseTitle.trim();
+      if (!trimmed) {
+        return { success: false, error: "not_found" as const };
+      }
+      updateData.courseTitle = trimmed;
+    }
+  }
+
+  await prisma.catalogSubmission.update({
+    where: { id: submissionId },
+    data: updateData,
+  });
+
+  return {
+    success: true,
+    result: {
+      submissionId,
+      status: CatalogSubmissionStatus.PENDING,
+    },
+  };
+}
+
 export async function runCatalogSubmissionSideEffects(
   result: ModerateCatalogSubmissionSuccess,
 ): Promise<void> {
@@ -692,6 +785,37 @@ export async function runCatalogSubmissionSideEffects(
       result.notifySubmitterRejected.reason,
     );
   }
+}
+
+export async function deleteCatalogSubmission(
+  submissionId: string,
+  userId: string,
+): Promise<
+  | { success: true }
+  | { success: false; error: "not_found" | "not_owner" | "not_rejected" }
+> {
+  const submission = await prisma.catalogSubmission.findUnique({
+    where: { id: submissionId },
+    select: { submitterId: true, status: true },
+  });
+
+  if (!submission) {
+    return { success: false, error: "not_found" };
+  }
+
+  if (submission.submitterId !== userId) {
+    return { success: false, error: "not_owner" };
+  }
+
+  if (submission.status !== CatalogSubmissionStatus.REJECTED) {
+    return { success: false, error: "not_rejected" };
+  }
+
+  await prisma.catalogSubmission.delete({
+    where: { id: submissionId },
+  });
+
+  return { success: true };
 }
 
 export function serializeCatalogSubmission(

@@ -4,6 +4,7 @@ import {
   PASCO_CONTENT_TYPES,
   PASCO_TYPES,
   SEMESTER_TYPES,
+  STUDY_MODES,
 } from "@/lib/schemas/pasco-create";
 import type {
   PascoListFilters,
@@ -28,6 +29,7 @@ const LIST_SORT_FIELDS: readonly PascoListSortBy[] = [
 ];
 
 const EDUCATION_LEVEL_SET = new Set<string>(EDUCATION_LEVELS);
+const STUDY_MODE_SET = new Set<string>(STUDY_MODES);
 const SEMESTER_TYPE_SET = new Set<string>(SEMESTER_TYPES);
 const PASCO_TYPE_SET = new Set<string>(PASCO_TYPES);
 const PASCO_CONTENT_TYPE_SET = new Set<string>(PASCO_CONTENT_TYPES);
@@ -37,6 +39,7 @@ export type PascoListQuery = {
   courseId?: string;
   courseIds?: string[];
   educationLevel?: PascoListFilters["educationLevel"];
+  studyMode?: PascoListFilters["studyMode"];
   academicYear?: string;
   semesterType?: PascoListFilters["semesterType"];
   type?: PascoListFilters["type"];
@@ -50,6 +53,7 @@ export type PascoListQuery = {
 
 export type PascoListParseError =
   | "invalid_education_level"
+  | "invalid_study_mode"
   | "invalid_semester_type"
   | "invalid_type"
   | "invalid_content_type"
@@ -113,6 +117,7 @@ export function parseListPascosQuery(
   const qParam = searchParams.get("q");
   const courseIdParam = searchParams.get("courseId");
   const educationLevelParam = searchParams.get("educationLevel");
+  const studyModeParam = searchParams.get("studyMode");
   const academicYearParam = searchParams.get("academicYear");
   const semesterTypeParam = searchParams.get("semesterType");
   const typeParam = searchParams.get("type");
@@ -137,6 +142,10 @@ export function parseListPascosQuery(
     !EDUCATION_LEVEL_SET.has(educationLevelParam)
   ) {
     return { success: false, error: "invalid_education_level" };
+  }
+
+  if (studyModeParam !== null && !STUDY_MODE_SET.has(studyModeParam)) {
+    return { success: false, error: "invalid_study_mode" };
   }
 
   if (semesterTypeParam !== null && !SEMESTER_TYPE_SET.has(semesterTypeParam)) {
@@ -211,6 +220,10 @@ export function parseListPascosQuery(
         educationLevelParam !== null
           ? (educationLevelParam as PascoListFilters["educationLevel"])
           : undefined,
+      studyMode:
+        studyModeParam !== null
+          ? (studyModeParam as PascoListFilters["studyMode"])
+          : undefined,
       academicYear,
       semesterType:
         semesterTypeParam !== null
@@ -251,6 +264,10 @@ export function queryToFilters(query: PascoListQuery): PascoListFilters {
 
   if (query.educationLevel !== undefined) {
     filters.educationLevel = query.educationLevel;
+  }
+
+  if (query.studyMode !== undefined) {
+    filters.studyMode = query.studyMode;
   }
 
   if (query.academicYear !== undefined) {
@@ -308,6 +325,10 @@ export function filtersToSearchParams(
 
   if (filters.educationLevel) {
     params.set("educationLevel", filters.educationLevel);
+  }
+
+  if (filters.studyMode) {
+    params.set("studyMode", filters.studyMode);
   }
 
   if (filters.academicYear) {

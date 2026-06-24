@@ -1,5 +1,12 @@
 import type { Course } from "@/types/api/catalog";
 
+export type StudyMode =
+  | "FULL_TIME"
+  | "PART_TIME"
+  | "DISTANCE"
+  | "EVENING"
+  | "WEEKEND";
+
 export type EducationLevel =
   | "LEVEL_100"
   | "LEVEL_200"
@@ -40,6 +47,7 @@ export type PascoListFilters = {
   q?: string;
   courseId?: string;
   educationLevel?: EducationLevel;
+  studyMode?: StudyMode;
   academicYear?: string;
   semesterType?: SemesterType;
   type?: PascoType;
@@ -89,6 +97,7 @@ export type Pasco = {
   academicYear: string;
   description: string | null;
   educationLevel: EducationLevel;
+  studyMode: StudyMode;
   semesterType: SemesterType;
   type: PascoType;
   contentType: PascoContentType;
@@ -139,6 +148,8 @@ export type MyPascoListResponse = {
 
 export type PascoDetailResponse = {
   pasco: Pasco;
+  displayTitle: string;
+  course?: { code: string; title: string } | null;
 };
 
 export type PascoFileCreateInput = {
@@ -187,6 +198,7 @@ export type PascoCreateInput = {
   academicYear: string;
   description?: string;
   educationLevel: EducationLevel;
+  studyMode: StudyMode;
   semesterType: SemesterType;
   type: PascoType;
   contentType: PascoContentType;
@@ -212,6 +224,7 @@ export type PascoUpdateInput = {
   academicYear?: string;
   description?: string | null;
   educationLevel?: EducationLevel;
+  studyMode?: StudyMode;
   semesterType?: SemesterType;
   type?: PascoType;
   contentType?: PascoContentType;

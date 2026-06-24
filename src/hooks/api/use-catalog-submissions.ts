@@ -5,16 +5,20 @@ import { toast } from "sonner";
 
 import {
   createCatalogSubmission,
+  deleteCatalogSubmission as deleteCatalogSubmissionApi,
   listMyCatalogSubmissions,
   type ModerationCatalogSubmissionListFilters,
   moderateCatalogSubmissionReview,
   moderationCatalogSubmissionsListOptions,
   myCatalogSubmissionsOptions,
+  resubmitCatalogSubmission as resubmitCatalogSubmissionApi,
+  updateCatalogSubmission as updateCatalogSubmissionApi,
 } from "@/lib/api/catalog-submissions";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
   CatalogSubmissionCreateRequest,
   CatalogSubmissionListFilters,
+  CatalogSubmissionUpdateRequest,
   ModerationCatalogSubmissionUpdateRequest,
 } from "@/types/api/catalog-submissions";
 
@@ -91,6 +95,67 @@ export function useModerateCatalogSubmissionReview() {
     },
     onError: () => {
       toast.error("Could not update catalog submission");
+    },
+  });
+}
+
+export function useResubmitCatalogSubmission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (submissionId: string) =>
+      resubmitCatalogSubmissionApi(submissionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.catalogSubmissions.all,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.moderation.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+      toast.success("Submission resubmitted for review");
+    },
+    onError: () => {
+      toast.error("Could not resubmit catalog request");
+    },
+  });
+}
+
+export function useUpdateCatalogSubmission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      submissionId,
+      ...payload
+    }: CatalogSubmissionUpdateRequest & { submissionId: string }) =>
+      updateCatalogSubmissionApi(submissionId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.catalogSubmissions.all,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.moderation.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+      toast.success("Changes saved. Submission resubmitted for review.");
+    },
+    onError: () => {
+      toast.error("Could not update catalog request");
+    },
+  });
+}
+
+export function useDeleteCatalogSubmission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (submissionId: string) =>
+      deleteCatalogSubmissionApi(submissionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.catalogSubmissions.all,
+      });
+      toast.success("Catalog request deleted");
+    },
+    onError: () => {
+      toast.error("Could not delete catalog request");
     },
   });
 }

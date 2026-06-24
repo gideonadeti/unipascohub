@@ -8,6 +8,7 @@ import { ModerationGate } from "@/components/moderation-gate";
 export const metadata: Metadata = {
   title: "Catalog moderation",
   description: "Review contributor requests for new programs and courses.",
+  robots: { index: false },
 };
 
 export default function ModerationCatalogRoute() {

@@ -90,3 +90,14 @@ export type ModerationCatalogSubmissionUpdateRequest = {
 export type ModerationCatalogSubmissionUpdateResponse = {
   status: CatalogSubmissionStatus;
 };
+
+export type CatalogSubmissionUpdateRequest = {
+  programName?: string;
+  programType?: ProgramType;
+  courseCode?: string;
+  courseTitle?: string;
+};
+
+export type CatalogSubmissionUpdateResponse = {
+  status: CatalogSubmissionStatus;
+};

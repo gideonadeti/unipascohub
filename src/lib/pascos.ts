@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { academicYearValidationMessage } from "@/lib/academic-year";
 import {
   deleteCloudinaryAssets,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/cloudinary";
 import { isValidContentHash, normalizeContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
+import { parseNonEmptyString } from "@/lib/parse";
 import { findDuplicatePascoFiles } from "@/lib/pasco-file-hash";
 import type { PascoListQuery } from "@/lib/pasco-list-query";
 import {
@@ -16,7 +18,11 @@ import {
   shouldIncludeModerationSource,
   shouldIncludeModerationStatus,
 } from "@/lib/pasco-moderation-utils";
-import type { PascoFileDuplicate } from "@/types/api/pascos";
+import type {
+  PascoFileDuplicate,
+  PascoListResponse,
+  PascoListSearchMeta,
+} from "@/types/api/pascos";
 import type { Pasco, PascoFile } from "../../generated/prisma/client";
 import { Prisma } from "../../generated/prisma/client";
 import {
@@ -36,6 +42,8 @@ import {
   SolutionCompleteness,
   type SolutionCompleteness as SolutionCompletenessType,
   StorageCleanupSource,
+  StudyMode,
+  type StudyMode as StudyModeType,
 } from "../../generated/prisma/enums";
 
 const MAX_DESCRIPTION_LENGTH = 1000;
@@ -54,6 +62,7 @@ const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
 const SOLUTION_COMPLETENESS_VALUES = new Set<string>(
   Object.values(SolutionCompleteness),
 );
+const STUDY_MODES = new Set<string>(Object.values(StudyMode));
 
 export type PascoCreateInput = {
   courseId: string;
@@ -61,6 +70,7 @@ export type PascoCreateInput = {
   academicYear: string;
   description?: string;
   educationLevel: EducationLevelType;
+  studyMode: StudyModeType;
   semesterType: SemesterTypeType;
   type: PascoTypeType;
   contentType: PascoContentTypeType;
@@ -94,6 +104,7 @@ export type PascoUpdateInput = {
   academicYear?: string;
   description?: string | null;
   educationLevel?: EducationLevelType;
+  studyMode?: StudyModeType;
   semesterType?: SemesterTypeType;
   type?: PascoTypeType;
   contentType?: PascoContentTypeType;
@@ -156,6 +167,7 @@ type PascoCreateParseError =
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
+  | "invalid_study_mode"
   | "invalid_semester_type"
   | "invalid_type"
   | "invalid_content_type"
@@ -174,6 +186,7 @@ type PascoUpdateParseError =
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
+  | "invalid_study_mode"
   | "invalid_semester_type"
   | "invalid_type"
   | "invalid_content_type"
@@ -318,20 +331,6 @@ function parseCourseId(value: unknown): string | null {
   }
 
   return courseId;
-}
-
-function parseNonEmptyString(value: unknown, maxLength: number): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-
-  if (trimmed.length === 0 || trimmed.length > maxLength) {
-    return null;
-  }
-
-  return trimmed;
 }
 
 function parseFileSize(value: unknown): number | null {
@@ -712,6 +711,10 @@ function isEducationLevel(value: string): value is EducationLevelType {
   return EDUCATION_LEVELS.has(value);
 }
 
+function isStudyMode(value: string): value is StudyModeType {
+  return STUDY_MODES.has(value);
+}
+
 function isSemesterType(value: string): value is SemesterTypeType {
   return SEMESTER_TYPES.has(value);
 }
@@ -787,6 +790,7 @@ export function parsePascoCreate(
     "files",
     "academicYear",
     "educationLevel",
+    "studyMode",
     "semesterType",
     "type",
     "contentType",
@@ -823,6 +827,10 @@ export function parsePascoCreate(
     !isEducationLevel(record.educationLevel)
   ) {
     return { success: false, error: "invalid_education_level" };
+  }
+
+  if (typeof record.studyMode !== "string" || !isStudyMode(record.studyMode)) {
+    return { success: false, error: "invalid_study_mode" };
   }
 
   if (
@@ -879,6 +887,7 @@ export function parsePascoCreate(
       files: filesResult.data,
       academicYear,
       educationLevel: record.educationLevel,
+      studyMode: record.studyMode,
       semesterType: record.semesterType,
       type: record.type,
       contentType: record.contentType,
@@ -947,6 +956,19 @@ export function parsePascoUpdate(
     }
 
     data.educationLevel = record.educationLevel;
+  }
+
+  if ("studyMode" in record) {
+    hasUpdate = true;
+
+    if (
+      typeof record.studyMode !== "string" ||
+      !isStudyMode(record.studyMode)
+    ) {
+      return { success: false, error: "invalid_study_mode" };
+    }
+
+    data.studyMode = record.studyMode;
   }
 
   if ("semesterType" in record) {
@@ -1065,6 +1087,7 @@ export function serializePasco(
     academicYear: pasco.academicYear,
     description: pasco.description,
     educationLevel: pasco.educationLevel,
+    studyMode: pasco.studyMode,
     semesterType: pasco.semesterType,
     type: pasco.type,
     contentType: pasco.contentType,
@@ -1111,6 +1134,37 @@ export function serializePasco(
 }
 
 export type SerializedPasco = ReturnType<typeof serializePasco>;
+
+export function serializePascoListItem(pasco: PascoWithFilesAndCourse) {
+  return serializePasco(pasco);
+}
+
+export function serializePascoListResponse(
+  result: {
+    pascos: PascoWithFilesAndCourse[];
+    total: number;
+    page: number;
+    limit: number;
+  },
+  extras?: {
+    appliedCourse?: PascoCourseSummaryFields;
+    search?: PascoListSearchMeta;
+  },
+): PascoListResponse {
+  const totalPages = Math.ceil(result.total / result.limit);
+
+  return {
+    pascos: result.pascos.map(serializePascoListItem),
+    pagination: {
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      totalPages,
+    },
+    ...(extras?.appliedCourse ? { appliedCourse: extras.appliedCourse } : {}),
+    ...(extras?.search ? { search: extras.search } : {}),
+  };
+}
 
 function isDuplicatePublicIdError(error: unknown): boolean {
   return (
@@ -1318,6 +1372,7 @@ export async function listPascos(params: PascoListQuery): Promise<
       ? { courseId: { in: params.courseIds } }
       : {}),
     ...(params.educationLevel ? { educationLevel: params.educationLevel } : {}),
+    ...(params.studyMode ? { studyMode: params.studyMode } : {}),
     ...(params.academicYear ? { academicYear: params.academicYear } : {}),
     ...(params.semesterType ? { semesterType: params.semesterType } : {}),
     ...(params.type ? { type: params.type } : {}),
@@ -1350,6 +1405,27 @@ export async function listPascos(params: PascoListQuery): Promise<
     page: params.page,
     limit: params.limit,
   };
+}
+
+export async function getPascoListResponse(
+  query: PascoListQuery,
+): Promise<PascoListResponse | null> {
+  const result = await listPascos(query);
+
+  if (!result.success) {
+    return null;
+  }
+
+  const appliedCourse = query.courseId
+    ? await prisma.course.findUnique({
+        where: { id: query.courseId },
+        select: { code: true, title: true },
+      })
+    : null;
+
+  return serializePascoListResponse(result, {
+    ...(appliedCourse ? { appliedCourse } : {}),
+  });
 }
 
 export type MyPascoListQuery = {
@@ -1445,6 +1521,12 @@ export async function createPasco(
       duplicates?: PascoFileDuplicate[];
     }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Creating pasco",
+    data: { courseId: input.courseId, fileCount: input.files.length },
+  });
+
   const course = await prisma.course.findUnique({
     where: { id: input.courseId },
   });
@@ -1492,6 +1574,7 @@ export async function createPasco(
         academicYear: input.academicYear,
         description: input.description ?? null,
         educationLevel: input.educationLevel,
+        studyMode: input.studyMode,
         semesterType: input.semesterType,
         type: input.type,
         contentType: input.contentType,
@@ -1538,6 +1621,12 @@ export async function updatePasco(
       duplicates?: PascoFileDuplicate[];
     }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Updating pasco",
+    data: { pascoId },
+  });
+
   const existing = await prisma.pasco.findUnique({
     where: { id: pascoId },
     include: pascoInclude,
@@ -1566,11 +1655,26 @@ export async function updatePasco(
     }
   }
 
+  if (
+    triggeredById &&
+    existing.uploaderId === triggeredById &&
+    existing.moderationStatus === PascoModerationStatus.REJECTED
+  ) {
+    await prisma.pasco.update({
+      where: { id: pascoId },
+      data: {
+        moderationStatus: PascoModerationStatus.PENDING_REVIEW,
+        rejectionReason: null,
+      },
+    });
+  }
+
   const hasMetadataUpdate =
     input.courseId !== undefined ||
     input.academicYear !== undefined ||
     input.description !== undefined ||
     input.educationLevel !== undefined ||
+    input.studyMode !== undefined ||
     input.semesterType !== undefined ||
     input.type !== undefined ||
     input.contentType !== undefined ||
@@ -1590,6 +1694,9 @@ export async function updatePasco(
         }),
         ...(input.educationLevel !== undefined && {
           educationLevel: input.educationLevel,
+        }),
+        ...(input.studyMode !== undefined && {
+          studyMode: input.studyMode,
         }),
         ...(input.semesterType !== undefined && {
           semesterType: input.semesterType,
@@ -1649,6 +1756,12 @@ export async function deletePasco(
   | { success: true; storageCleanupFailures?: string[] }
   | { success: false; error: "not_found" }
 > {
+  Sentry.addBreadcrumb({
+    category: "pasco",
+    message: "Deleting pasco",
+    data: { pascoId },
+  });
+
   const existing = await prisma.pasco.findUnique({
     where: { id: pascoId },
     include: { files: true },

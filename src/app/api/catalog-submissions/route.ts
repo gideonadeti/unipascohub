@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 import {
   createCatalogSubmission,
@@ -6,6 +7,11 @@ import {
   parseCatalogSubmissionCreate,
   serializeCatalogSubmission,
 } from "@/lib/catalog-submissions";
+import { logError } from "@/lib/logger";
+import {
+  checkRateLimit,
+  getCatalogSubmissionCreateRateLimitOptions,
+} from "@/lib/rate-limit";
 import { requireContributor } from "@/lib/require-contributor";
 import { CatalogSubmissionStatus } from "../../../../generated/prisma/enums";
 
@@ -38,6 +44,8 @@ export async function GET(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -69,7 +77,7 @@ export async function GET(req: Request) {
       submissions: submissions.map(serializeCatalogSubmission),
     });
   } catch (err) {
-    console.error("Catalog submission list failed:", err);
+    logError("Catalog submission list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -90,7 +98,32 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+  }
+
+  Sentry.addBreadcrumb({
+    category: "catalog-submission",
+    message: "Creating catalog submission",
+    data: { userId, contributorRole: contributorResult.user.role },
+  });
+
+  const createRateLimit = await checkRateLimit(
+    `catalog-submission-create:${userId}`,
+    getCatalogSubmissionCreateRateLimitOptions(),
+  );
+
+  if (createRateLimit.rateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: createRateLimit.retryAfterSeconds
+          ? { "Retry-After": String(createRateLimit.retryAfterSeconds) }
+          : undefined,
+      },
+    );
   }
 
   let body: unknown;
@@ -160,7 +193,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("Catalog submission create failed:", err);
+    logError("Catalog submission create failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

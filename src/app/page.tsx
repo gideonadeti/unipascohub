@@ -4,16 +4,37 @@ import { HomeHero } from "@/components/home-hero";
 import { PageContainer } from "@/components/layout/page-container";
 import { PascoListSection } from "@/components/pasco-list-section";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
-import { siteDescription } from "@/config/site";
+import { siteDescription, siteName } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "Home",
   description: siteDescription,
 };
 
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteName,
+  url: "https://unipascohub.com",
+  description: siteDescription,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://unipascohub.com/pascos?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function HomePage() {
   return (
     <PageContainer width="default" className="space-y-12">
+      <script
+        type="application/ld+json"
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
       <HomeHero />
 
       <div id="discover" className="scroll-mt-20 space-y-12">

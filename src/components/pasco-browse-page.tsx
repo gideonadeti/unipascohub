@@ -40,6 +40,7 @@ import {
 import { buildBrowseHref } from "@/lib/search/build-browse-href";
 import type {
   PascoListFilters,
+  PascoListResponse,
   PascoListSearchMeta,
   PascoListSortBy,
   PascoListSortOrder,
@@ -47,6 +48,7 @@ import type {
 
 const PARSE_ERROR_MESSAGES: Record<PascoListParseError, string> = {
   invalid_education_level: "Invalid education level in the URL.",
+  invalid_study_mode: "Invalid study mode in the URL.",
   invalid_semester_type: "Invalid semester type in the URL.",
   invalid_type: "Invalid pasco type in the URL.",
   invalid_content_type: "Invalid content type in the URL.",
@@ -142,6 +144,20 @@ function buildActiveChips(
     });
   }
 
+  if (filters.studyMode) {
+    chips.push({
+      key: "studyMode",
+      label: formatEnumLabel(filters.studyMode),
+      removable: true,
+    });
+  } else if (searchMeta?.parsedFilters.studyMode) {
+    chips.push({
+      key: "studyMode",
+      label: formatEnumLabel(searchMeta.parsedFilters.studyMode),
+      removable: false,
+    });
+  }
+
   if (filters.semesterType) {
     chips.push({
       key: "semesterType",
@@ -191,6 +207,7 @@ function buildActiveChips(
 
 type PascoBrowsePageContentProps = {
   filters: PascoListFilters;
+  initialData?: PascoListResponse;
 };
 
 function PascoBrowseSearchBar({
@@ -276,10 +293,13 @@ function PascoBrowseSearchBar({
   );
 }
 
-function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
+function PascoBrowsePageContent({
+  filters,
+  initialData,
+}: PascoBrowsePageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const pascosQuery = usePascosList(filters);
+  const pascosQuery = usePascosList(filters, initialData);
   const searchMeta = pascosQuery.data?.search;
   const courseLabel = resolveCourseChipLabel({
     filters,
@@ -377,6 +397,8 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
                       educationLevel:
                         filters.educationLevel ??
                         searchMeta.parsedFilters.educationLevel,
+                      studyMode:
+                        filters.studyMode ?? searchMeta.parsedFilters.studyMode,
                       semesterType:
                         filters.semesterType ??
                         searchMeta.parsedFilters.semesterType,
@@ -524,7 +546,11 @@ function PascoBrowsePageContent({ filters }: PascoBrowsePageContentProps) {
   );
 }
 
-export function PascoBrowsePage() {
+type PascoBrowsePageProps = {
+  initialData?: PascoListResponse;
+};
+
+export function PascoBrowsePage({ initialData }: PascoBrowsePageProps) {
   const searchParams = useSearchParams();
   const parsed = searchParamsToFilters(searchParams, {
     defaultLimit: BROWSE_DEFAULT_LIMIT,
@@ -544,5 +570,10 @@ export function PascoBrowsePage() {
     );
   }
 
-  return <PascoBrowsePageContent filters={parsed.filters} />;
+  return (
+    <PascoBrowsePageContent
+      filters={parsed.filters}
+      initialData={initialData}
+    />
+  );
 }

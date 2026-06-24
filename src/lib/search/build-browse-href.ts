@@ -9,6 +9,7 @@ export function buildBrowseHref(
     {
       courseId: filters.courseId,
       educationLevel: filters.educationLevel,
+      studyMode: filters.studyMode,
       academicYear: filters.academicYear,
       semesterType: filters.semesterType,
       type: filters.type,

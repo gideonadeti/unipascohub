@@ -58,7 +58,7 @@ export function PascoRejectDialog({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Reject pasco</DialogTitle>
             <DialogDescription>

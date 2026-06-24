@@ -3,10 +3,14 @@
 import { LibraryBig, Upload } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
+import { CatalogSubmissionDeleteDialog } from "@/components/catalog-submission-delete-dialog";
+import { CatalogSubmissionEditDialog } from "@/components/catalog-submission-edit-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { PascoBrowsePagination } from "@/components/pasco-browse-pagination";
 import { PascoCard } from "@/components/pasco-card";
+import { PascoDeleteDialog } from "@/components/pasco-delete-dialog";
 import { PascoListSkeleton } from "@/components/pasco-list-skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +23,10 @@ import { useMyPascosList } from "@/hooks/api/use-pascos";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import { formatDateTime } from "@/lib/dates";
 import { buildPascoCreateHref } from "@/lib/pasco-create-href";
-import { canUserModifyPasco } from "@/lib/pasco-permissions";
+import {
+  canUserDeletePasco,
+  canUserModifyPasco,
+} from "@/lib/pasco-permissions";
 import type {
   CatalogSubmission,
   CatalogSubmissionStatus,
@@ -69,53 +76,74 @@ function moderationStatusLabel(status: PascoModerationStatus): string {
 }
 
 function MyUploadCard({ pasco }: { pasco: Pasco }) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const currentUser = useCurrentUser();
   const canEdit =
     currentUser.data?.user && canUserModifyPasco(currentUser.data.user, pasco);
+  const canDelete =
+    currentUser.data?.user && canUserDeletePasco(currentUser.data.user, pasco);
   const status = pasco.moderationStatus ?? "PUBLISHED";
 
   return (
-    <div className="space-y-3">
-      <div className="relative">
-        <PascoCard pasco={pasco} showInstitution />
-        <div className="absolute top-3 right-3">
-          <Badge
-            variant={
-              status === "REJECTED"
-                ? "destructive"
-                : status === "PENDING_REVIEW"
-                  ? "secondary"
-                  : "outline"
-            }
-          >
-            {moderationStatusLabel(status)}
-          </Badge>
+    <>
+      {canDelete ? (
+        <PascoDeleteDialog
+          pascoId={pasco.id}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+        />
+      ) : null}
+      <div className="space-y-3">
+        <div className="relative">
+          <PascoCard pasco={pasco} showInstitution />
+          <div className="absolute top-3 right-3">
+            <Badge
+              variant={
+                status === "REJECTED"
+                  ? "destructive"
+                  : status === "PENDING_REVIEW"
+                    ? "secondary"
+                    : "outline"
+              }
+            >
+              {moderationStatusLabel(status)}
+            </Badge>
+          </div>
         </div>
-      </div>
-      <div className="space-y-2 px-1">
-        {pasco.rejectionReason ? (
-          <p className="text-xs text-muted-foreground">
-            Reason: {pasco.rejectionReason}
-          </p>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={`/pascos/${pasco.id}`}
-            className="text-sm underline-offset-4 hover:underline"
-          >
-            View
-          </Link>
-          {canEdit ? (
+        <div className="space-y-2 px-1">
+          {pasco.rejectionReason ? (
+            <p className="text-xs text-muted-foreground">
+              Reason: {pasco.rejectionReason}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-3">
             <Link
-              href={`/pascos/${pasco.id}/edit`}
+              href={`/pascos/${pasco.id}`}
               className="text-sm underline-offset-4 hover:underline"
             >
-              Edit
+              View
             </Link>
-          ) : null}
+            {canEdit ? (
+              <Link
+                href={`/pascos/${pasco.id}/edit`}
+                className="text-sm underline-offset-4 hover:underline"
+              >
+                Edit
+              </Link>
+            ) : null}
+            {canDelete && status === "REJECTED" ? (
+              <button
+                type="button"
+                className="text-sm text-destructive underline-offset-4 hover:underline"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -124,51 +152,91 @@ function MyCatalogSubmissionCard({
 }: {
   submission: CatalogSubmission;
 }) {
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const uploadHref = getCatalogUploadHref(submission);
 
   return (
-    <Card>
-      <CardHeader className="gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">
-            {submission.type === "PROGRAM" ? "Program" : "Course"}
-          </Badge>
-          <Badge
-            variant={
-              submission.status === "REJECTED" ? "destructive" : "outline"
-            }
-          >
-            {submission.status}
-          </Badge>
-        </div>
-        <CardTitle className="text-base">{submission.summary}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          {submission.institutionName}
-        </p>
-        {submission.type === "PROGRAM" && submission.programType ? (
-          <p className="text-xs text-muted-foreground">
-            Type: {formatEnumLabel(submission.programType)}
+    <>
+      {submission.status === "REJECTED" ? (
+        <CatalogSubmissionEditDialog
+          submission={submission}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+        />
+      ) : null}
+      {submission.status === "REJECTED" ? (
+        <CatalogSubmissionDeleteDialog
+          submissionId={submission.id}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+        />
+      ) : null}
+      <Card>
+        <CardHeader className="gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">
+              {submission.type === "PROGRAM" ? "Program" : "Course"}
+            </Badge>
+            <Badge
+              variant={
+                submission.status === "REJECTED" ? "destructive" : "outline"
+              }
+            >
+              {submission.status}
+            </Badge>
+          </div>
+          <CardTitle className="text-base">{submission.summary}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {submission.institutionName}
           </p>
-        ) : null}
-        {submission.rejectionReason ? (
-          <p className="text-xs text-muted-foreground">
-            Reason: {submission.rejectionReason}
-          </p>
-        ) : null}
-        {submission.reviewedAt ? (
-          <p className="text-xs text-muted-foreground">
-            Reviewed {formatDateTime(submission.reviewedAt)}
-          </p>
-        ) : null}
-        {uploadHref ? (
-          <Button type="button" size="sm" variant="outline" asChild>
-            <Link href={uploadHref}>Upload a pasco</Link>
-          </Button>
-        ) : null}
-      </CardContent>
-    </Card>
+          {submission.type === "PROGRAM" && submission.programType ? (
+            <p className="text-xs text-muted-foreground">
+              Type: {formatEnumLabel(submission.programType)}
+            </p>
+          ) : null}
+          {submission.rejectionReason ? (
+            <p className="text-xs text-muted-foreground">
+              Reason: {submission.rejectionReason}
+            </p>
+          ) : null}
+          {submission.reviewedAt ? (
+            <p className="text-xs text-muted-foreground">
+              Reviewed {formatDateTime(submission.reviewedAt)}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            {uploadHref ? (
+              <Button type="button" size="sm" variant="outline" asChild>
+                <Link href={uploadHref}>Upload a pasco</Link>
+              </Button>
+            ) : null}
+            {submission.status === "REJECTED" ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => setEditOpen(true)}
+              >
+                Edit & resubmit
+              </Button>
+            ) : null}
+            {submission.status === "REJECTED" ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 

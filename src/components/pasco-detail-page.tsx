@@ -37,14 +37,18 @@ import {
   canUserModifyPasco,
   isModeratorRole,
 } from "@/lib/pasco-permissions";
-import type { PascoFile } from "@/types/api/pascos";
+import type { PascoDetailResponse, PascoFile } from "@/types/api/pascos";
 
-export function PascoDetailPage() {
+export function PascoDetailPage({
+  initialData,
+}: {
+  initialData?: PascoDetailResponse;
+}) {
   const params = useParams<{ pascoId: string }>();
   const pascoId = params.pascoId ?? "";
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewFile, setViewFile] = useState<PascoFile | null>(null);
-  const pascoQuery = usePasco(pascoId);
+  const pascoQuery = usePasco(pascoId, initialData);
   const courseId = pascoQuery.data?.pasco.courseId ?? "";
   const courseQuery = useCourse(courseId);
   const currentUser = useCurrentUser();
@@ -64,12 +68,11 @@ export function PascoDetailPage() {
   }
 
   const pasco = pascoQuery.data.pasco;
-  const course = courseQuery.data?.course;
+  const displayCourse = initialData?.course ?? null;
+  const course = courseQuery.data?.course ?? displayCourse;
   const courseLabel = course
     ? `${course.code} — ${course.title}`
-    : courseQuery.isPending
-      ? "Loading course details…"
-      : pasco.courseId;
+    : pasco.courseId;
   const user = currentUser.data?.user;
   const canEdit = user && canUserModifyPasco(user, pasco);
   const canDelete = user && canUserDeletePasco(user, pasco);
@@ -79,10 +82,10 @@ export function PascoDetailPage() {
   const isUploaderPending = moderationStatus === "PENDING_REVIEW" && isUploader;
   const isUploaderRejected = moderationStatus === "REJECTED" && isUploader;
   const uploadAnotherHref =
-    isUploader && course
+    isUploader && courseQuery.data?.course
       ? buildPascoCreateHref({
-          institutionId: course.institutionId,
-          programId: course.programIds[0],
+          institutionId: courseQuery.data.course.institutionId,
+          programId: courseQuery.data.course.programIds[0],
         })
       : null;
 
@@ -102,10 +105,22 @@ export function PascoDetailPage() {
       {isUploaderRejected ? (
         <Alert variant="destructive">
           <AlertTitle>Not published</AlertTitle>
-          <AlertDescription>
-            {pasco.rejectionReason
-              ? `Moderators rejected this pasco: ${pasco.rejectionReason}`
-              : "Moderators rejected this pasco. It is hidden from other students."}
+          <AlertDescription className="space-y-2">
+            {pasco.rejectionReason ? (
+              <p>Moderators rejected this pasco: {pasco.rejectionReason}</p>
+            ) : (
+              <p>Moderators rejected this pasco.</p>
+            )}
+            <p>
+              You can{" "}
+              <Link
+                href={`/pascos/${pascoId}/edit`}
+                className="font-medium underline underline-offset-4"
+              >
+                edit it
+              </Link>{" "}
+              and resubmit for review.
+            </p>
           </AlertDescription>
         </Alert>
       ) : null}
@@ -147,7 +162,7 @@ export function PascoDetailPage() {
       ) : null}
 
       <PageHeader
-        title={getPascoDisplayTitle(pasco, course)}
+        title={initialData?.displayTitle ?? getPascoDisplayTitle(pasco, course)}
         description={getPascoDisplayDescription(pasco, course)}
         actions={
           <>
@@ -207,6 +222,10 @@ export function PascoDetailPage() {
               <div>
                 <dt className="text-muted-foreground">Education level</dt>
                 <dd>{formatEnumLabel(pasco.educationLevel)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Study mode</dt>
+                <dd>{formatEnumLabel(pasco.studyMode)}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Semester</dt>

@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import { listModerationPascos } from "@/lib/pasco-moderation";
 import { serializePasco } from "@/lib/pascos";
 import { requireModerator } from "@/lib/require-moderator";
@@ -92,7 +92,7 @@ export async function GET(req: Request) {
       },
     });
   } catch (err) {
-    console.error("Moderation pasco list failed:", err);
+    logError("Moderation pasco list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

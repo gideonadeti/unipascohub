@@ -65,8 +65,9 @@ Shared TypeScript types live in [`src/types/api/`](../../src/types/api/).
 | [catalog.md](catalog.md)                         | Institutions, programs, courses   |
 | [catalog-submissions.md](catalog-submissions.md) | Catalog submission and moderation |
 | [pascos.md](pascos.md)                           | Pasco CRUD, engagement, files     |
+| [feedback.md](feedback.md)                       | Feedback submission and management |
 | [users.md](users.md)                             | Current user, role upgrades       |
-| [admin.md](admin.md)                             | Cloudinary cleanup, storage logs  |
+| [admin.md](admin.md)                             | Cloudinary cleanup, storage logs, moderation settings |
 
 ## Webhooks
 

@@ -1,4 +1,5 @@
 import { createClient, type RedisClientType } from "redis";
+import { logError } from "@/lib/logger";
 
 type RateLimitOptions = {
   limit: number;
@@ -19,6 +20,7 @@ let redisClient: RedisClientType | null = null;
 let redisConnectPromise: Promise<RedisClientType | null> | null = null;
 let warnedMemoryFallback = false;
 
+const MEMORY_STORE_MAX = 10_000;
 const memoryStore = new Map<string, MemoryEntry>();
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
@@ -54,7 +56,7 @@ async function getRedisClient(): Promise<RedisClientType | null> {
     const client = createClient({ url: redisUrl });
 
     client.on("error", (error) => {
-      console.error("Redis rate limit error:", error);
+      logError("Redis rate limit error", error);
     });
 
     await client.connect();
@@ -66,7 +68,7 @@ async function getRedisClient(): Promise<RedisClientType | null> {
   try {
     return await redisConnectPromise;
   } catch (error) {
-    console.error("Failed to connect to Redis for rate limiting:", error);
+    logError("Failed to connect to Redis for rate limiting", error);
     redisConnectPromise = null;
     redisClient = null;
 
@@ -85,20 +87,39 @@ async function checkRedisRateLimit(
   }
 
   const windowSeconds = Math.max(1, Math.ceil(options.windowMs / 1000));
-  const count = await client.incr(key);
 
-  if (count === 1) {
-    await client.expire(key, windowSeconds);
-  }
+  const created = await client.set(key, 1, { NX: true, EX: windowSeconds });
 
-  if (count > options.limit) {
-    const ttl = await client.ttl(key);
-    const retryAfterSeconds = ttl > 0 ? ttl : windowSeconds;
+  if (created === null) {
+    const count = await client.incr(key);
 
-    return { rateLimited: true, retryAfterSeconds };
+    if (count > options.limit) {
+      const ttl = await client.ttl(key);
+      const retryAfterSeconds = ttl > 0 ? ttl : windowSeconds;
+
+      return { rateLimited: true, retryAfterSeconds };
+    }
   }
 
   return { rateLimited: false };
+}
+
+function evictMemoryStore(): void {
+  if (memoryStore.size < MEMORY_STORE_MAX) return;
+
+  let oldestKey: string | undefined;
+  let oldestResetAt = Infinity;
+
+  for (const [key, entry] of memoryStore) {
+    if (entry.resetAt < oldestResetAt) {
+      oldestResetAt = entry.resetAt;
+      oldestKey = key;
+    }
+  }
+
+  if (oldestKey) {
+    memoryStore.delete(oldestKey);
+  }
 }
 
 function checkMemoryRateLimit(
@@ -116,6 +137,7 @@ function checkMemoryRateLimit(
   const existing = memoryStore.get(key);
 
   if (existing === undefined || now >= existing.resetAt) {
+    evictMemoryStore();
     memoryStore.set(key, { count: 1, resetAt: now + options.windowMs });
 
     return { rateLimited: false };
@@ -198,9 +220,42 @@ export function getPascoViewGlobalRateLimitOptions(): RateLimitOptions {
   };
 }
 
+export function getPascoCreateRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(process.env.PASCO_CREATE_RATE_LIMIT, 10),
+    windowMs: parsePositiveInt(
+      process.env.PASCO_CREATE_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}
+
 export function getPascoListRateLimitOptions(): RateLimitOptions {
   return {
     limit: parsePositiveInt(process.env.PASCO_LIST_RATE_LIMIT, 120),
     windowMs: parsePositiveInt(process.env.PASCO_LIST_RATE_WINDOW_MS, 900_000),
+  };
+}
+
+export function getCatalogSubmissionCreateRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(
+      process.env.CATALOG_SUBMISSION_CREATE_RATE_LIMIT,
+      10,
+    ),
+    windowMs: parsePositiveInt(
+      process.env.CATALOG_SUBMISSION_CREATE_RATE_WINDOW_MS,
+      900_000,
+    ),
+  };
+}
+
+export function getUpgradeToContributorRateLimitOptions(): RateLimitOptions {
+  return {
+    limit: parsePositiveInt(process.env.UPGRADE_TO_CONTRIBUTOR_RATE_LIMIT, 3),
+    windowMs: parsePositiveInt(
+      process.env.UPGRADE_TO_CONTRIBUTOR_RATE_WINDOW_MS,
+      900_000,
+    ),
   };
 }

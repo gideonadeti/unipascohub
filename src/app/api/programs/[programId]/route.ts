@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-
+import { logError } from "@/lib/logger";
 import {
   deleteProgram,
   getProgramById,
@@ -28,7 +28,7 @@ export async function GET(
       program: serializeProgram(result.program),
     });
   } catch (err) {
-    console.error("Program fetch failed:", err);
+    logError("Program fetch failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -52,6 +52,8 @@ export async function PATCH(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -100,7 +102,7 @@ export async function PATCH(
         );
     }
   } catch (err) {
-    console.error("Program update failed:", err);
+    logError("Program update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -124,6 +126,8 @@ export async function DELETE(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -141,7 +145,7 @@ export async function DELETE(
         return Response.json({ error: "Program not found" }, { status: 404 });
     }
   } catch (err) {
-    console.error("Program delete failed:", err);
+    logError("Program delete failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

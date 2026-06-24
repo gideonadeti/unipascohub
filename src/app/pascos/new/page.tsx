@@ -11,6 +11,7 @@ import { siteDescription } from "@/config/site";
 export const metadata: Metadata = {
   title: "Upload pasco",
   description: siteDescription,
+  robots: { index: false },
 };
 
 function PascoCreateFormFallback() {

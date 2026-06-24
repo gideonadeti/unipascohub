@@ -6,6 +6,7 @@ import {
   parseInstitutionCreate,
   serializeInstitution,
 } from "@/lib/institutions";
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
@@ -18,11 +19,14 @@ export async function GET() {
       return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 
-    return Response.json({
-      institutions: result.institutions.map(serializeInstitution),
-    });
+    return Response.json(
+      {
+        institutions: result.institutions.map(serializeInstitution),
+      },
+      { headers: { "Cache-Control": "public, max-age=3600" } },
+    );
   } catch (err) {
-    console.error("Institution list failed:", err);
+    logError("Institution list failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -43,6 +47,8 @@ export async function POST(req: Request) {
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -83,7 +89,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("Institution create failed:", err);
+    logError("Institution create failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

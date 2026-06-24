@@ -58,7 +58,7 @@ export function CatalogSubmissionRejectDialog({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Reject catalog submission</DialogTitle>
             <DialogDescription>

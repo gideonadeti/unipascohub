@@ -29,6 +29,14 @@ enum EducationLevel {
   LEVEL_400
 }
 
+enum StudyMode {
+  FULL_TIME
+  PART_TIME
+  DISTANCE
+  EVENING
+  WEEKEND
+}
+
 enum SemesterType {
   FIRST_SEMESTER
   SECOND_SEMESTER
@@ -88,6 +96,14 @@ enum CatalogSubmissionType {
   COURSE
 }
 
+enum FeedbackCategory {
+  BUG_REPORT
+  CONTENT_ISSUE
+  FEATURE_REQUEST
+  GENERAL
+  TESTIMONIAL
+}
+
 enum CatalogSubmissionStatus {
   PENDING
   APPROVED
@@ -109,8 +125,10 @@ model User {
   storageCleanupRuns        StorageCleanupRun[]
   searchQueries             SearchQuery[]
   notifications             Notification[]
+  pushSubscriptions          PushSubscription[]
   catalogSubmissionsSubmitted CatalogSubmission[] @relation("CatalogSubmissionSubmitter")
   catalogSubmissionsReviewed  CatalogSubmission[] @relation("CatalogSubmissionReviewer")
+  feedback                    Feedback[]
 }
 
 model Institution {
@@ -163,6 +181,7 @@ model Pasco {
   academicYear         String // e.g., "2024/2025"
   description          String?
   educationLevel       EducationLevel
+  studyMode           StudyMode @default(FULL_TIME)
   semesterType         SemesterType
   type                 PascoType
   contentType          PascoContentType
@@ -186,8 +205,9 @@ model Pasco {
   reactions                PascoReaction[]
   downloads                PascoDownload[]
   storageCleanupFailures   StorageCleanupFailure[]
+  feedback                 Feedback[]
 
-  @@index([courseId, educationLevel, academicYear])
+  @@index([courseId, educationLevel, studyMode, academicYear])
   @@index([uploaderId])
   @@index([createdAt(sort: Desc)])
   @@index([likeCount(sort: Desc)])
@@ -322,6 +342,20 @@ model Notification {
   @@index([userId, readAt, createdAt(sort: Desc)])
 }
 
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model CatalogSubmission {
   id                String                  @id @default(cuid())
   type              CatalogSubmissionType
@@ -348,4 +382,25 @@ model CatalogSubmission {
   @@index([status, createdAt(sort: Desc)])
   @@index([submitterId, createdAt(sort: Desc)])
   @@index([institutionId, type, status])
+}
+
+model Feedback {
+  id           String           @id @default(cuid())
+  userId       String?
+  category     FeedbackCategory
+  subject      String
+  message      String
+  contactEmail String?
+  pageUrl      String?
+  pascoId      String?
+  status       String           @default("NEW")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pasco Pasco? @relation(fields: [pascoId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([category, createdAt(sort: Desc)])
 }

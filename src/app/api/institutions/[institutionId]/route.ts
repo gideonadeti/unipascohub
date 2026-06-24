@@ -7,6 +7,7 @@ import {
   serializeInstitution,
   updateInstitution,
 } from "@/lib/institutions";
+import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
@@ -28,7 +29,7 @@ export async function GET(
       institution: serializeInstitution(result.institution),
     });
   } catch (err) {
-    console.error("Institution fetch failed:", err);
+    logError("Institution fetch failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -52,6 +53,8 @@ export async function PATCH(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -101,7 +104,7 @@ export async function PATCH(
         );
     }
   } catch (err) {
-    console.error("Institution update failed:", err);
+    logError("Institution update failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -125,6 +128,8 @@ export async function DELETE(
         return Response.json({ error: "User not found" }, { status: 404 });
       case "forbidden":
         return Response.json({ error: "Forbidden" }, { status: 403 });
+      default:
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -150,7 +155,7 @@ export async function DELETE(
 
     return Response.json({ success: true });
   } catch (err) {
-    console.error("Institution delete failed:", err);
+    logError("Institution delete failed", err);
 
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -69,6 +69,7 @@ export function getPascoBrowseHref(pasco: Pick<Pasco, "courseId">): string {
 export const pascoOverviewBadges = [
   "type",
   "educationLevel",
+  "studyMode",
   "semesterType",
   "contentType",
 ] as const satisfies ReadonlyArray<keyof Pasco>;

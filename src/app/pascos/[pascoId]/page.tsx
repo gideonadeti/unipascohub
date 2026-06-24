@@ -1,11 +1,20 @@
+import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { PascoDetailPage } from "@/components/pasco-detail-page";
-import { siteDescription } from "@/config/site";
+import { formatEnumLabel } from "@/lib/catalog-labels";
 import { getCourseById } from "@/lib/courses";
 import { getPascoDisplayTitle } from "@/lib/pasco-display";
-import { getPascoById } from "@/lib/pascos";
+import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
+import { getPascoById, serializePasco } from "@/lib/pascos";
+import { breadcrumbJsonLd, pascoJsonLd } from "@/lib/seo/json-ld";
+
+import type { PascoDetailResponse } from "@/types/api/pascos";
+
+const getCachedPascoById = cache(getPascoById);
 
 type PascoDetailRouteProps = {
   params: Promise<{ pascoId: string }>;
@@ -15,12 +24,11 @@ export async function generateMetadata({
   params,
 }: PascoDetailRouteProps): Promise<Metadata> {
   const { pascoId } = await params;
-  const result = await getPascoById(pascoId);
+  const result = await getCachedPascoById(pascoId);
 
   if (!result.success) {
     return {
       title: "Pasco",
-      description: siteDescription,
     };
   }
 
@@ -28,16 +36,83 @@ export async function generateMetadata({
   const course = courseResult.success ? courseResult.course : null;
   const title = getPascoDisplayTitle(result.pasco, course);
 
+  const pasco = result.pasco;
+  const courseLabel = course
+    ? `${course.code} ${course.title}`
+    : "past exam paper";
+  const description = `Download ${courseLabel} ${formatEnumLabel(pasco.educationLevel)} ${formatEnumLabel(pasco.semesterType)} ${formatEnumLabel(pasco.type)} past questions (${pasco.academicYear}). Free university exam paper from Uni Pasco Hub.`;
+
   return {
     title,
-    description: siteDescription,
+    description,
+    alternates: { canonical: `/pascos/${pascoId}` },
   };
 }
 
-export default function PascoDetailRoute() {
+async function getPascoData(pascoId: string) {
+  const result = await getCachedPascoById(pascoId);
+
+  if (!result.success) {
+    return null;
+  }
+
+  const courseResult = await getCourseById(result.pasco.courseId);
+  const course = courseResult.success ? courseResult.course : null;
+
+  return { pasco: result.pasco, course };
+}
+
+export default async function PascoDetailRoute({
+  params,
+}: PascoDetailRouteProps) {
+  const { pascoId } = await params;
+  const data = await getPascoData(pascoId);
+
+  if (!data) {
+    notFound();
+  }
+
+  const { userId } = await auth();
+  const viewerReaction = userId
+    ? ((await getViewerReactionsForPascos(userId, [pascoId])).get(pascoId) ??
+      null)
+    : undefined;
+
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", href: "/" },
+    { name: "Browse pascos", href: "/pascos" },
+    {
+      name: getPascoDisplayTitle(data.pasco, data.course),
+      href: `/pascos/${pascoId}`,
+    },
+  ]);
+
+  const pascoSchema = pascoJsonLd(data.pasco, data.course);
+
+  const serialized = serializePasco(data.pasco, { viewerReaction });
+  const displayTitle = getPascoDisplayTitle(data.pasco, data.course);
+  const course = data.course
+    ? { code: data.course.code, title: data.course.title }
+    : null;
+  const initialData: PascoDetailResponse = {
+    pasco: serialized,
+    displayTitle,
+    course,
+  };
+
   return (
     <PageContainer width="narrow" className="space-y-8">
-      <PascoDetailPage />
+      <script
+        type="application/ld+json"
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pascoSchema) }}
+      />
+      <PascoDetailPage initialData={initialData} />
     </PageContainer>
   );
 }
