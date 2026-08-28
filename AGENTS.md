@@ -4,8 +4,8 @@
 
 ```bash
 pnpm install
-cp .env.example .env                  # production config
-cp .env.example .env.local           # local dev overrides (localhost DB, test keys, etc.)
+cp .env.example .env                  # then fill in values (see docs/development.md)
+cp .env.example .env.local           # optional local overrides (localhost DB, test keys, etc.)
 echo "postgres" > secrets/postgres_password.txt
 docker compose -f compose.yaml -f compose.local.yaml up -d
 pnpm prisma migrate dev && pnpm prisma generate
