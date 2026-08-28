@@ -29,8 +29,7 @@ export function SiteHeader() {
         className="text-base font-semibold tracking-tight sm:text-lg"
         aria-current={isHome ? "page" : undefined}
       >
-        <span className="sm:hidden">Uni Pasco</span>
-        <span className="hidden sm:inline">{siteName}</span>
+        {siteName}
       </Link>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
