@@ -30,10 +30,10 @@ export type FooterNavGroup = {
 export const siteName = "Uni Pasco Hub";
 
 export const siteTagline =
-  "Find and share past exam papers to prepare with confidence.";
+  "Find and share past exam papers. Prepare with confidence.";
 
 export const siteDescription =
-  "A hub for university students to share pasco and better prepare for exams.";
+  "A hub for university students to find, share, and access past exam papers.";
 
 export const siteContributors: SiteContributor[] = [
   {
