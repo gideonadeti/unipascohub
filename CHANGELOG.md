@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Pasco uploads are anonymous to the public: detail page no longer shows uploader names; public API responses omit `uploaderId` unless the viewer is the uploader or a moderator/admin
+- Contributors page: open-source contribution guidance (GitHub repo, contributing guide, and issue tracker links) replacing the private-repository DM flow
 
 ### Planned
 

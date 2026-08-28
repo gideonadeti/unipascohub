@@ -45,6 +45,8 @@ export const siteContributors: SiteContributor[] = [
 
 export const siteSponsors: SiteSponsor[] = [];
 
+export const siteRepoUrl = "https://github.com/gideonadeti/unipascohub";
+
 function getLeadContributor(): SiteContributor | undefined {
   return (
     siteContributors.find((person) => person.role === "lead") ??

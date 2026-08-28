@@ -123,7 +123,7 @@ See [operations.md](operations.md) for maintenance workflows.
 | Edit pasco       | `/pascos/[pascoId]/edit` | Functional                                           |
 | My contributions | `/contributions`         | Uploads + catalog request history (contributor gate) |
 | Catalog review   | `/moderation/catalog`    | Pending/rejected contributor catalog requests        |
-| Contributors     | `/contributors`          | Stub page (reads from `siteCredits`)                 |
+| Contributors     | `/contributors`          | Team cards + open-source contribution guide (`siteContributors`) |
 | Sponsors         | `/sponsors`              | Stub page                                            |
 | Privacy          | `/privacy`               | Draft placeholder                                    |
 | Terms            | `/terms`                 | Draft placeholder                                    |

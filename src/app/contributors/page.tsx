@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FaXTwitter } from "react-icons/fa6";
+import { FaGithub } from "react-icons/fa6";
 
 import { ContributorCard } from "@/components/contributor-card";
 import { PageContainer } from "@/components/layout/page-container";
@@ -9,10 +9,9 @@ import { ProseContent } from "@/components/layout/prose-content";
 import { Section } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
 import {
-  getLeadContributor,
   type SiteContributor,
   siteContributors,
-  siteLinks,
+  siteRepoUrl,
 } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -36,8 +35,6 @@ function sortContributors(contributors: SiteContributor[]): SiteContributor[] {
 
 export default function ContributorsPage() {
   const contributors = sortContributors(siteContributors);
-  const lead = getLeadContributor();
-  const leadFirstName = lead?.name.trim().split(/\s+/)[0];
 
   return (
     <PageContainer width="default">
@@ -49,7 +46,7 @@ export default function ContributorsPage() {
 
         <Section
           title="Want to help?"
-          description="Share pascos on your own, or reach out to join development."
+          description="Share pascos on your own, or help build the platform."
         >
           <ProseContent>
             <p>
@@ -58,29 +55,35 @@ export default function ContributorsPage() {
               contributor from there — no invite needed.
             </p>
             <p>
-              The codebase is private while the platform is in active
-              development. If you would like to contribute code or help maintain
-              the project, send{" "}
-              {lead ? <strong>{lead.name}</strong> : "the project lead"} a DM on
-              X for repository access.
+              The codebase is open source under the MIT license at{" "}
+              <a href={siteRepoUrl} target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+              . To contribute code or help maintain the project, start with the
+              <a
+                href={`${siteRepoUrl}/blob/main/CONTRIBUTING.md`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                contributing guide
+              </a>
+              , then open an issue or pull request.
             </p>
           </ProseContent>
           <div className="flex flex-wrap gap-3">
             <Button asChild>
               <Link href="/pascos/new">Upload pasco</Link>
             </Button>
-            {siteLinks.twitter ? (
-              <Button variant="outline" asChild>
-                <a
-                  href={siteLinks.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaXTwitter aria-hidden />
-                  DM {leadFirstName ?? lead?.name ?? "the lead"} on X
-                </a>
-              </Button>
-            ) : null}
+            <Button variant="outline" asChild>
+              <a
+                href={`${siteRepoUrl}/issues`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaGithub aria-hidden />
+                Browse open issues
+              </a>
+            </Button>
           </div>
         </Section>
 
