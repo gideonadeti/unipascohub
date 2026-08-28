@@ -5,7 +5,7 @@ import { siteDescription, siteName } from "@/config/site";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: siteName,
-    short_name: "Uni Pasco",
+    short_name: "Uni Pasco Hub",
     description: siteDescription,
     start_url: "/",
     display: "standalone",
