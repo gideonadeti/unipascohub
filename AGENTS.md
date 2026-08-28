@@ -35,6 +35,8 @@ pnpm dev
 
 **No test framework or test script exists.** Only CI checks are lint, typecheck, build.
 
+**Run `pnpm build` sparingly** — it takes several minutes. Default to `pnpm lint` + `pnpm typecheck` for validation (doc changes, small edits, config/comment tweaks). Only run the full build when it is actually needed: before pushing, after changing `next.config.ts`, routes/pages, Prisma schema, or dependencies, or when reproducing a build-only failure. CI runs the build anyway, so it does not need to be repeated locally for every change.
+
 ## Architecture
 
 - **Next.js 16 App Router** — all route handlers export `runtime = "nodejs"` (no edge runtime)
