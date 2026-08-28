@@ -59,7 +59,7 @@ export default function ContributorsPage() {
               <a href={siteRepoUrl} target="_blank" rel="noopener noreferrer">
                 GitHub
               </a>
-              . To contribute code or help maintain the project, start with the
+              . To contribute code or help maintain the project, start with the{" "}
               <a
                 href={`${siteRepoUrl}/blob/main/CONTRIBUTING.md`}
                 target="_blank"
