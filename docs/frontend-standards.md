@@ -120,7 +120,7 @@ Prefer `PascoCardSkeleton` grid (Phase 2) over spinners for list loading.
 - Entire card is a `Link` to `/pascos/[id]` (large tap target on mobile)
 - **Institution eyebrow:** `course.institutionName` above the title when present; hidden on browse when `courseId` filter is active
 - **Title:** `course.code — course.title` from list API `course` summary (fallback: `academicYear · level`)
-- **Subtitle:** `getPascoDisplayDescription` — muted line with year, level, semester, and exam type
+- **Subtitle:** `getPascoDisplayDescription` — muted line with year, level, and semester (exam type lives in the badges)
 - **Badges:** max 2 via `getPascoCardBadges` — incomplete upload, non-default content type, partial solutions, exam type; browse passes `hiddenBadgeKeys` for active filters
 - **Meta row:** context-aware via `emphasize` (`createdAt`, `views`, `downloads`, `likes`) plus file count
 - Grid: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4`
