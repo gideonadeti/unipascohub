@@ -67,6 +67,7 @@ pnpm dev
 - Migrations: `pnpm prisma migrate dev --name <desc>` then `pnpm prisma generate`
 - Seeds: `prisma/seed-*.ts` files run via `tsx`, each registered as `pnpm seed-<name>` (no `prisma db seed`)
 - Never edit applied migration files
+- pg_trgm search indexes are migration-managed (not in `schema.prisma`) — use `prisma migrate dev --create-only` and strip spurious `DROP INDEX *_trgm_idx` lines before applying (see `docs/development.md`)
 - DB password stored in `secrets/postgres_password.txt` (Docker secret; path also in `.gitignore` as `/secrets`)
 
 ## Gotchas

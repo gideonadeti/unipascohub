@@ -69,6 +69,10 @@ pnpm seed-institutions
 - Generated client output: `generated/prisma/`
 - Config: [`prisma.config.ts`](../prisma.config.ts)
 - Search requires the `pg_trgm` extension (applied by migration `20260618100000_add_pg_trgm_course_search_indexes`). Most managed Postgres providers support `CREATE EXTENSION pg_trgm`; confirm before production deploy.
+- The trigram search indexes (`course_code_trgm_idx`, `course_title_trgm_idx`, `institution_name_trgm_idx`) are **migration-managed, not schema-managed** — Prisma cannot express them in `schema.prisma`. They were once dropped by a later generated migration (`20260618132845`) and re-added by `20260829000000_recreate_pg_trgm_search_indexes`. When running `prisma migrate dev`, prefer `--create-only`, review the generated SQL, and remove any spurious `DROP INDEX *_trgm_idx` lines before applying. Verify after deploys with:
+  ```sql
+  SELECT indexname FROM pg_indexes WHERE indexdef LIKE '%gin_trgm_ops%'; -- expect 3 rows
+  ```
 
 ### 5. Clerk configuration
 
