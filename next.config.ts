@@ -23,6 +23,31 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    // PostHog reverse proxy: keeps analytics requests same-origin so ad
+    // blockers and future CSP enforcement don't drop events. Inert when
+    // NEXT_PUBLIC_POSTHOG_HOST is unset. See docs/analytics.md.
+    const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+
+    if (!posthogHost) {
+      return [];
+    }
+
+    const posthogStaticHost = posthogHost.includes("eu.i.posthog.com")
+      ? "https://eu-assets.i.posthog.com"
+      : "https://us-assets.i.posthog.com";
+
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: `${posthogStaticHost}/static/:path*`,
+      },
+      {
+        source: "/ingest/:path*",
+        destination: `${posthogHost}/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -61,11 +86,11 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy-Report-Only",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://clerk.com https://upload-widget.cloudinary.com https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://clerk.com https://upload-widget.cloudinary.com https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live https://*.posthog.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://avatars.githubusercontent.com https://github.com",
+              "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://avatars.githubusercontent.com https://github.com https://*.posthog.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.cloudinary.com https://*.clerk.com https://clerk.com https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live",
+              "connect-src 'self' https://api.cloudinary.com https://*.clerk.com https://clerk.com https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live https://*.posthog.com",
               "frame-src 'self' https://*.clerk.com https://clerk.com",
               "worker-src 'self' blob:",
               "base-uri 'self'",

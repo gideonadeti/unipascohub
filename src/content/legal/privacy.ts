@@ -9,11 +9,11 @@ export const privacySections = [
   },
   {
     title: "Cookies and analytics",
-    body: "We use cookies required for authentication and session management. When you use search, we store your search query text on our servers (along with optional account identifier if signed in and basic result metadata) to understand usage and improve the product. We do not use third-party advertising trackers for search.",
+    body: "We use cookies required for authentication and session management. When you use search, we store your search query text on our servers (along with optional account identifier if signed in and basic result metadata) to understand usage and improve the product. We do not use third-party advertising trackers for search. We also use PostHog, a product analytics service, to understand how the product is used (for example, how often pascos are searched, viewed, or downloaded). PostHog receives a pseudonymous account identifier (if you are signed in) and product usage events only — we do not send it your name, email address, school, search query text, or file contents.",
   },
   {
     title: "Third-party processors",
-    body: "We use third-party services to run Uni Pasco Hub. Clerk provides authentication, and Cloudinary stores uploaded files. These services process data on our behalf to deliver the product.",
+    body: "We use third-party services to run Uni Pasco Hub. Clerk provides authentication, Cloudinary stores uploaded files, and PostHog provides product analytics. These services process data on our behalf to deliver and improve the product.",
   },
   {
     title: "How we use data",

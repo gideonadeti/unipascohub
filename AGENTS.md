@@ -44,6 +44,7 @@ pnpm dev
 - **Clerk** for auth; a local `User` row stores roles (`NORMAL_USER`/`CONTRIBUTOR`/`MODERATOR`/`ADMIN`). Users synced via webhooks (`/api/webhooks`) + SSR fallback (`EnsureUserSynced`).
 - **Cloudinary** for file storage (unsigned upload preset); all view/download URLs are time-limited and signed. PDFs must use `resourceType: IMAGE`. Spreadsheets are not allowed.
 - **Redis** for distributed rate limiting (optional — falls back to in-memory store)
+- **PostHog** (client-side only) for product analytics — typed events via `src/lib/analytics/posthog.ts`, inert unless `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` are set; requests proxied through `/ingest`; see `docs/analytics.md`
 - **TanStack Query** on the client (`src/hooks/api/` → `src/lib/api/` wrappers)
 - **shadcn/ui** (Radix Maia style) with **Tailwind CSS 4** (`postcss.config.mjs` uses `@tailwindcss/postcss` — no `tailwind.config.*`)
 - **Biome** for lint + format; **Husky + lint-staged** pre-commit

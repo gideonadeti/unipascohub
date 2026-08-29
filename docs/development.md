@@ -89,7 +89,15 @@ The app also syncs users on page load via [`src/components/ensure-user-synced.ts
 
 Allowed file types are defined in [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts): PDF, images, and documents (not spreadsheets).
 
-### 7. Run the dev server
+### 7. PostHog (optional)
+
+Client-side product analytics only. Leave `NEXT_PUBLIC_POSTHOG_KEY` and
+`NEXT_PUBLIC_POSTHOG_HOST` unset to run completely without it (the default).
+To enable locally, copy the values from [`.env.example`](../.env.example) into
+`.env`. Events, privacy rules, and Vercel setup are documented in
+[`docs/analytics.md`](analytics.md).
+
+### 8. Run the dev server
 
 ```bash
 pnpm dev
