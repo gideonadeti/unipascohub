@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -148,11 +147,6 @@ export function MobileNavSheet() {
               })}
             </nav>
           ))}
-
-          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
-            <span className="text-sm">Theme</span>
-            <ThemeToggle />
-          </div>
 
           <Show when="signed-out">
             <div className="flex flex-col gap-2">

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import { MobileNavSheet } from "@/components/mobile-nav-sheet";
 import { NotificationBell } from "@/components/notification-bell";
+import { PwaInstallButton } from "@/components/pwa-install-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { siteName } from "@/config/site";
@@ -57,7 +58,6 @@ export function SiteHeader() {
               </Button>
             </>
           ) : null}
-          <ThemeToggle />
           <Show when="signed-out">
             <SignInButton mode="modal">
               <Button variant="ghost" type="button">
@@ -69,6 +69,9 @@ export function SiteHeader() {
             </SignUpButton>
           </Show>
         </div>
+
+        <ThemeToggle />
+        <PwaInstallButton />
 
         <Show when="signed-in">
           <NotificationBell />
