@@ -30,12 +30,14 @@ const FILE_TYPE_ICONS: Record<PascoFileViewKind, LucideIcon> = {
 type PascoFileActionsProps = {
   pascoId: string;
   file: PascoFile;
+  courseCode?: string;
   onView: (file: PascoFile) => void;
 };
 
 export function PascoFileActions({
   pascoId,
   file,
+  courseCode,
   onView,
 }: PascoFileActionsProps) {
   const { isSignedIn } = useAuth();
@@ -124,7 +126,12 @@ export function PascoFileActions({
         }
       >
         {renderViewButton()}
-        <PascoFileDownload pascoId={pascoId} file={file} compact />
+        <PascoFileDownload
+          pascoId={pascoId}
+          file={file}
+          courseCode={courseCode}
+          compact
+        />
       </div>
     </div>
   );

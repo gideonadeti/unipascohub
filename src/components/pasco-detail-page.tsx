@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { Section } from "@/components/layout/section";
@@ -23,6 +23,7 @@ import { useCourse } from "@/hooks/api/use-courses";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
 import { useRecordPascoView } from "@/hooks/api/use-pasco-engagement";
 import { usePasco } from "@/hooks/api/use-pascos";
+import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import { formatDateTime } from "@/lib/dates";
 import { buildPascoCreateHref } from "@/lib/pasco-create-href";
@@ -53,6 +54,25 @@ export function PascoDetailPage({
   const courseQuery = useCourse(courseId);
   const currentUser = useCurrentUser();
   useRecordPascoView(pascoId, pascoQuery.isSuccess);
+
+  const courseCode = courseQuery.data?.course?.code;
+  const trackedViewRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !pascoQuery.isSuccess ||
+      trackedViewRef.current ||
+      courseQuery.isFetching
+    ) {
+      return;
+    }
+
+    trackedViewRef.current = true;
+    trackAnalyticsEvent("pasco_viewed", {
+      pasco_id: pascoId,
+      course_code: courseCode,
+    });
+  }, [pascoQuery.isSuccess, courseQuery.isFetching, courseCode, pascoId]);
 
   if (pascoQuery.isPending) {
     return <PascoDetailSkeleton />;
@@ -289,6 +309,7 @@ export function PascoDetailPage({
                     <PascoFileActions
                       pascoId={pascoId}
                       file={file}
+                      courseCode={course?.code}
                       onView={setViewFile}
                     />
                   </li>

@@ -26,7 +26,7 @@ export function PascoDownloadAll({
   course,
 }: PascoDownloadAllProps) {
   const { isSignedIn } = useAuth();
-  const downloadAllMutation = useDownloadPascoAll(pascoId);
+  const downloadAllMutation = useDownloadPascoAll(pascoId, course?.code);
   const totalSize = formatPascoFileSize(getTotalFileSize(files));
   const ariaLabel = course
     ? `Download all files for ${course.code} as ZIP (${totalSize})`

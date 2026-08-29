@@ -42,6 +42,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubmitPascoCreate } from "@/hooks/api/use-pascos";
 import { ACADEMIC_YEAR_OPTIONS } from "@/lib/academic-year";
+import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
 import { coursesListOptions } from "@/lib/api/courses";
 import { institutionsListOptions } from "@/lib/api/institutions";
 import { programsListOptions } from "@/lib/api/programs";
@@ -185,6 +186,13 @@ export function PascoCreateForm() {
 
   async function onSubmit(values: PascoCreateFormValues) {
     await createPasco.submit(values);
+    const courseCode = courses.data?.courses.find(
+      (course) => course.id === values.courseId,
+    )?.code;
+    trackAnalyticsEvent("pasco_uploaded", {
+      file_count: values.files.length,
+      course_code: courseCode,
+    });
     saveLastUploadCatalogContext({
       institutionId: values.institutionId,
       programId: values.programId,

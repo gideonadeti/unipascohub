@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-
+import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
 import {
   downloadPascoAll,
   getPascoFileViewUrl,
@@ -63,7 +63,10 @@ export function useRecordPascoView(pascoId: string, enabled: boolean) {
   return mutation;
 }
 
-export function useRecordPascoFileDownload(pascoId: string) {
+export function useRecordPascoFileDownload(
+  pascoId: string,
+  courseCode?: string,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -73,6 +76,11 @@ export function useRecordPascoFileDownload(pascoId: string) {
         downloadCount: data.downloadCount,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.pascos.all });
+      trackAnalyticsEvent("pasco_downloaded", {
+        pasco_id: pascoId,
+        course_code: courseCode,
+        download_all: false,
+      });
     },
     onError: (error) => {
       toast.error(getPascoEngagementErrorMessage(error, "download"));
@@ -80,7 +88,7 @@ export function useRecordPascoFileDownload(pascoId: string) {
   });
 }
 
-export function useDownloadPascoAll(pascoId: string) {
+export function useDownloadPascoAll(pascoId: string, courseCode?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -90,6 +98,11 @@ export function useDownloadPascoAll(pascoId: string) {
         downloadCount: data.downloadCount,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.pascos.all });
+      trackAnalyticsEvent("pasco_downloaded", {
+        pasco_id: pascoId,
+        course_code: courseCode,
+        download_all: true,
+      });
     },
     onError: (error) => {
       toast.error(getPascoEngagementErrorMessage(error, "download"));
