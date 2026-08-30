@@ -10,6 +10,7 @@ import { isValidContentHash, normalizeContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
 import { parseNonEmptyString } from "@/lib/parse";
 import { findDuplicatePascoFiles } from "@/lib/pasco-file-hash";
+import { isAllowedPascoFileName } from "@/lib/pasco-file-types";
 import type { PascoListQuery } from "@/lib/pasco-list-query";
 import {
   canViewPasco,
@@ -164,6 +165,7 @@ type PascoCreateParseError =
   | "invalid_file_url"
   | "invalid_resource_type"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
@@ -200,6 +202,7 @@ type PascoUpdateParseError =
   | "invalid_file_url"
   | "invalid_resource_type"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "duplicate_order_in_files"
   | "duplicate_content_hash_in_files"
   | "invalid_content_hash"
@@ -386,6 +389,7 @@ function parsePascoFileCreate(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "file_size_exceeded"
         | "invalid_content_hash";
     } {
@@ -425,6 +429,10 @@ function parsePascoFileCreate(value: unknown):
 
   if (fileName === null) {
     return { success: false, error: "invalid_file_name" };
+  }
+
+  if (!isAllowedPascoFileName(fileName)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   if (fileSize === null) {
@@ -484,6 +492,7 @@ function parsePascoFiles(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "duplicate_order_in_files"
         | "duplicate_content_hash_in_files"
         | "invalid_content_hash"
@@ -553,6 +562,7 @@ function parsePascoFileSync(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "invalid_content_hash"
         | "file_size_exceeded";
     } {
@@ -608,6 +618,7 @@ function parsePascoFilesSync(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "duplicate_order_in_files"
         | "duplicate_content_hash_in_files"
         | "invalid_content_hash"
@@ -1062,7 +1073,6 @@ function serializePascoFile(file: PascoFile) {
     order: file.order,
     fileName: file.fileName,
     fileSize: file.fileSize,
-    fileUrl: file.fileUrl,
     resourceType: file.resourceType,
     createdAt: file.createdAt.toISOString(),
     updatedAt: file.updatedAt.toISOString(),

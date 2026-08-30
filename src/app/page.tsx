@@ -5,6 +5,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { PascoListSection } from "@/components/pasco-list-section";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
 import { siteDescription, siteName } from "@/config/site";
+import { serializeJsonLd } from "@/lib/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -32,8 +33,8 @@ export default function HomePage() {
     <PageContainer width="default" className="space-y-12">
       <script
         type="application/ld+json"
-        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD serialized via serializeJsonLd (escapes <, >, &, line separators) */
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }}
       />
       <HomeHero />
 

@@ -26,7 +26,6 @@ export const pascoFileExistingSchema = z.object({
   order: z.number().int().positive(),
   fileName: z.string().min(1).max(255),
   fileSize: z.number().int().positive(),
-  fileUrl: z.string().min(1).max(2000),
   resourceType: z.enum(["IMAGE", "RAW"]),
 });
 
@@ -149,7 +148,6 @@ export function pascoToEditFormValues(
       order: file.order,
       fileName: file.fileName,
       fileSize: file.fileSize,
-      fileUrl: file.fileUrl,
       resourceType: file.resourceType,
     })),
   };

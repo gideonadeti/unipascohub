@@ -241,6 +241,14 @@ export function isAllowedPascoFileName(fileName: string): boolean {
   );
 }
 
+export function isAllowedPascoFileFormat(format: string): boolean {
+  const normalized = format.trim().toLowerCase();
+
+  return PASCO_ALLOWED_EXTENSIONS.includes(
+    normalized as (typeof PASCO_ALLOWED_EXTENSIONS)[number],
+  );
+}
+
 export function isPascoPdfFileName(fileName: string): boolean {
   const extension = getFileExtension(fileName);
 

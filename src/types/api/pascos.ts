@@ -84,11 +84,16 @@ export type PascoFile = {
   order: number;
   fileName: string;
   fileSize: number;
-  fileUrl: string;
   resourceType: CloudinaryResourceType;
   createdAt: string;
   updatedAt: string;
 };
+
+/**
+ * A pasco file whose `fileUrl` is a short-lived signed URL obtained from the
+ * view/download endpoints. Raw storage URLs are never exposed by the API.
+ */
+export type PascoFileWithSignedUrl = PascoFile & { fileUrl: string };
 
 export type Pasco = {
   id: string;

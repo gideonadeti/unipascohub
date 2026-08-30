@@ -37,6 +37,29 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return parsed;
 }
 
+function resetRedisClientState(): void {
+  redisClient = null;
+  redisConnectPromise = null;
+}
+
+async function connectRedisClient(redisUrl: string): Promise<RedisClientType> {
+  const client = createClient({ url: redisUrl });
+
+  client.on("error", (error) => {
+    logError("Redis rate limit error", error);
+  });
+
+  client.on("end", () => {
+    // Allow the next request to establish a fresh connection instead of
+    // reusing a closed client for the lifetime of a warm serverless instance.
+    resetRedisClientState();
+  });
+
+  const connected = await client.connect();
+
+  return connected as RedisClientType;
+}
+
 async function getRedisClient(): Promise<RedisClientType | null> {
   const redisUrl = process.env.REDIS_URL?.trim();
 
@@ -48,32 +71,23 @@ async function getRedisClient(): Promise<RedisClientType | null> {
     return redisClient;
   }
 
-  if (redisConnectPromise) {
-    return redisConnectPromise;
+  if (!redisConnectPromise) {
+    redisConnectPromise = connectRedisClient(redisUrl)
+      .then((client) => {
+        redisClient = client;
+        redisConnectPromise = null;
+
+        return client;
+      })
+      .catch((error) => {
+        logError("Failed to connect to Redis for rate limiting", error);
+        resetRedisClientState();
+
+        return null;
+      });
   }
 
-  redisConnectPromise = (async () => {
-    const client = createClient({ url: redisUrl });
-
-    client.on("error", (error) => {
-      logError("Redis rate limit error", error);
-    });
-
-    await client.connect();
-    redisClient = client as RedisClientType;
-
-    return redisClient;
-  })();
-
-  try {
-    return await redisConnectPromise;
-  } catch (error) {
-    logError("Failed to connect to Redis for rate limiting", error);
-    redisConnectPromise = null;
-    redisClient = null;
-
-    return null;
-  }
+  return redisConnectPromise;
 }
 
 async function checkRedisRateLimit(
@@ -88,20 +102,43 @@ async function checkRedisRateLimit(
 
   const windowSeconds = Math.max(1, Math.ceil(options.windowMs / 1000));
 
-  const created = await client.set(key, 1, { NX: true, EX: windowSeconds });
+  try {
+    const created = await client.set(key, 1, { NX: true, EX: windowSeconds });
 
-  if (created === null) {
-    const count = await client.incr(key);
+    if (created === null) {
+      const count = await client.incr(key);
 
-    if (count > options.limit) {
-      const ttl = await client.ttl(key);
-      const retryAfterSeconds = ttl > 0 ? ttl : windowSeconds;
+      if (count > options.limit) {
+        let ttl = await client.ttl(key);
 
-      return { rateLimited: true, retryAfterSeconds };
+        if (ttl < 0) {
+          // The key lost its TTL (e.g. incr raced with expiry). Restore it so
+          // the rate-limit window can actually reset instead of persisting
+          // forever.
+          await client.expire(key, windowSeconds);
+          ttl = windowSeconds;
+        }
+
+        return { rateLimited: true, retryAfterSeconds: ttl };
+      }
     }
-  }
 
-  return { rateLimited: false };
+    return { rateLimited: false };
+  } catch (error) {
+    // Transient Redis failures must not turn public endpoints into 500s.
+    // Degrade to the in-memory limiter and drop the client so the next
+    // request can reconnect.
+    logError(
+      "Redis rate limit command failed; falling back to in-memory limiter",
+      error,
+    );
+
+    if (redisClient === client) {
+      redisClient = null;
+    }
+
+    return checkMemoryRateLimit(key, options);
+  }
 }
 
 function evictMemoryStore(): void {
@@ -128,7 +165,7 @@ function checkMemoryRateLimit(
 ): RateLimitResult {
   if (!warnedMemoryFallback) {
     console.warn(
-      "REDIS_URL is not set; using in-memory rate limiting (single-instance only)",
+      "In-memory rate limiting in use (single-instance only); Redis is unavailable",
     );
     warnedMemoryFallback = true;
   }

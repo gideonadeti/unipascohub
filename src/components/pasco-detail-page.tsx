@@ -38,7 +38,10 @@ import {
   canUserModifyPasco,
   isModeratorRole,
 } from "@/lib/pasco-permissions";
-import type { PascoDetailResponse, PascoFile } from "@/types/api/pascos";
+import type {
+  PascoDetailResponse,
+  PascoFileWithSignedUrl,
+} from "@/types/api/pascos";
 
 export function PascoDetailPage({
   initialData,
@@ -48,7 +51,7 @@ export function PascoDetailPage({
   const params = useParams<{ pascoId: string }>();
   const pascoId = params.pascoId ?? "";
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [viewFile, setViewFile] = useState<PascoFile | null>(null);
+  const [viewFile, setViewFile] = useState<PascoFileWithSignedUrl | null>(null);
   const pascoQuery = usePasco(pascoId, initialData);
   const courseId = pascoQuery.data?.pasco.courseId ?? "";
   const courseQuery = useCourse(courseId);
