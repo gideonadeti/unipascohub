@@ -4,6 +4,7 @@ export type SiteContributor = {
   name: string;
   github: string;
   role?: SiteContributorRole;
+  title?: string;
   avatarUrl?: string;
 };
 
@@ -40,6 +41,7 @@ export const siteContributors: SiteContributor[] = [
     name: "Gideon Adeti",
     github: "gideonadeti",
     role: "lead",
+    title: "Founder of WeAMP & Full-Stack Software Engineer",
   },
 ];
 

@@ -34,7 +34,7 @@ export function ContributorCard({ contributor }: ContributorCardProps) {
 
   return (
     <Card>
-      <CardContent className="flex items-start gap-4 pt-6">
+      <CardContent className="flex items-start gap-4">
         {profileUrl ? (
           <a
             href={profileUrl}
@@ -66,6 +66,9 @@ export function ContributorCard({ contributor }: ContributorCardProps) {
               <Badge variant="secondary">Lead</Badge>
             ) : null}
           </div>
+          {contributor.title ? (
+            <p className="text-sm text-muted-foreground">{contributor.title}</p>
+          ) : null}
           {showGitHub ? (
             <a
               href={profileUrl}
