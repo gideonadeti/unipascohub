@@ -51,7 +51,7 @@ Then set `DATABASE_URL` in `.env`:
 DATABASE_URL="postgresql://postgres:your-local-password@localhost:5432/unipascohub"
 ```
 
-Optionally set `REDIS_URL="redis://localhost:6379"` in `.env` to enable distributed rate limiting locally (it falls back to an in-memory store without it, which is fine for development).
+Rate limiting uses Upstash's HTTP/REST Redis client: set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (from the "REST API" section of your database in the [Upstash console](https://console.upstash.com/redis)) to enable distributed rate limiting. Without them the app uses an in-memory store, which is fine for development. (The Redis container in `compose.local.yaml` is not used by the app.)
 
 ### 3. Environment variables
 
@@ -170,7 +170,7 @@ Run these locally before pushing. Husky pre-commit hooks run lint-staged when no
 
 ### Rate limiting in development
 
-Without `REDIS_URL`, rate limits use an in-memory store (single process only). This is fine for local dev. Set `REDIS_URL` to test distributed rate limiting.
+Without Upstash credentials, rate limits use an in-memory store (single process only). This is fine for local dev. Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to test distributed rate limiting.
 
 ## When you change things, update docs
 
