@@ -34,6 +34,9 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 | `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                                |
 | `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                                         |
 | `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub + external form CTA                                |
+| `/guides`                | [`src/app/guides/page.tsx`](../src/app/guides/page.tsx)                               | Guide index linking the two usage guides                        |
+| `/guides/browsing`       | [`src/app/guides/browsing/page.tsx`](../src/app/guides/browsing/page.tsx)             | Browsing guide rendered from `src/content/guides/browsing.ts`   |
+| `/guides/uploading`      | [`src/app/guides/uploading/page.tsx`](../src/app/guides/uploading/page.tsx)           | Uploading guide rendered from `src/content/guides/uploading.ts` |
 | `/moderation/pascos`     | [`src/app/moderation/pascos/page.tsx`](../src/app/moderation/pascos/page.tsx)         | Pending pasco review queue (moderator/admin gate)               |
 
 Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
@@ -61,6 +64,7 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 | `PascoListSkeleton`   | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx)     | Grid of card skeletons                                        |
 | `EmptyState`          | [`empty-state.tsx`](../src/components/empty-state.tsx)                     | shadcn Empty wrapper with optional CTA                        |
 | `ProseContent`        | [`layout/prose-content.tsx`](../src/components/layout/prose-content.tsx)   | Lightweight wrapper for static copy pages                     |
+| `GuideContent`        | [`layout/guide-content.tsx`](../src/components/layout/guide-content.tsx)   | Renders structured guide content (paragraphs, bullets, steps) |
 | `HomeHero`            | [`home-hero.tsx`](../src/components/home-hero.tsx)                         | Homepage marketing hero with CTAs                             |
 | `HeroSearch`          | [`hero-search.tsx`](../src/components/hero-search.tsx)                     | Decorative v1 search with typing placeholder                  |
 | `RevealOnScroll`      | [`reveal-on-scroll.tsx`](../src/components/reveal-on-scroll.tsx)           | Motion wrapper for section reveal on scroll                   |
