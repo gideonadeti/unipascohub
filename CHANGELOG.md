@@ -4,7 +4,24 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.0] - 2026-08-30
+
+### Added
+
+- Admin link in the mobile nav sheet (desktop already had it) ([#14](https://github.com/weamp-org/unipascohub/pull/14))
+- Operations runbooks: promoting the first admin and fulfilling data-deletion requests ([#17](https://github.com/weamp-org/unipascohub/pull/17))
+
+### Changed
+
+- Upload limits tightened: 5 MB per file (was 10 MB) and 10 files per pasco (was 20), consistent across schema, server enforcement, docs, and the uploading guide ([#15](https://github.com/weamp-org/unipascohub/pull/15))
+- Legal pages finalized: draft framing removed, ownership/license grant, copyright & takedown process, IP-address disclosure, governing law (Republic of Ghana), org contact email ([#16](https://github.com/weamp-org/unipascohub/pull/16), [#17](https://github.com/weamp-org/unipascohub/pull/17))
+- Contact address switched from personal to organizational email (`admin@weamp.org`) across the Code of Conduct, security policy, and web-push VAPID contact ([#13](https://github.com/weamp-org/unipascohub/pull/13))
+
 ## [1.1.0] - 2026-08-30
+
+### Added
+
+- How-to guides: `/guides` index with browsing and uploading walkthroughs, linked from the footer and included in the sitemap ([#12](https://github.com/weamp-org/unipascohub/pull/12))
 
 ### Changed
 
@@ -139,7 +156,8 @@ Initial documented baseline of implemented functionality.
 - Cloudinary widget signing with source and widget timestamp
 - Font variable consistency in globals.css
 
-[Unreleased]: https://github.com/weamp-org/unipascohub/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/weamp-org/unipascohub/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/weamp-org/unipascohub/releases/tag/v1.2.0
 [1.1.0]: https://github.com/weamp-org/unipascohub/releases/tag/v1.1.0
 [1.0.1]: https://github.com/weamp-org/unipascohub/releases/tag/v1.0.1
 [1.0.0]: https://github.com/weamp-org/unipascohub/releases/tag/v1.0.0
