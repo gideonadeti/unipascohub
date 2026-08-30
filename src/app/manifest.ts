@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
 
+import { siteDescription, siteName } from "@/config/site";
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Uni Pasco Hub",
-    short_name: "Uni Pasco",
-    description:
-      "A hub for university students to share pasco and better prepare for exams.",
+    name: siteName,
+    short_name: "Uni Pasco Hub",
+    description: siteDescription,
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

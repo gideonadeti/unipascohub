@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
 import { queryKeys } from "@/lib/api/query-keys";
 import { upgradeToContributor } from "@/lib/api/users";
 
@@ -30,6 +31,7 @@ export function ContributorUpgradeCard({
     mutationFn: upgradeToContributor,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.me });
+      trackAnalyticsEvent("contributor_upgrade_completed");
     },
   });
 

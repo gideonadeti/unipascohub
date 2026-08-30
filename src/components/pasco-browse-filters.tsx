@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCourse } from "@/hooks/api/use-courses";
 import { ACADEMIC_YEAR_OPTIONS } from "@/lib/academic-year";
+import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
 import { coursesListOptions } from "@/lib/api/courses";
 import { institutionsListOptions } from "@/lib/api/institutions";
 import { programsListOptions } from "@/lib/api/programs";
@@ -54,6 +55,18 @@ import type { Program } from "@/types/api/catalog";
 import type { PascoListFilters } from "@/types/api/pascos";
 
 const ANY_VALUE = "__any__";
+
+// Only filter *keys* are ever tracked — never filter values.
+const APPLIED_FILTER_KEYS = [
+  "courseId",
+  "academicYear",
+  "educationLevel",
+  "studyMode",
+  "semesterType",
+  "type",
+  "contentType",
+  "isComplete",
+] as const satisfies readonly (keyof PascoListFilters)[];
 
 type PascoBrowseFiltersProps = {
   appliedFilters: PascoListFilters;
@@ -441,7 +454,18 @@ export function PascoBrowseFilters({
         type="button"
         className="w-full sm:w-auto"
         onClick={() => {
-          onApply(draftToFilters(draft, appliedFilters));
+          const nextFilters = draftToFilters(draft, appliedFilters);
+          const appliedKeys = APPLIED_FILTER_KEYS.filter(
+            (key) => nextFilters[key] !== undefined,
+          );
+
+          if (appliedKeys.length > 0) {
+            trackAnalyticsEvent("pasco_filtered", {
+              filters: [...appliedKeys],
+            });
+          }
+
+          onApply(nextFilters);
           setMobileOpen(false);
         }}
       >

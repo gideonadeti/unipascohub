@@ -1,8 +1,10 @@
 import { ImageResponse } from "next/og";
 
+import { siteName, siteTagline } from "@/config/site";
+
 export const runtime = "edge";
 
-export const alt = "Uni Pasco Hub";
+export const alt = siteName;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -37,7 +39,7 @@ export default function OpenGraphImage() {
             lineHeight: 1.1,
           }}
         >
-          Uni Pasco Hub
+          {siteName}
         </div>
         <div
           style={{
@@ -48,7 +50,7 @@ export default function OpenGraphImage() {
             lineHeight: 1.4,
           }}
         >
-          Find and share past exam papers to prepare with confidence.
+          {siteTagline}
         </div>
       </div>
     </div>,

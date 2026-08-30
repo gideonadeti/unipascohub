@@ -11,7 +11,7 @@ A platform for university students to share past exam papers (pascos) and prepar
 - **Auth & roles** — Clerk sign-in with `NORMAL_USER`, `CONTRIBUTOR`, `MODERATOR`, and `ADMIN` roles
 - **Operations** — Cloudinary orphan cleanup (API + CLI), storage cleanup failure logging
 
-The browse/discovery UI and a production homepage are planned next. See [docs/features.md](docs/features.md) for the full implemented vs planned breakdown.
+The production homepage, `/pascos` browse page, and pasco create/detail/edit pages are implemented. See [docs/features.md](docs/features.md) for the full implemented vs planned breakdown.
 
 ## Tech stack
 
@@ -71,6 +71,8 @@ Open [http://localhost:3000](http://localhost:3000). The home page runs a basic 
 | [docs/frontend.md](docs/frontend.md)                     | UI pages and components              |
 | [docs/frontend-standards.md](docs/frontend-standards.md) | UI/UX conventions and phase roadmap  |
 | [docs/operations.md](docs/operations.md)                 | Admin ops and maintenance            |
+| [SECURITY.md](SECURITY.md)                               | Security policy and vulnerability reporting |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)                 | Community code of conduct            |
 | [CONTRIBUTING.md](CONTRIBUTING.md)                       | Contributor guide                    |
 | [CHANGELOG.md](CHANGELOG.md)                             | Release history                      |
 

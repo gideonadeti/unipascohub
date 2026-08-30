@@ -14,7 +14,7 @@ Step-by-step instructions for running Uni Pasco Hub locally.
 ### 1. Clone and install
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/gideonadeti/unipascohub.git
 cd unipascohub
 pnpm install
 ```
@@ -69,6 +69,10 @@ pnpm seed-institutions
 - Generated client output: `generated/prisma/`
 - Config: [`prisma.config.ts`](../prisma.config.ts)
 - Search requires the `pg_trgm` extension (applied by migration `20260618100000_add_pg_trgm_course_search_indexes`). Most managed Postgres providers support `CREATE EXTENSION pg_trgm`; confirm before production deploy.
+- The trigram search indexes (`course_code_trgm_idx`, `course_title_trgm_idx`, `institution_name_trgm_idx`) are **migration-managed, not schema-managed** — Prisma cannot express them in `schema.prisma`. They were once dropped by a later generated migration (`20260618132845`) and re-added by `20260829000000_recreate_pg_trgm_search_indexes`. When running `prisma migrate dev`, prefer `--create-only`, review the generated SQL, and remove any spurious `DROP INDEX *_trgm_idx` lines before applying. Verify after deploys with:
+  ```sql
+  SELECT indexname FROM pg_indexes WHERE indexdef LIKE '%gin_trgm_ops%'; -- expect 3 rows
+  ```
 
 ### 5. Clerk configuration
 
@@ -84,12 +88,20 @@ The app also syncs users on page load via [`src/components/ensure-user-synced.ts
 
 1. Create a Cloudinary account at [cloudinary.com](https://cloudinary.com/).
 2. Add API credentials to `.env`.
-3. Create an **unsigned upload preset** (Settings → Upload → Upload presets).
+3. Create a **signed upload preset** (Settings → Upload → Upload presets) — every upload is signed server-side via [`POST /api/cloudinary/sign`](api/pascos.md).
 4. Set `CLOUDINARY_UPLOAD_PRESET` to the preset name.
 
 Allowed file types are defined in [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts): PDF, images, and documents (not spreadsheets).
 
-### 7. Run the dev server
+### 7. PostHog (optional)
+
+Client-side product analytics only. Leave `NEXT_PUBLIC_POSTHOG_KEY` and
+`NEXT_PUBLIC_POSTHOG_HOST` unset to run completely without it (the default).
+To enable locally, copy the values from [`.env.example`](../.env.example) into
+`.env`. Events, privacy rules, and Vercel setup are documented in
+[`docs/analytics.md`](analytics.md).
+
+### 8. Run the dev server
 
 ```bash
 pnpm dev
@@ -146,7 +158,7 @@ Run these locally before pushing. Husky pre-commit hooks run lint-staged when no
 
 ### Cloudinary: upload fails
 
-- Verify unsigned upload preset name matches `CLOUDINARY_UPLOAD_PRESET`
+- Verify signed upload preset name matches `CLOUDINARY_UPLOAD_PRESET`
 - Check file type is allowed (no spreadsheets)
 - Confirm file size is under `PASCO_MAX_FILE_SIZE_BYTES` (default 10 MB)
 

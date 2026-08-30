@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.0.0] - 2026-08-30
 
 ### Added
 
@@ -22,10 +22,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Frontend Phase 5: `/pascos` browse page with URL-driven filters, sort, pagination, and homepage wiring
 - Frontend Phase 6: pasco create/detail/edit pages aligned to shell (`PageHeader`, `PascoPageNav`, `PascoDetailPage`, `PascoDetailSkeleton`, `pasco-display` helpers)
 - Frontend Phase 7: accessibility and responsive polish (`SkipToContent`, landmark labels, browse live regions, collapsible mobile filters, dialog/skeleton improvements)
+- PostHog product analytics (client-side only) with typed event wrapper, provider, and `/ingest` reverse proxy
 
 ### Changed
 
 - Pasco uploads are anonymous to the public: detail page no longer shows uploader names; public API responses omit `uploaderId` unless the viewer is the uploader or a moderator/admin
+- Contributors page: open-source contribution guidance (GitHub repo, contributing guide, and issue tracker links) replacing the private-repository DM flow
+
+### Security
+
+- Pre-launch security hardening ([#3](https://github.com/gideonadeti/unipascohub/pull/3)): escape JSON-LD output in all script sinks (stored-XSS fix), remove permanent Cloudinary URLs from public pasco API responses, enforce allowed file formats server-side (sign, create, file-sync, asset verification), make the Redis rate limiter fail open and reconnect on transient failures, unblock published pasco pages in `robots.txt`, and require `NEXT_PUBLIC_APP_URL` in production
 
 ### Planned
 
@@ -113,5 +119,5 @@ Initial documented baseline of implemented functionality.
 - Cloudinary widget signing with source and widget timestamp
 - Font variable consistency in globals.css
 
-[Unreleased]: https://github.com/your-org/unipascohub/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/your-org/unipascohub/releases/tag/v0.1.0
+[Unreleased]: https://github.com/gideonadeti/unipascohub/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/gideonadeti/unipascohub/releases/tag/v0.1.0

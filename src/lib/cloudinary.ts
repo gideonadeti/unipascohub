@@ -4,6 +4,10 @@ import { v2 as cloudinary } from "cloudinary";
 import { logError } from "@/lib/logger";
 import { parseNonEmptyString } from "@/lib/parse";
 import {
+  isAllowedPascoFileFormat,
+  isAllowedPascoFileName,
+} from "@/lib/pasco-file-types";
+import {
   recordStorageCleanupFailures,
   resolveStorageCleanupFailures,
 } from "@/lib/storage-cleanup-log";
@@ -37,6 +41,7 @@ type SignUploadParseError =
   | "invalid_resource_type"
   | "invalid_file_name"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "invalid_widget_params";
 
 type SignUploadError = "missing_config" | "invalid_widget_params";
@@ -58,7 +63,8 @@ export type VerifyFileError =
   | "asset_size_mismatch"
   | "asset_url_mismatch"
   | "asset_resource_type_mismatch"
-  | "invalid_pdf_resource_type";
+  | "invalid_pdf_resource_type"
+  | "unsupported_file_type";
 
 export type VerifyCloudinaryFileInput = {
   publicId: string;
@@ -239,6 +245,10 @@ export function parseSignUploadInput(
     return { success: false, error: "invalid_file_name" };
   }
 
+  if (!isAllowedPascoFileName(fileName)) {
+    return { success: false, error: "unsupported_file_type" };
+  }
+
   if (
     typeof record.resourceType !== "string" ||
     !isCloudinaryResourceType(record.resourceType)
@@ -392,6 +402,7 @@ type ComputeCloudinaryFileHashParseError =
   | "invalid_file_url"
   | "invalid_resource_type"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "file_size_exceeded";
 
 const MAX_PUBLIC_ID_LENGTH = 255;
@@ -459,6 +470,10 @@ export function parseComputeCloudinaryFileHashInput(
 
   if (fileSize > getMaxPascoFileSizeBytes()) {
     return { success: false, error: "file_size_exceeded" };
+  }
+
+  if (!isAllowedPascoFileName(fileName)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   if (fileUrl === null) {
@@ -535,6 +550,10 @@ export async function verifyCloudinaryFile(
     input.resourceType === CloudinaryResourceType.RAW
   ) {
     return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
+  if (asset.format !== undefined && !isAllowedPascoFileFormat(asset.format)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   return { success: true };
@@ -684,6 +703,10 @@ export async function hashCloudinaryFile(
     input.resourceType === CloudinaryResourceType.RAW
   ) {
     return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
+  if (asset.format !== undefined && !isAllowedPascoFileFormat(asset.format)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   const apiSecret = cloudinary.config().api_secret;

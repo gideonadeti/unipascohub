@@ -10,7 +10,11 @@ import { getCourseById } from "@/lib/courses";
 import { getPascoDisplayTitle } from "@/lib/pasco-display";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import { getPascoById, serializePasco } from "@/lib/pascos";
-import { breadcrumbJsonLd, pascoJsonLd } from "@/lib/seo/json-ld";
+import {
+  breadcrumbJsonLd,
+  pascoJsonLd,
+  serializeJsonLd,
+} from "@/lib/seo/json-ld";
 
 import type { PascoDetailResponse } from "@/types/api/pascos";
 
@@ -104,13 +108,13 @@ export default async function PascoDetailRoute({
     <PageContainer width="narrow" className="space-y-8">
       <script
         type="application/ld+json"
-        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD serialized via serializeJsonLd (escapes <, >, &, line separators) */
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumb) }}
       />
       <script
         type="application/ld+json"
-        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pascoSchema) }}
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD serialized via serializeJsonLd (escapes <, >, &, line separators) */
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(pascoSchema) }}
       />
       <PascoDetailPage initialData={initialData} />
     </PageContainer>

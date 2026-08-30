@@ -14,16 +14,18 @@ const COMPACT_BUTTON_CLASS =
 type PascoFileDownloadProps = {
   pascoId: string;
   file: PascoFile;
+  courseCode?: string;
   compact?: boolean;
 };
 
 export function PascoFileDownload({
   pascoId,
   file,
+  courseCode,
   compact = false,
 }: PascoFileDownloadProps) {
   const { isSignedIn } = useAuth();
-  const downloadMutation = useRecordPascoFileDownload(pascoId);
+  const downloadMutation = useRecordPascoFileDownload(pascoId, courseCode);
   const ariaLabel = `Download ${file.fileName}`;
 
   async function handleDownload() {

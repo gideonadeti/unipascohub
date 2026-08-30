@@ -4,8 +4,8 @@
 
 ```bash
 pnpm install
-cp .env.example .env                  # production config
-cp .env.example .env.local           # local dev overrides (localhost DB, test keys, etc.)
+cp .env.example .env                  # then fill in values (see docs/development.md)
+cp .env.example .env.local           # optional local overrides (localhost DB, test keys, etc.)
 echo "postgres" > secrets/postgres_password.txt
 docker compose -f compose.yaml -f compose.local.yaml up -d
 pnpm prisma migrate dev && pnpm prisma generate
@@ -35,13 +35,16 @@ pnpm dev
 
 **No test framework or test script exists.** Only CI checks are lint, typecheck, build.
 
+**Run `pnpm build` sparingly** — it takes several minutes. Default to `pnpm lint` + `pnpm typecheck` for validation (doc changes, small edits, config/comment tweaks). Only run the full build when it is actually needed: before pushing, after changing `next.config.ts`, routes/pages, Prisma schema, or dependencies, or when reproducing a build-only failure. CI runs the build anyway, so it does not need to be repeated locally for every change.
+
 ## Architecture
 
 - **Next.js 16 App Router** — all route handlers export `runtime = "nodejs"` (no edge runtime)
 - **Prisma 7 + PostgreSQL** — client generated to `generated/prisma/` (gitignored, requires `pg_trgm` extension for search indexes)
 - **Clerk** for auth; a local `User` row stores roles (`NORMAL_USER`/`CONTRIBUTOR`/`MODERATOR`/`ADMIN`). Users synced via webhooks (`/api/webhooks`) + SSR fallback (`EnsureUserSynced`).
-- **Cloudinary** for file storage (unsigned upload preset); all view/download URLs are time-limited and signed. PDFs must use `resourceType: IMAGE`. Spreadsheets are not allowed.
+- **Cloudinary** for file storage (server-signed uploads via `/api/cloudinary/sign`); all view/download URLs are time-limited and signed. PDFs must use `resourceType: IMAGE`. Spreadsheets are not allowed.
 - **Redis** for distributed rate limiting (optional — falls back to in-memory store)
+- **PostHog** (client-side only) for product analytics — typed events via `src/lib/analytics/posthog.ts`, inert unless `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` are set; requests proxied through `/ingest`; see `docs/analytics.md`
 - **TanStack Query** on the client (`src/hooks/api/` → `src/lib/api/` wrappers)
 - **shadcn/ui** (Radix Maia style) with **Tailwind CSS 4** (`postcss.config.mjs` uses `@tailwindcss/postcss` — no `tailwind.config.*`)
 - **Biome** for lint + format; **Husky + lint-staged** pre-commit
@@ -64,6 +67,7 @@ pnpm dev
 - Migrations: `pnpm prisma migrate dev --name <desc>` then `pnpm prisma generate`
 - Seeds: `prisma/seed-*.ts` files run via `tsx`, each registered as `pnpm seed-<name>` (no `prisma db seed`)
 - Never edit applied migration files
+- pg_trgm search indexes are migration-managed (not in `schema.prisma`) — use `prisma migrate dev --create-only` and strip spurious `DROP INDEX *_trgm_idx` lines before applying (see `docs/development.md`)
 - DB password stored in `secrets/postgres_password.txt` (Docker secret; path also in `.gitignore` as `/secrets`)
 
 ## Gotchas

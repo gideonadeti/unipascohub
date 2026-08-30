@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { usePascosList } from "@/hooks/api/use-pascos";
 import { useRecentSearches } from "@/hooks/use-recent-searches";
+import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import {
   getPascoCardEmphasis,
@@ -301,6 +302,22 @@ function PascoBrowsePageContent({
   const pathname = usePathname();
   const pascosQuery = usePascosList(filters, initialData);
   const searchMeta = pascosQuery.data?.search;
+  const trackedSearchRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const query = filters.q;
+
+    if (!query || !pascosQuery.data || trackedSearchRef.current === query) {
+      return;
+    }
+
+    trackedSearchRef.current = query;
+    trackAnalyticsEvent("pasco_searched", {
+      result_count: pascosQuery.data.pagination.total,
+      matched_course: Boolean(pascosQuery.data.appliedCourse),
+    });
+  }, [filters.q, pascosQuery.data]);
+
   const courseLabel = resolveCourseChipLabel({
     filters,
     appliedCourse: pascosQuery.data?.appliedCourse,

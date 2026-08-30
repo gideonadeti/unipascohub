@@ -11,7 +11,7 @@ import type {
 
 type PascoTitleFields = Pick<
   Pasco,
-  "academicYear" | "educationLevel" | "courseId" | "semesterType" | "type"
+  "academicYear" | "educationLevel" | "courseId" | "semesterType"
 >;
 
 type CourseTitleFields = Pick<Course, "code" | "title">;
@@ -54,10 +54,10 @@ export function getPascoDisplayDescription(
   course?: CourseTitleFields | null,
 ): string | undefined {
   if (course) {
-    return `${pasco.academicYear} · ${formatEnumLabel(pasco.educationLevel)} · ${formatEnumLabel(pasco.semesterType)} · ${formatEnumLabel(pasco.type)}`;
+    return `${pasco.academicYear} · ${formatEnumLabel(pasco.educationLevel)} · ${formatEnumLabel(pasco.semesterType)}`;
   }
 
-  return `${formatEnumLabel(pasco.semesterType)} · ${formatEnumLabel(pasco.type)}`;
+  return formatEnumLabel(pasco.semesterType);
 }
 
 export function getPascoBrowseHref(pasco: Pick<Pasco, "courseId">): string {

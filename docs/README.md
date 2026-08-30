@@ -38,6 +38,7 @@ Index of all documentation for Uni Pasco Hub.
 | ---------------------------------------------- | ----------------------------------------------------- |
 | [frontend-standards.md](frontend-standards.md) | UI/UX conventions, component layers, phase roadmap    |
 | [file-uploads.md](file-uploads.md)             | Upload pipeline, duplicates, Cloudinary folders       |
+| [analytics.md](analytics.md)                   | PostHog product analytics, events, privacy rules      |
 | [frontend.md](frontend.md)                     | Pages, components, hooks, UI gaps                     |
 | [operations.md](operations.md)                 | Orphan cleanup CLI, rate limits, production checklist |
 

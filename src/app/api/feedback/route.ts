@@ -59,7 +59,9 @@ export async function POST(req: Request) {
       "http://localhost:3000",
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
       process.env.NEXT_PUBLIC_APP_URL,
-    ].filter(Boolean) as string[];
+    ]
+      .filter(Boolean)
+      .map((allowed) => (allowed as string).replace(/\/+$/, ""));
 
     const requestOrigin = (origin ?? referer ?? "").replace(/\/+$/, "");
     const isAllowed = allowedOrigins.some(

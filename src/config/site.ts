@@ -4,6 +4,7 @@ export type SiteContributor = {
   name: string;
   github: string;
   role?: SiteContributorRole;
+  title?: string;
   avatarUrl?: string;
 };
 
@@ -30,43 +31,25 @@ export type FooterNavGroup = {
 export const siteName = "Uni Pasco Hub";
 
 export const siteTagline =
-  "Find and share past exam papers to prepare with confidence.";
+  "Find and share past exam papers. Prepare with confidence.";
 
 export const siteDescription =
-  "A hub for university students to share pasco and better prepare for exams.";
+  "A hub for university students to find, share, and access past exam papers.";
 
 export const siteContributors: SiteContributor[] = [
   {
     name: "Gideon Adeti",
     github: "gideonadeti",
     role: "lead",
+    title: "Founder of WeAMP & Full-Stack Software Engineer",
   },
 ];
 
 export const siteSponsors: SiteSponsor[] = [];
 
-function getLeadContributor(): SiteContributor | undefined {
-  return (
-    siteContributors.find((person) => person.role === "lead") ??
-    siteContributors[0]
-  );
-}
+export const siteRepoUrl = "https://github.com/gideonadeti/unipascohub";
 
-export { getLeadContributor };
-
-export function getCreditLine(): string {
-  const lead = getLeadContributor();
-  const leadName = lead?.name ?? "contributors";
-  const hasAdditionalContributors = siteContributors.some(
-    (person) => person.role === "contributor",
-  );
-
-  if (!hasAdditionalContributors) {
-    return `Engineered by ${leadName}`;
-  }
-
-  return `Engineered by ${leadName} and contributors`;
-}
+export const weampUrl = "https://weamp.org";
 
 function readPublicUrl(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -88,6 +71,7 @@ export const footerNav: FooterNavGroup[] = [
       { label: "Browse pascos", href: "/pascos" },
       { label: "Upload pasco", href: "/pascos/new" },
       { label: "Contributors", href: "/contributors" },
+      { label: "Open Source", href: siteRepoUrl, external: true },
       { label: "Sponsors", href: "/sponsors" },
     ],
   },

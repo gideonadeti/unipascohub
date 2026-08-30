@@ -69,6 +69,11 @@ export async function POST(req: Request) {
           { error: "PDF files must use IMAGE resource type" },
           { status: 400 },
         );
+      case "unsupported_file_type":
+        return Response.json(
+          { error: "Only PDF, image, and document files are allowed" },
+          { status: 400 },
+        );
       case "file_size_exceeded":
         return Response.json(
           { error: "File size exceeds limit" },
@@ -129,6 +134,11 @@ export async function POST(req: Request) {
       case "invalid_pdf_resource_type":
         return Response.json(
           { error: "PDF files must use IMAGE resource type" },
+          { status: 400 },
+        );
+      case "unsupported_file_type":
+        return Response.json(
+          { error: "Only PDF, image, and document files are allowed" },
           { status: 400 },
         );
     }

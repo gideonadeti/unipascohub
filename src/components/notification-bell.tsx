@@ -20,6 +20,7 @@ import {
   useMarkNotificationRead,
   useNotificationsList,
 } from "@/hooks/api/use-notifications";
+import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
 import { formatDateTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +64,11 @@ export function NotificationBell() {
         ) as BufferSource,
       });
       setIsSubscribed(true);
-      await subscribeUser(JSON.parse(JSON.stringify(sub)));
+      const result = await subscribeUser(JSON.parse(JSON.stringify(sub)));
+
+      if (result?.success) {
+        trackAnalyticsEvent("push_enabled");
+      }
     } catch {
       // subscription failed
     }

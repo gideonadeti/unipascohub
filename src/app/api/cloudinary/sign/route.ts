@@ -81,6 +81,11 @@ export async function POST(req: Request) {
           { error: "PDFs must use resourceType IMAGE" },
           { status: 400 },
         );
+      case "unsupported_file_type":
+        return Response.json(
+          { error: "Only PDF, image, and document files are allowed" },
+          { status: 400 },
+        );
       case "invalid_widget_params":
         return Response.json(
           { error: "Invalid widget upload parameters" },

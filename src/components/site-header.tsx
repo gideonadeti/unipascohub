@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import { MobileNavSheet } from "@/components/mobile-nav-sheet";
 import { NotificationBell } from "@/components/notification-bell";
+import { PwaInstallButton } from "@/components/pwa-install-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { siteName } from "@/config/site";
@@ -29,11 +30,10 @@ export function SiteHeader() {
         className="text-base font-semibold tracking-tight sm:text-lg"
         aria-current={isHome ? "page" : undefined}
       >
-        <span className="sm:hidden">Uni Pasco</span>
-        <span className="hidden sm:inline">{siteName}</span>
+        {siteName}
       </Link>
 
-      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+      <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <div className="hidden items-center gap-2 lg:flex lg:gap-3">
           {showContributionsLink ? (
             <Button variant="ghost" size="sm" asChild>
@@ -58,7 +58,6 @@ export function SiteHeader() {
               </Button>
             </>
           ) : null}
-          <ThemeToggle />
           <Show when="signed-out">
             <SignInButton mode="modal">
               <Button variant="ghost" type="button">
@@ -70,6 +69,21 @@ export function SiteHeader() {
             </SignUpButton>
           </Show>
         </div>
+
+        <ThemeToggle />
+        <PwaInstallButton />
+
+        <Show when="signed-out">
+          <SignInButton mode="modal">
+            <Button
+              variant="ghost"
+              type="button"
+              className="min-h-11 lg:hidden"
+            >
+              Sign in
+            </Button>
+          </SignInButton>
+        </Show>
 
         <Show when="signed-in">
           <NotificationBell />

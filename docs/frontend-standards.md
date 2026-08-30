@@ -120,7 +120,7 @@ Prefer `PascoCardSkeleton` grid (Phase 2) over spinners for list loading.
 - Entire card is a `Link` to `/pascos/[id]` (large tap target on mobile)
 - **Institution eyebrow:** `course.institutionName` above the title when present; hidden on browse when `courseId` filter is active
 - **Title:** `course.code — course.title` from list API `course` summary (fallback: `academicYear · level`)
-- **Subtitle:** `getPascoDisplayDescription` — muted line with year, level, semester, and exam type
+- **Subtitle:** `getPascoDisplayDescription` — muted line with year, level, and semester (exam type lives in the badges)
 - **Badges:** max 2 via `getPascoCardBadges` — incomplete upload, non-default content type, partial solutions, exam type; browse passes `hiddenBadgeKeys` for active filters
 - **Meta row:** context-aware via `emphasize` (`createdAt`, `views`, `downloads`, `likes`) plus file count
 - Grid: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4`
@@ -241,7 +241,7 @@ Contributors page (`/contributors`) reads from `siteContributors`. Avatars defau
 
 Sponsors page (`/sponsors`) reads from `siteSponsors`. Each card links to `url` with an optional `logoUrl` (falls back to initials) and optional `tier` (`partner` | `supporter`) for badge display. Buy Me a Coffee CTA uses `siteLinks.buyMeACoffee` when set.
 
-Pasco detail **Report** opens `NEXT_PUBLIC_FEEDBACK_URL` with Google Form prefill when entry env vars are set: `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_CATEGORY`, `NEXT_PUBLIC_FEEDBACK_FORM_CATEGORY_REPORT` (exact “What is this about?” option, default `Report`), `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_MESSAGE`, `NEXT_PUBLIC_FEEDBACK_FORM_MESSAGE_REPORT` (optional starter text), `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_PASCO_ID`, `NEXT_PUBLIC_FEEDBACK_FORM_ENTRY_PAGE_URL`. Use the full `viewform` URL, not `forms.gle`. Screenshot uploads cannot be prefilled. The Report button is hidden when `NEXT_PUBLIC_FEEDBACK_URL` is unset.
+Pasco detail **Report** opens the in-app feedback dialog (`FeedbackDialog` + `FeedbackForm`) — no external service. The category is fixed to `CONTENT_ISSUE` (no selector shown); `pascoId` and the current `pageUrl` are captured automatically. Submissions go to `POST /api/feedback` (see [api/feedback.md](api/feedback.md)), stored in the `Feedback` table, and surface in the moderator feedback queue.
 
 ---
 
