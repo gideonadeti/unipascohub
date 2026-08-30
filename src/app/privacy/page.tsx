@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProseContent } from "@/components/layout/prose-content";
-import { privacySections } from "@/content/legal/privacy";
+import { privacyLastUpdated, privacySections } from "@/content/legal/privacy";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -18,6 +18,10 @@ export default function PrivacyPage() {
           title="Privacy"
           description="A draft overview of how Uni Pasco Hub handles data."
         />
+
+        <p className="text-sm text-muted-foreground">
+          Last updated: {privacyLastUpdated}
+        </p>
 
         <ProseContent>
           {privacySections.map((section) => (

@@ -1,3 +1,5 @@
+export const privacyLastUpdated = "30 August 2026";
+
 export const privacySections = [
   {
     title: "Draft notice",
@@ -5,7 +7,11 @@ export const privacySections = [
   },
   {
     title: "What we collect",
-    body: "We collect basic account details needed to operate the service (for example, authentication identifiers and profile information provided through Clerk). When you upload pascos, we store file metadata (like filename and size) and engagement counts (views, downloads, likes/dislikes).",
+    body: "We collect basic account details needed to operate the service: authentication identifiers handled by Clerk, your name, and the optional school you provide on your profile. When you upload pascos, we store file metadata (like filename and size). Views, downloads, and likes/dislikes are recorded to show counts and prevent abuse — download and reaction records are linked to your account. If you enable push notifications, we store the browser-provided subscription endpoint used to deliver them.",
+  },
+  {
+    title: "IP addresses",
+    body: "When you view or download files, your IP address may be used briefly to prevent duplicate counting and abuse (for example, rate limiting). IP addresses are not stored in our database.",
   },
   {
     title: "Cookies and analytics",
@@ -13,7 +19,7 @@ export const privacySections = [
   },
   {
     title: "Third-party processors",
-    body: "We use third-party services to run Uni Pasco Hub. Clerk provides authentication, Cloudinary stores uploaded files, and PostHog provides product analytics. These services process data on our behalf to deliver and improve the product.",
+    body: "We use third-party services to run Uni Pasco Hub. Vercel hosts the application, Clerk provides authentication, Cloudinary stores uploaded files, Upstash Redis powers rate limiting, and PostHog provides product analytics. These services process data on our behalf to deliver and improve the product.",
   },
   {
     title: "How we use data",
@@ -21,6 +27,6 @@ export const privacySections = [
   },
   {
     title: "Contact",
-    body: "If you have questions or want to request changes or deletion of your data, please use the Feedback page to reach the maintainers.",
+    body: "If you have questions or want to request changes or deletion of your data, please use the Feedback page or email admin@weamp.org.",
   },
 ] as const;
