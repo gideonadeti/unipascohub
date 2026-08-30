@@ -16,7 +16,7 @@ Uni Pasco Hub is actively developed and only the latest version on `main` receiv
 Preferred options, in order:
 
 1. **GitHub private vulnerability reporting** — use the **"Report a vulnerability"** button in the repository's **Security** tab. This keeps the report confidential and visible only to the maintainer.
-2. **Email** — send details to [gideonadeti0@gmail.com](mailto:gideonadeti0@gmail.com) with "Uni Pasco Hub security" in the subject line.
+2. **Email** — send details to [admin@weamp.org](mailto:admin@weamp.org) with "Uni Pasco Hub security" in the subject line.
 
 ## What to include
 
