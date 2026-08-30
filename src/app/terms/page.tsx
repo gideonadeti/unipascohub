@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProseContent } from "@/components/layout/prose-content";
-import { termsSections } from "@/content/legal/terms";
+import { termsLastUpdated, termsSections } from "@/content/legal/terms";
 
 export const metadata: Metadata = {
   title: "Terms",
@@ -18,6 +18,10 @@ export default function TermsPage() {
           title="Terms"
           description="Draft terms of use for Uni Pasco Hub."
         />
+
+        <p className="text-sm text-muted-foreground">
+          Last updated: {termsLastUpdated}
+        </p>
 
         <ProseContent>
           {termsSections.map((section) => (
