@@ -19,9 +19,12 @@ cd unipascohub
 pnpm install
 ```
 
-### 2. PostgreSQL via Docker Compose
+### 2. PostgreSQL + Redis via Docker Compose
 
-The project uses [`compose.yaml`](../compose.yaml) for a local Postgres 18 instance.
+The project uses two Compose files, invoked together:
+
+- [`compose.yaml`](../compose.yaml) — Postgres 18 (no ports published by itself)
+- [`compose.local.yaml`](../compose.local.yaml) — publishes Postgres on `127.0.0.1:5432` and adds a local Redis 8 on `127.0.0.1:6379`
 
 Create the password secret file before starting:
 
@@ -30,25 +33,29 @@ mkdir -p secrets
 echo "your-local-password" > secrets/postgres_password.txt
 ```
 
-Start the database:
+Start the stack (always pass both files — without `compose.local.yaml`, Postgres has no published port):
 
 ```bash
-docker compose up -d
+docker compose -f compose.yaml -f compose.local.yaml up -d
 ```
 
-Set `DATABASE_URL` in `.env` (copy from [`.env.example`](../.env.example)):
-
-```text
-DATABASE_URL="postgresql://postgres:your-local-password@localhost:5432/unipascohub"
-```
-
-### 3. Environment variables
+Create `.env` from [`.env.example`](../.env.example) before editing it:
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in all required values. See [`.env.example`](../.env.example) for the full list and where to obtain each value.
+Then set `DATABASE_URL` in `.env`:
+
+```text
+DATABASE_URL="postgresql://postgres:your-local-password@localhost:5432/unipascohub"
+```
+
+Optionally set `REDIS_URL="redis://localhost:6379"` in `.env` to enable distributed rate limiting locally (it falls back to an in-memory store without it, which is fine for development).
+
+### 3. Environment variables
+
+Fill in all required values in the `.env` created above. See [`.env.example`](../.env.example) for the full list and where to obtain each value.
 
 ### 4. Prisma migrations
 
@@ -57,15 +64,7 @@ pnpm prisma migrate dev
 pnpm prisma generate
 ```
 
-Seed institutions (from [Wikipedia's list of universities in Ghana](https://en.wikipedia.org/wiki/List_of_universities_in_Ghana), parsed by [`prisma/data/parse-wikipedia-institutions.ts`](../prisma/data/parse-wikipedia-institutions.ts)):
-
-```bash
-pnpm seed-institutions
-```
-
 - Migrations live in [`prisma/migrations/`](../prisma/migrations/)
-- Seed scripts live in [`prisma/seed-*.ts`](../prisma/) and are listed in [`prisma/seeds.config.ts`](../prisma/seeds.config.ts)
-- Each seed has a matching `pnpm seed-<name>` script in [`package.json`](../package.json) (not `prisma db seed` — Prisma only supports one built-in seed command)
 - Generated client output: `generated/prisma/`
 - Config: [`prisma.config.ts`](../prisma.config.ts)
 - Search requires the `pg_trgm` extension (applied by migration `20260618100000_add_pg_trgm_course_search_indexes`). Most managed Postgres providers support `CREATE EXTENSION pg_trgm`; confirm before production deploy.
@@ -101,7 +100,23 @@ To enable locally, copy the values from [`.env.example`](../.env.example) into
 `.env`. Events, privacy rules, and Vercel setup are documented in
 [`docs/analytics.md`](analytics.md).
 
-### 8. Run the dev server
+### 8. Seed catalog data
+
+Seed scripts live in [`prisma/seed-*.ts`](../prisma/) and are registered in [`prisma/seeds.config.ts`](../prisma/seeds.config.ts), each exposed as a `pnpm seed-<name>` script in [`package.json`](../package.json) (not `prisma db seed` — Prisma only supports one built-in seed command):
+
+```bash
+pnpm seed-institutions      # ~90 Ghanaian institutions from Wikipedia
+pnpm seed-atu-programs      # ATU programs
+pnpm seed-atu-eee-courses   # ATU EEE Level 100 Semester 1 courses
+```
+
+All three seeds upsert, so they are safe to re-run. Institutions come from [Wikipedia's list of universities in Ghana](https://en.wikipedia.org/wiki/List_of_universities_in_Ghana), parsed by [`prisma/data/parse-wikipedia-institutions.ts`](../prisma/data/parse-wikipedia-institutions.ts). Programs are added via contributor submission (moderator review) or admin API; courses with a linked program are added automatically when contributors submit from the upload form.
+
+To add another seed: create `prisma/seed-<name>.ts`, register it in `prisma/seeds.config.ts`, and add `"seed-<name>": "tsx prisma/seed-<name>.ts"` to `package.json`.
+
+For local moderator testing, set a user's `role` to `MODERATOR` or `ADMIN` in Prisma Studio. Catalog mutations via admin API still require `ADMIN`.
+
+### 9. Run the dev server
 
 ```bash
 pnpm dev
@@ -111,20 +126,6 @@ Smoke-check:
 
 - `/` — API smoke test (institution and pasco counts)
 - `/pascos/new` — upload form (requires sign-in + contributor role)
-
-### 8. Seed catalog data
-
-Institutions are seeded via dedicated scripts (see [`prisma/seeds.config.ts`](../prisma/seeds.config.ts)):
-
-```bash
-pnpm seed-institutions
-```
-
-To add another seed: create `prisma/seed-<name>.ts`, register it in `prisma/seeds.config.ts`, and add `"seed-<name>": "tsx prisma/seed-<name>.ts"` to `package.json`.
-
-This upserts ~90 Ghanaian institutions from [Wikipedia's list of universities in Ghana](https://en.wikipedia.org/wiki/List_of_universities_in_Ghana). Programs are added via contributor submission (moderator review) or admin API. Courses with a linked program are added automatically when contributors submit from the upload form.
-
-For local moderator testing, set a user's `role` to `MODERATOR` or `ADMIN` in Prisma Studio. Catalog mutations via admin API still require `ADMIN`.
 
 ## CI expectations
 
