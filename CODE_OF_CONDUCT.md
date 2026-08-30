@@ -60,7 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leader responsible for enforcement at
-[gideonadeti0@gmail.com](mailto:gideonadeti0@gmail.com), or via GitHub's
+[admin@weamp.org](mailto:admin@weamp.org), or via GitHub's
 reporting tools on the repository.
 All complaints will be reviewed and investigated promptly and fairly.
 
