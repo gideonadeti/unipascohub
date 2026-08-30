@@ -66,7 +66,7 @@ const envSchema = z
         code: "custom",
         path: ["NEXT_PUBLIC_APP_URL"],
         message:
-          "NEXT_PUBLIC_APP_URL must be a full origin URL (e.g. https://unipascohub.com)",
+          "NEXT_PUBLIC_APP_URL must be a full origin URL (e.g. https://unipascohub.weamp.org)",
       });
     }
 
@@ -81,7 +81,7 @@ const envSchema = z
         code: "custom",
         path: ["NEXT_PUBLIC_APP_URL"],
         message:
-          "NEXT_PUBLIC_APP_URL is required in production (e.g. https://unipascohub.com)",
+          "NEXT_PUBLIC_APP_URL is required in production (e.g. https://unipascohub.weamp.org)",
       });
     }
   });

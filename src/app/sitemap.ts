@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-
+import { siteUrl } from "@/config/site";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ const SITEMAP_PAGE_SIZE = 1000;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
-    url: `https://unipascohub.com${route.url}`,
+    url: `${siteUrl}${route.url}`,
     lastModified: new Date(),
     changeFrequency: route.changeFrequency,
     priority: route.priority,
@@ -38,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     for (const pasco of pascos) {
       entries.push({
-        url: `https://unipascohub.com/pascos/${pasco.id}`,
+        url: `${siteUrl}/pascos/${pasco.id}`,
         lastModified: pasco.updatedAt,
         changeFrequency: "weekly",
         priority: 0.7,

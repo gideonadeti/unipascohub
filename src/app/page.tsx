@@ -4,7 +4,7 @@ import { HomeHero } from "@/components/home-hero";
 import { PageContainer } from "@/components/layout/page-container";
 import { PascoListSection } from "@/components/pasco-list-section";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
-import { siteDescription, siteName } from "@/config/site";
+import { siteDescription, siteName, siteUrl } from "@/config/site";
 import { serializeJsonLd } from "@/lib/seo/json-ld";
 
 export const metadata: Metadata = {
@@ -16,13 +16,13 @@ const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: siteName,
-  url: "https://unipascohub.com",
+  url: siteUrl,
   description: siteDescription,
   potentialAction: {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: "https://unipascohub.com/pascos?q={search_term_string}",
+      urlTemplate: `${siteUrl}/pascos?q={search_term_string}`,
     },
     "query-input": "required name=search_term_string",
   },

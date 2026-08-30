@@ -14,7 +14,7 @@ Step-by-step instructions for running Uni Pasco Hub locally.
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/gideonadeti/unipascohub.git
+git clone https://github.com/weamp-org/unipascohub.git
 cd unipascohub
 pnpm install
 ```

@@ -13,7 +13,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SkipToContent } from "@/components/skip-to-content";
 import { Toaster } from "@/components/ui/sonner";
-import { siteDescription, siteName } from "@/config/site";
+import { siteDescription, siteName, siteUrl } from "@/config/site";
 
 import "./globals.css";
 
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
-  metadataBase: new URL("https://unipascohub.com"),
+  metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
     locale: "en_US",
