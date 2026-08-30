@@ -30,6 +30,8 @@ export type FooterNavGroup = {
 
 export const siteName = "Uni Pasco Hub";
 
+export const siteUrl = "https://unipascohub.weamp.org";
+
 export const siteTagline =
   "Find and share past exam papers. Prepare with confidence.";
 
@@ -47,7 +49,7 @@ export const siteContributors: SiteContributor[] = [
 
 export const siteSponsors: SiteSponsor[] = [];
 
-export const siteRepoUrl = "https://github.com/gideonadeti/unipascohub";
+export const siteRepoUrl = "https://github.com/weamp-org/unipascohub";
 
 export const weampUrl = "https://weamp.org";
 

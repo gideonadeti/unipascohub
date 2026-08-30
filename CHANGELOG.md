@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- Local setup docs: quick start and development guide used a single-file `docker compose up -d` that never published the Postgres port — replaced with the two-file invocation (`compose.yaml` + `compose.local.yaml`) and documented the included local Redis and optional `REDIS_URL` ([#4](https://github.com/gideonadeti/unipascohub/pull/4))
-- Local setup docs: added the missing seed scripts to the quick start and scripts table, and fixed duplicated/numbered sections in the development guide ([#4](https://github.com/gideonadeti/unipascohub/pull/4))
+- Local setup docs: quick start and development guide used a single-file `docker compose up -d` that never published the Postgres port — replaced with the two-file invocation (`compose.yaml` + `compose.local.yaml`) and documented the included local Redis and optional `REDIS_URL` ([#4](https://github.com/weamp-org/unipascohub/pull/4))
+- Local setup docs: added the missing seed scripts to the quick start and scripts table, and fixed duplicated/numbered sections in the development guide ([#4](https://github.com/weamp-org/unipascohub/pull/4))
 
 ## [1.0.0] - 2026-08-30
 
@@ -38,7 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Security
 
-- Pre-launch security hardening ([#3](https://github.com/gideonadeti/unipascohub/pull/3)): escape JSON-LD output in all script sinks (stored-XSS fix), remove permanent Cloudinary URLs from public pasco API responses, enforce allowed file formats server-side (sign, create, file-sync, asset verification), make the Redis rate limiter fail open and reconnect on transient failures, unblock published pasco pages in `robots.txt`, and require `NEXT_PUBLIC_APP_URL` in production
+- Pre-launch security hardening ([#3](https://github.com/weamp-org/unipascohub/pull/3)): escape JSON-LD output in all script sinks (stored-XSS fix), remove permanent Cloudinary URLs from public pasco API responses, enforce allowed file formats server-side (sign, create, file-sync, asset verification), make the Redis rate limiter fail open and reconnect on transient failures, unblock published pasco pages in `robots.txt`, and require `NEXT_PUBLIC_APP_URL` in production
 
 ### Planned
 
@@ -126,5 +126,5 @@ Initial documented baseline of implemented functionality.
 - Cloudinary widget signing with source and widget timestamp
 - Font variable consistency in globals.css
 
-[Unreleased]: https://github.com/gideonadeti/unipascohub/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/gideonadeti/unipascohub/releases/tag/v0.1.0
+[Unreleased]: https://github.com/weamp-org/unipascohub/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/weamp-org/unipascohub/releases/tag/v0.1.0

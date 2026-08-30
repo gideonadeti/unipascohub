@@ -1,6 +1,9 @@
 {
   "name": "unipascohub",
   "version": "1.0.1",
+  "description": "Find and share past exam papers. Prepare with confidence.",
+  "repository": "github:weamp-org/unipascohub",
+  "license": "MIT",
   "private": true,
   "packageManager": "pnpm@11.4.0",
   "scripts": {

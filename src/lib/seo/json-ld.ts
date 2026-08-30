@@ -1,3 +1,4 @@
+import { siteUrl } from "@/config/site";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 
 type JsonLdItem = {
@@ -45,7 +46,7 @@ export function breadcrumbJsonLd(items: JsonLdItem[]) {
     "@type": "ListItem",
     position: index + 1,
     name: item.name,
-    item: `https://unipascohub.com${item.href}`,
+    item: `${siteUrl}${item.href}`,
   }));
 
   return {

@@ -1,6 +1,6 @@
 # Uni Pasco Hub
 
-A platform for university students to share past exam papers (pascos) and prepare for exams. Contributors upload papers organized by institution, program, and course; anyone can browse, view, react, and download.
+Find and share past exam papers. Prepare with confidence. Contributors upload papers organized by institution, program, and course; anyone can browse, view, react, and download.
 
 ## Features
 
