@@ -35,7 +35,8 @@ cp .env.example .env
 mkdir -p secrets
 echo "your-local-password" > secrets/postgres_password.txt
 docker compose -f compose.yaml -f compose.local.yaml up -d
-# Optionally set REDIS_URL="redis://localhost:6379" in .env to use the local Redis
+# Distributed rate limiting uses Upstash (see .env.example); locally the
+# in-memory fallback is fine
 
 # 4. Run migrations and generate Prisma client
 pnpm prisma migrate dev
