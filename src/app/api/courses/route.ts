@@ -30,7 +30,7 @@ export async function GET(req: Request) {
       {
         courses: result.courses.map(serializeCourse),
       },
-      { headers: { "Cache-Control": "public, max-age=3600" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {
     logError("Course list failed", err);

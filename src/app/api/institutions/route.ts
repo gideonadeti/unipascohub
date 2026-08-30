@@ -23,7 +23,7 @@ export async function GET() {
       {
         institutions: result.institutions.map(serializeInstitution),
       },
-      { headers: { "Cache-Control": "public, max-age=3600" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {
     logError("Institution list failed", err);
