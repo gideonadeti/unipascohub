@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "vercel-build": "prisma generate && pnpm db:deploy && next build",
-    "db:deploy": "prisma migrate deploy && pnpm seed-institutions && pnpm seed-atu-programs && pnpm seed-atu-eee-courses",
+    "db:deploy": "node scripts/db-deploy.mjs",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",

@@ -80,6 +80,7 @@ pnpm dev
 
 ## Gotchas
 
+- **Concurrent Vercel builds race on Prisma's migration advisory lock** (`P1002`, 10s lock wait) — `db:deploy` (`scripts/db-deploy.mjs`) retries P1001/P1002/lock timeouts up to 5×15s; the sequence is idempotent, so retries are safe
 - `pnpm-workspace.yaml` only configures allowed builds (`prisma`, `esbuild`, `sharp`) — **not a monorepo**; do not use `workspace:` protocol
 - All `.env*` files are gitignored — `.env.example` is excluded by git; provide its content manually on fresh clones
 - `generated/prisma/` is gitignored — run `pnpm prisma generate` after every migration or `git pull`
