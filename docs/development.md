@@ -39,7 +39,13 @@ Start the stack (always pass both files — without `compose.local.yaml`, Postgr
 docker compose -f compose.yaml -f compose.local.yaml up -d
 ```
 
-Set `DATABASE_URL` in `.env` (copy from [`.env.example`](../.env.example)):
+Create `.env` from [`.env.example`](../.env.example) before editing it:
+
+```bash
+cp .env.example .env
+```
+
+Then set `DATABASE_URL` in `.env`:
 
 ```text
 DATABASE_URL="postgresql://postgres:your-local-password@localhost:5432/unipascohub"
@@ -49,11 +55,7 @@ Optionally set `REDIS_URL="redis://localhost:6379"` in `.env` to enable distribu
 
 ### 3. Environment variables
 
-```bash
-cp .env.example .env
-```
-
-Fill in all required values. See [`.env.example`](../.env.example) for the full list and where to obtain each value.
+Fill in all required values in the `.env` created above. See [`.env.example`](../.env.example) for the full list and where to obtain each value.
 
 ### 4. Prisma migrations
 
