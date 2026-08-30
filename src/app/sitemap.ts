@@ -8,6 +8,17 @@ const STATIC_ROUTES = [
   { url: "/", priority: 1.0, changeFrequency: "daily" as const },
   { url: "/pascos", priority: 0.9, changeFrequency: "hourly" as const },
   { url: "/feedback", priority: 0.4, changeFrequency: "monthly" as const },
+  { url: "/guides", priority: 0.4, changeFrequency: "monthly" as const },
+  {
+    url: "/guides/browsing",
+    priority: 0.4,
+    changeFrequency: "monthly" as const,
+  },
+  {
+    url: "/guides/uploading",
+    priority: 0.4,
+    changeFrequency: "monthly" as const,
+  },
   { url: "/contributors", priority: 0.3, changeFrequency: "monthly" as const },
   { url: "/sponsors", priority: 0.3, changeFrequency: "monthly" as const },
   { url: "/privacy", priority: 0.2, changeFrequency: "yearly" as const },

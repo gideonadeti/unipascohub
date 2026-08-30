@@ -78,6 +78,13 @@ export const footerNav: FooterNavGroup[] = [
     ],
   },
   {
+    title: "Guides",
+    links: [
+      { label: "How to browse", href: "/guides/browsing" },
+      { label: "How to upload", href: "/guides/uploading" },
+    ],
+  },
+  {
     title: "Legal",
     links: [
       { label: "Privacy", href: "/privacy" },
