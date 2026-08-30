@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.1] - 2026-08-30
+
+### Fixed
+
+- Local setup docs: quick start and development guide used a single-file `docker compose up -d` that never published the Postgres port — replaced with the two-file invocation (`compose.yaml` + `compose.local.yaml`) and documented the included local Redis and optional `REDIS_URL` ([#4](https://github.com/gideonadeti/unipascohub/pull/4))
+- Local setup docs: added the missing seed scripts to the quick start and scripts table, and fixed duplicated/numbered sections in the development guide ([#4](https://github.com/gideonadeti/unipascohub/pull/4))
+
 ## [1.0.0] - 2026-08-30
 
 ### Added
