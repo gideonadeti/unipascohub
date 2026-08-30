@@ -31,9 +31,13 @@ PostHog-derived counts in the UI and never send server-side events.
 | `pasco_uploaded`               | Pasco creation succeeds                      | `file_count`, `course_code?` |
 | `contributor_upgrade_completed`| Contributor upgrade succeeds                 | — |
 | `push_enabled`                 | Push subscription is saved successfully      | — |
+| `$pageview` (system)           | Any route change                             | `$current_url` = origin + pathname (query string deliberately scrubbed) |
 
 Do not add events without updating this doc. Explicitly **not** implemented:
-autocapture, automatic pageviews (Vercel Analytics covers page traffic), PostHog
+autocapture, automatic pageviews (`capture_pageview: false` — `$pageview` is
+captured manually with a scrubbed URL instead, because the browse page keeps
+search text in the query string; Vercel Analytics still covers lightweight
+traffic dashboards), PostHog
 session replay (Sentry already has replay; replaying copyrighted PDF content is
 a legal risk), feature flags, experiments, surveys, server-side tracking, and a
 cookie-consent banner (tracked as a separate open item).

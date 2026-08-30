@@ -27,6 +27,10 @@ export function initPostHog(): void {
     // Same-origin reverse proxy (see next.config.ts) to survive ad blockers.
     api_host: "/ingest",
     autocapture: false,
+    // Automatic pageviews stay off: they would capture the full URL including
+    // the query string, and /pascos?q=<search text> would leak search-query
+    // text. Pageviews are captured manually with a scrubbed URL instead —
+    // see PostHogPageView.
     capture_pageview: false,
     capture_pageleave: false,
     disable_session_recording: true,
@@ -76,4 +80,17 @@ export function trackAnalyticsEvent<K extends AnalyticsEventName>(
   }
 
   posthog.capture(name, properties);
+}
+
+export function capturePageView(pathname: string): void {
+  if (!initialized) {
+    return;
+  }
+
+  // Privacy rule: search-query text must never reach PostHog, and the browse
+  // page keeps filters in the query string — so the captured URL is origin +
+  // pathname only. See PostHogPageView.
+  posthog.capture("$pageview", {
+    $current_url: `${window.location.origin}${pathname}`,
+  });
 }

@@ -5,6 +5,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 
 import { EnsureUserSynced } from "@/components/ensure-user-synced";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { PostHogPageView } from "@/components/providers/posthog-page-view";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -91,6 +92,7 @@ export default function RootLayout({
             <QueryProvider>
               <EnsureUserSynced />
               <PostHogProvider />
+              <PostHogPageView />
               <SiteHeader />
               <div className="flex flex-1 flex-col">{children}</div>
               <SiteFooter />
