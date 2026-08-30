@@ -42,7 +42,7 @@ pnpm dev
 - **Next.js 16 App Router** — all route handlers export `runtime = "nodejs"` (no edge runtime)
 - **Prisma 7 + PostgreSQL** — client generated to `generated/prisma/` (gitignored, requires `pg_trgm` extension for search indexes)
 - **Clerk** for auth; a local `User` row stores roles (`NORMAL_USER`/`CONTRIBUTOR`/`MODERATOR`/`ADMIN`). Users synced via webhooks (`/api/webhooks`) + SSR fallback (`EnsureUserSynced`).
-- **Cloudinary** for file storage (unsigned upload preset); all view/download URLs are time-limited and signed. PDFs must use `resourceType: IMAGE`. Spreadsheets are not allowed.
+- **Cloudinary** for file storage (server-signed uploads via `/api/cloudinary/sign`); all view/download URLs are time-limited and signed. PDFs must use `resourceType: IMAGE`. Spreadsheets are not allowed.
 - **Redis** for distributed rate limiting (optional — falls back to in-memory store)
 - **PostHog** (client-side only) for product analytics — typed events via `src/lib/analytics/posthog.ts`, inert unless `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` are set; requests proxied through `/ingest`; see `docs/analytics.md`
 - **TanStack Query** on the client (`src/hooks/api/` → `src/lib/api/` wrappers)

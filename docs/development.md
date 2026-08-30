@@ -88,7 +88,7 @@ The app also syncs users on page load via [`src/components/ensure-user-synced.ts
 
 1. Create a Cloudinary account at [cloudinary.com](https://cloudinary.com/).
 2. Add API credentials to `.env`.
-3. Create an **unsigned upload preset** (Settings → Upload → Upload presets).
+3. Create a **signed upload preset** (Settings → Upload → Upload presets) — every upload is signed server-side via [`POST /api/cloudinary/sign`](api/pascos.md).
 4. Set `CLOUDINARY_UPLOAD_PRESET` to the preset name.
 
 Allowed file types are defined in [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts): PDF, images, and documents (not spreadsheets).
@@ -158,7 +158,7 @@ Run these locally before pushing. Husky pre-commit hooks run lint-staged when no
 
 ### Cloudinary: upload fails
 
-- Verify unsigned upload preset name matches `CLOUDINARY_UPLOAD_PRESET`
+- Verify signed upload preset name matches `CLOUDINARY_UPLOAD_PRESET`
 - Check file type is allowed (no spreadsheets)
 - Confirm file size is under `PASCO_MAX_FILE_SIZE_BYTES` (default 10 MB)
 
