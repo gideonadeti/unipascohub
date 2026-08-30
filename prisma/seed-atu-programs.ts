@@ -25,27 +25,31 @@ void runSeed(async (prisma) => {
 
   let upserted = 0;
 
-  await prisma.$transaction(async (tx) => {
-    for (const { name, type } of programs) {
-      await tx.program.upsert({
-        where: {
-          institutionId_name_type: {
+  await prisma.$transaction(
+    async (tx) => {
+      for (const { name, type } of programs) {
+        await tx.program.upsert({
+          where: {
+            institutionId_name_type: {
+              institutionId: institution.id,
+              name,
+              type,
+            },
+          },
+          update: {},
+          create: {
             institutionId: institution.id,
             name,
             type,
           },
-        },
-        update: {},
-        create: {
-          institutionId: institution.id,
-          name,
-          type,
-        },
-      });
+        });
 
-      upserted++;
-    }
-  });
+        upserted++;
+      }
+      // Default 5s transaction timeout is too tight for a cold Neon compute.
+    },
+    { timeout: 60_000, maxWait: 10_000 },
+  );
 
   const count = await prisma.program.count({
     where: { institutionId: institution.id },

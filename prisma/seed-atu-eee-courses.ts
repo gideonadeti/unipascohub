@@ -66,6 +66,8 @@ void runSeed(async (prisma) => {
         },
       }),
     ),
+    // Default 5s transaction timeout is too tight for a cold Neon compute.
+    { timeout: 60_000, maxWait: 10_000 },
   );
 
   console.log(
