@@ -58,7 +58,7 @@ export const uploadingGuide: Guide = {
       bullets: [
         "Allowed: PDF, images (JPG, PNG, WebP, GIF), and documents (DOC, DOCX, TXT, RTF, ODT).",
         "Not allowed: spreadsheets (XLS, XLSX, CSV, ODS) and password-protected PDFs.",
-        "Up to 20 files per paper, 10 MB per file.",
+        "Up to 10 files per paper, 5 MB per file.",
         "Exact duplicates are blocked. If a file already exists on the hub, you get a link to it instead of a second copy.",
         "Large PDF? Compress it for free and try again.",
       ],
@@ -90,7 +90,7 @@ export const uploadingGuide: Guide = {
       bullets: [
         "Right course, right year, right level.",
         "All pages included, and the complete checkbox reflects it.",
-        "No passwords, no spreadsheets, under 10 MB per file.",
+        "No passwords, no spreadsheets, under 5 MB per file.",
         "No personal details visible on any page.",
         "Clear file names help students find what they need.",
       ],

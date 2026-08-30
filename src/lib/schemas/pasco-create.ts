@@ -58,8 +58,8 @@ export const CLOUDINARY_RESOURCE_TYPES = [
   "RAW",
 ] as const satisfies readonly CloudinaryResourceType[];
 
-export const PASCO_MAX_FILES = 20;
-export const PASCO_MAX_FILE_SIZE_BYTES = 10_485_760;
+export const PASCO_MAX_FILES = 10;
+export const PASCO_MAX_FILE_SIZE_BYTES = 5_242_880;
 
 export const pascoFileCreateSchema = z.object({
   order: z.number().int().positive(),
