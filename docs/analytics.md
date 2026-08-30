@@ -49,6 +49,10 @@ file names/contents, Cloudinary URLs, auth tokens, push subscription
 endpoints/keys. Identification uses the opaque Clerk user id plus the user's
 `role` as the only person property. Anonymous visitors stay anonymous
 (`person_profiles: "identified_only"` — no person profile is created for them).
+
+Every outgoing event also passes a `before_send` scrub: `$current_url` and
+`$referrer` are reduced to origin + pathname (query strings and hashes dropped)
+before ingestion, so search text carried in `/pascos?q=…` never reaches PostHog.
 Disclosed in `src/content/legal/privacy.ts` (Cookies and analytics +
 Third-party processors sections).
 

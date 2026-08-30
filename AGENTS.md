@@ -37,6 +37,14 @@ pnpm dev
 
 **Run `pnpm build` only when necessary** — it takes several minutes and CI runs it on every PR/push, so a local build is rarely needed. Default to `pnpm lint` + `pnpm typecheck` for validation. Run the full build locally only when: `next.config.ts`, routes/pages, or the Prisma schema changed; dependencies were added/removed; or when reproducing a build-only failure. Do **not** run it for component/hook/lib tweaks, docs, or config edits — let CI build.
 
+## Releases & tagging
+
+- **A release is a batch marker, not a per-PR event.** Let merged work accumulate and tag a coherent set (a weekly/biweekly cadence works; tag immediately only for urgent fixes or a rollback point). Docs-only fixes usually ride with the next release.
+- **Semver**: MAJOR = breaking contract (env removals without fallback, removed behavior); MINOR = new user-facing behavior or documented env migrations; PATCH = fixes. When a release bundles several PRs, the highest level among them wins.
+- **The invariant**: the tagged commit must contain the version bump and a CHANGELOG section covering exactly what the tag contains. Never tag `main` directly when version/changelog drift exists.
+- **Flow**: open a `chore/release-vX.Y.Z` PR off `main` that bumps `package.json`, adds the dated CHANGELOG section for everything since the last tag, and updates the link refs at the bottom of `CHANGELOG.md` → merge → tag the merge commit (annotated) → publish the GitHub release mirroring the changelog section → delete the branch.
+- Keep one line of notes in release copy for anything self-hosters must do (e.g., env migrations).
+
 ## Architecture
 
 - **Next.js 16 App Router** — all route handlers export `runtime = "nodejs"` (no edge runtime)
@@ -72,6 +80,7 @@ pnpm dev
 
 ## Gotchas
 
+- **Concurrent Vercel builds race on Prisma's migration advisory lock** (`P1002`, 10s lock wait) — `db:deploy` (`scripts/db-deploy.mjs`) retries P1001/P1002/lock timeouts up to 5×15s; the sequence is idempotent, so retries are safe
 - `pnpm-workspace.yaml` only configures allowed builds (`prisma`, `esbuild`, `sharp`) — **not a monorepo**; do not use `workspace:` protocol
 - All `.env*` files are gitignored — `.env.example` is excluded by git; provide its content manually on fresh clones
 - `generated/prisma/` is gitignored — run `pnpm prisma generate` after every migration or `git pull`

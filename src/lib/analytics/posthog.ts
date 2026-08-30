@@ -16,6 +16,16 @@ export function isPostHogEnabled(): boolean {
   return POSTHOG_ENABLED && Boolean(POSTHOG_KEY) && Boolean(POSTHOG_HOST);
 }
 
+function scrubUrl(value: string): string {
+  try {
+    const url = new URL(value);
+
+    return url.origin + url.pathname;
+  } catch {
+    return value;
+  }
+}
+
 export function initPostHog(): void {
   if (initialized || !POSTHOG_ENABLED || !POSTHOG_KEY || !POSTHOG_HOST) {
     return;
@@ -36,6 +46,26 @@ export function initPostHog(): void {
     disable_session_recording: true,
     disable_surveys: true,
     person_profiles: "identified_only",
+    // Central choke point: posthog-js auto-attaches $current_url (and
+    // $referrer) with the full location to every event, which would leak
+    // search text from /pascos?q=<search text>. Reduce both to origin +
+    // pathname before anything is ingested. Idempotent over already-scrubbed
+    // pageview URLs.
+    before_send: (event) => {
+      if (!event || !event.properties) {
+        return event;
+      }
+
+      if (typeof event.properties.$current_url === "string") {
+        event.properties.$current_url = scrubUrl(event.properties.$current_url);
+      }
+
+      if (typeof event.properties.$referrer === "string") {
+        event.properties.$referrer = scrubUrl(event.properties.$referrer);
+      }
+
+      return event;
+    },
   });
 }
 
