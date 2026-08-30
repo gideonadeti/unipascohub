@@ -15,6 +15,9 @@ void runSeed(async (prisma) => {
         create: { name },
       }),
     ),
+    // Neon pooler + cold-start latency can push ~90 round-trips past the
+    // default 5s interactive transaction timeout (P2028 fails the build).
+    { timeout: 60_000, maxWait: 10_000 },
   );
 
   console.log(
