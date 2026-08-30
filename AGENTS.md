@@ -35,7 +35,7 @@ pnpm dev
 
 **No test framework or test script exists.** Only CI checks are lint, typecheck, build.
 
-**Run `pnpm build` sparingly** — it takes several minutes. Default to `pnpm lint` + `pnpm typecheck` for validation (doc changes, small edits, config/comment tweaks). Only run the full build when it is actually needed: before pushing, after changing `next.config.ts`, routes/pages, Prisma schema, or dependencies, or when reproducing a build-only failure. CI runs the build anyway, so it does not need to be repeated locally for every change.
+**Run `pnpm build` only when necessary** — it takes several minutes and CI runs it on every PR/push, so a local build is rarely needed. Default to `pnpm lint` + `pnpm typecheck` for validation. Run the full build locally only when: `next.config.ts`, routes/pages, or the Prisma schema changed; dependencies were added/removed; or when reproducing a build-only failure. Do **not** run it for component/hook/lib tweaks, docs, or config edits — let CI build.
 
 ## Architecture
 
