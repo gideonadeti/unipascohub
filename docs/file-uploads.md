@@ -49,8 +49,8 @@ Defined in [`src/lib/pasco-file-types.ts`](../src/lib/pasco-file-types.ts):
 
 | Limit               | Default | Env var                     |
 | ------------------- | ------- | --------------------------- |
-| Max per file        | 10 MB   | `PASCO_MAX_FILE_SIZE_BYTES` |
-| Max files per pasco | 20      | `PASCO_MAX_FILES_PER_PASCO` |
+| Max per file        | 5 MB    | `PASCO_MAX_FILE_SIZE_BYTES` |
+| Max files per pasco | 10      | `PASCO_MAX_FILES_PER_PASCO` |
 
 Oversized files show a user-friendly message suggesting [iLovePDF](https://www.ilovepdf.com/compress_pdf) compression.
 

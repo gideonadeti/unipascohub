@@ -250,11 +250,11 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
 }
 
 export function getPascoMaxFilesPerPasco(): number {
-  return parsePositiveInt(process.env.PASCO_MAX_FILES_PER_PASCO, 20);
+  return parsePositiveInt(process.env.PASCO_MAX_FILES_PER_PASCO, 10);
 }
 
 export function getPascoMaxFileSizeBytes(): number {
-  return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 10_485_760);
+  return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 5_242_880);
 }
 
 export function parsePascoFileDuplicateCheck(body: unknown):

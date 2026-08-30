@@ -418,9 +418,9 @@ function parsePositiveInt(value: unknown): number | null {
 
 function getMaxPascoFileSizeBytes(): number {
   const raw = process.env.PASCO_MAX_FILE_SIZE_BYTES;
-  const parsed = raw ? Number.parseInt(raw, 10) : 10_485_760;
+  const parsed = raw ? Number.parseInt(raw, 10) : 5_242_880;
 
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10_485_760;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 5_242_880;
 }
 
 export function parseComputeCloudinaryFileHashInput(

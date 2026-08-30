@@ -161,7 +161,7 @@ Run these locally before pushing. Husky pre-commit hooks run lint-staged when no
 
 - Verify signed upload preset name matches `CLOUDINARY_UPLOAD_PRESET`
 - Check file type is allowed (no spreadsheets)
-- Confirm file size is under `PASCO_MAX_FILE_SIZE_BYTES` (default 10 MB)
+- Confirm file size is under `PASCO_MAX_FILE_SIZE_BYTES` (default 5 MB)
 
 ### Pasco create: course not found
 
