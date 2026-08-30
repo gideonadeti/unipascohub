@@ -45,32 +45,52 @@ void runSeed(async (prisma) => {
     );
   }
 
-  await prisma.$transaction(
-    LEVEL_100_SEMESTER_1_COURSES.map((course) =>
-      prisma.course.upsert({
-        where: {
-          institutionId_code: {
-            institutionId: institution.id,
-            code: course.code,
-          },
-        },
-        update: {
-          title: course.title,
-          programs: { connect: { id: program.id } },
-        },
-        create: {
-          institutionId: institution.id,
-          code: course.code,
-          title: course.title,
-          programs: { connect: { id: program.id } },
-        },
-      }),
-    ),
-    // Default 5s transaction timeout is too tight for a cold Neon compute.
-    { timeout: 60_000, maxWait: 10_000 },
+  // Only insert courses that are missing so established databases skip the
+  // heavy work on every deploy while new seed data still propagates.
+  const existing = await prisma.course.findMany({
+    where: {
+      institutionId: institution.id,
+      code: { in: LEVEL_100_SEMESTER_1_COURSES.map((course) => course.code) },
+    },
+    select: { code: true },
+  });
+  const existingCodes = new Set(existing.map((course) => course.code));
+  const missing = LEVEL_100_SEMESTER_1_COURSES.filter(
+    (course) => !existingCodes.has(course.code),
   );
 
+  let seeded = 0;
+
+  if (missing.length > 0) {
+    await prisma.$transaction(
+      missing.map((course) =>
+        prisma.course.upsert({
+          where: {
+            institutionId_code: {
+              institutionId: institution.id,
+              code: course.code,
+            },
+          },
+          update: {
+            title: course.title,
+            programs: { connect: { id: program.id } },
+          },
+          create: {
+            institutionId: institution.id,
+            code: course.code,
+            title: course.title,
+            programs: { connect: { id: program.id } },
+          },
+        }),
+      ),
+      // Default 5s transaction timeout is too tight for a cold Neon compute.
+      { timeout: 60_000, maxWait: 10_000 },
+    );
+
+    seeded = missing.length;
+  }
+
   console.log(
-    `Seeded ${LEVEL_100_SEMESTER_1_COURSES.length} Level 100 Semester 1 courses for ${program.name} at ${ATU_INSTITUTION_NAME}.`,
+    `Seeded ${seeded} new Level 100 Semester 1 courses (${LEVEL_100_SEMESTER_1_COURSES.length - seeded} already present) for ${program.name} at ${ATU_INSTITUTION_NAME}.`,
   );
 });

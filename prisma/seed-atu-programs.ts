@@ -23,33 +23,51 @@ void runSeed(async (prisma) => {
     }
   }
 
+  // Only insert programs that are missing so established databases skip the
+  // heavy work on every deploy while new seed data still propagates.
+  const existing = await prisma.program.findMany({
+    where: {
+      institutionId: institution.id,
+      name: { in: programs.map((program) => program.name) },
+    },
+    select: { name: true, type: true },
+  });
+  const existingKeys = new Set(
+    existing.map((program) => `${program.name}:${program.type}`),
+  );
+  const missing = programs.filter(
+    (program) => !existingKeys.has(`${program.name}:${program.type}`),
+  );
+
   let upserted = 0;
 
-  await prisma.$transaction(
-    async (tx) => {
-      for (const { name, type } of programs) {
-        await tx.program.upsert({
-          where: {
-            institutionId_name_type: {
+  if (missing.length > 0) {
+    await prisma.$transaction(
+      async (tx) => {
+        for (const { name, type } of missing) {
+          await tx.program.upsert({
+            where: {
+              institutionId_name_type: {
+                institutionId: institution.id,
+                name,
+                type,
+              },
+            },
+            update: {},
+            create: {
               institutionId: institution.id,
               name,
               type,
             },
-          },
-          update: {},
-          create: {
-            institutionId: institution.id,
-            name,
-            type,
-          },
-        });
+          });
 
-        upserted++;
-      }
-      // Default 5s transaction timeout is too tight for a cold Neon compute.
-    },
-    { timeout: 60_000, maxWait: 10_000 },
-  );
+          upserted++;
+        }
+        // Default 5s transaction timeout is too tight for a cold Neon compute.
+      },
+      { timeout: 60_000, maxWait: 10_000 },
+    );
+  }
 
   const count = await prisma.program.count({
     where: { institutionId: institution.id },
@@ -57,6 +75,7 @@ void runSeed(async (prisma) => {
 
   console.log(`Seeded programs for ${institution.name}`);
   console.log(`  Upserted: ${upserted}`);
+  console.log(`  Already present: ${existingKeys.size}`);
   console.log(`  Skipped (technician): ${skipped.length}`);
   console.log(`  Total in DB: ${count}`);
 });
