@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.0.0] - 2026-08-30
 
 ### Added
 
@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Pasco uploads are anonymous to the public: detail page no longer shows uploader names; public API responses omit `uploaderId` unless the viewer is the uploader or a moderator/admin
 - Contributors page: open-source contribution guidance (GitHub repo, contributing guide, and issue tracker links) replacing the private-repository DM flow
+
+### Security
+
+- Pre-launch security hardening ([#3](https://github.com/gideonadeti/unipascohub/pull/3)): escape JSON-LD output in all script sinks (stored-XSS fix), remove permanent Cloudinary URLs from public pasco API responses, enforce allowed file formats server-side (sign, create, file-sync, asset verification), make the Redis rate limiter fail open and reconnect on transient failures, unblock published pasco pages in `robots.txt`, and require `NEXT_PUBLIC_APP_URL` in production
 
 ### Planned
 
