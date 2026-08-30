@@ -2,10 +2,6 @@ export const termsLastUpdated = "30 August 2026";
 
 export const termsSections = [
   {
-    title: "Draft notice",
-    body: "These terms are a draft placeholder and will be updated before public launch. They describe the current intended rules for using Uni Pasco Hub.",
-  },
-  {
     title: "Acceptable use",
     body: "You agree not to misuse the service, attempt to break security, or upload content you do not have the right to share. Do not upload personal data that should not be public.",
   },

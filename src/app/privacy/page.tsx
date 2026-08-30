@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       <div className="space-y-8">
         <PageHeader
           title="Privacy"
-          description="A draft overview of how Uni Pasco Hub handles data."
+          description="How Uni Pasco Hub handles your data."
         />
 
         <p className="text-sm text-muted-foreground">

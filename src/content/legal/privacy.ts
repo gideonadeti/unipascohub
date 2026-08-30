@@ -2,10 +2,6 @@ export const privacyLastUpdated = "30 August 2026";
 
 export const privacySections = [
   {
-    title: "Draft notice",
-    body: "This privacy policy is a draft placeholder and will be updated before public launch. It is provided to explain the current system at a high level.",
-  },
-  {
     title: "What we collect",
     body: "We collect basic account details needed to operate the service: authentication identifiers handled by Clerk, your name, and the optional school you provide on your profile. When you upload pascos, we store file metadata (like filename and size). Views, downloads, and likes/dislikes are recorded to show counts and prevent abuse — download and reaction records are linked to your account. If you enable push notifications, we store the browser-provided subscription endpoint used to deliver them.",
   },

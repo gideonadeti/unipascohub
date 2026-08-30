@@ -16,7 +16,7 @@ export default function TermsPage() {
       <div className="space-y-8">
         <PageHeader
           title="Terms"
-          description="Draft terms of use for Uni Pasco Hub."
+          description="Terms of use for Uni Pasco Hub."
         />
 
         <p className="text-sm text-muted-foreground">
