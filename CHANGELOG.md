@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.2.2] - 2026-08-30
 
+### Added
+
+- Scrubbed PostHog `$pageview` capture (URL is origin + pathname — search-query text never leaves the browser), giving funnels and retention a traffic baseline
+
 ### Changed
 
 - Cloudinary asset folders are namespaced under `unipascohub/pascos/{courseId}` (was `pascos/{courseId}`) — existing assets keep working unchanged, new uploads land in the new root, and orphan cleanup now scans the new root ([#21](https://github.com/weamp-org/unipascohub/pull/21))
