@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.1] - 2026-08-30
+
+### Fixed
+
+- Catalog list endpoints (`/api/courses`, `/api/institutions`, `/api/programs`) no longer serve a 1-hour HTTP cache — approved programs/courses and institution edits appear immediately in the upload form and comboboxes ([#19](https://github.com/weamp-org/unipascohub/pull/19))
+
 ## [1.2.0] - 2026-08-30
 
 ### Added
@@ -156,7 +162,8 @@ Initial documented baseline of implemented functionality.
 - Cloudinary widget signing with source and widget timestamp
 - Font variable consistency in globals.css
 
-[Unreleased]: https://github.com/weamp-org/unipascohub/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/weamp-org/unipascohub/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/weamp-org/unipascohub/releases/tag/v1.2.1
 [1.2.0]: https://github.com/weamp-org/unipascohub/releases/tag/v1.2.0
 [1.1.0]: https://github.com/weamp-org/unipascohub/releases/tag/v1.1.0
 [1.0.1]: https://github.com/weamp-org/unipascohub/releases/tag/v1.0.1
