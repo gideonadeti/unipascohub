@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Scrubbed PostHog `$pageview` capture (URL is origin + pathname — search-query text never leaves the browser), giving funnels and retention a traffic baseline
+- PostHog URL scrubbing: every outgoing event's `$current_url`/`$referrer` is reduced to origin + pathname before send (a `before_send` hook), and `$pageview` is captured manually on route changes — search-query text carried in `/pascos?q=…` never leaves the browser; gives funnels and retention a traffic baseline
 
 ### Changed
 
