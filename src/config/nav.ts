@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Home, Search, Upload } from "lucide-react";
 
-import { type FooterLink, footerNav } from "@/config/site";
+import type { FooterLink } from "@/config/site";
 
 export type NavLink = FooterLink;
 
@@ -62,8 +62,6 @@ export const roleNavLinks: RoleNavLink[] = [
     requiresModerator: true,
   },
 ];
-
-export const sheetNavGroups = footerNav;
 
 export function isNavLinkActive(
   pathname: string,

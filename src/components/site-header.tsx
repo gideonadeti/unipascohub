@@ -33,7 +33,7 @@ export function SiteHeader() {
         {siteName}
       </Link>
 
-      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+      <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <div className="hidden items-center gap-2 lg:flex lg:gap-3">
           {showContributionsLink ? (
             <Button variant="ghost" size="sm" asChild>
@@ -72,6 +72,18 @@ export function SiteHeader() {
 
         <ThemeToggle />
         <PwaInstallButton />
+
+        <Show when="signed-out">
+          <SignInButton mode="modal">
+            <Button
+              variant="ghost"
+              type="button"
+              className="min-h-11 lg:hidden"
+            >
+              Sign in
+            </Button>
+          </SignInButton>
+        </Show>
 
         <Show when="signed-in">
           <NotificationBell />
