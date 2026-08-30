@@ -5,10 +5,10 @@ import { SiBuymeacoffee } from "react-icons/si";
 
 import {
   footerNav,
-  getCreditLine,
   siteLinks,
   siteName,
   siteTagline,
+  weampUrl,
 } from "@/config/site";
 
 type SocialLink = {
@@ -64,8 +64,19 @@ export function SiteFooter() {
           <p className="text-lg font-semibold tracking-tight">{siteName}</p>
           <p className="text-sm text-muted-foreground">{siteTagline}</p>
           <p className="text-sm text-muted-foreground">
+            Built by{" "}
+            <a
+              href={weampUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-weamp text-base hover:text-foreground"
+            >
+              WeAMP
+              <span className="sr-only"> (opens in new tab)</span>
+            </a>{" "}
+            and{" "}
             <Link href="/contributors" className="hover:text-foreground">
-              {getCreditLine()}
+              open-source contributors
             </Link>
           </p>
           <p className="text-xs text-muted-foreground">

@@ -47,28 +47,7 @@ export const siteSponsors: SiteSponsor[] = [];
 
 export const siteRepoUrl = "https://github.com/gideonadeti/unipascohub";
 
-function getLeadContributor(): SiteContributor | undefined {
-  return (
-    siteContributors.find((person) => person.role === "lead") ??
-    siteContributors[0]
-  );
-}
-
-export { getLeadContributor };
-
-export function getCreditLine(): string {
-  const lead = getLeadContributor();
-  const leadName = lead?.name ?? "contributors";
-  const hasAdditionalContributors = siteContributors.some(
-    (person) => person.role === "contributor",
-  );
-
-  if (!hasAdditionalContributors) {
-    return `Engineered by ${leadName}`;
-  }
-
-  return `Engineered by ${leadName} and contributors`;
-}
+export const weampUrl = "https://weamp.org";
 
 function readPublicUrl(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -90,6 +69,7 @@ export const footerNav: FooterNavGroup[] = [
       { label: "Browse pascos", href: "/pascos" },
       { label: "Upload pasco", href: "/pascos/new" },
       { label: "Contributors", href: "/contributors" },
+      { label: "Open Source", href: siteRepoUrl, external: true },
       { label: "Sponsors", href: "/sponsors" },
     ],
   },
