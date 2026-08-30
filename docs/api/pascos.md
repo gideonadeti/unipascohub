@@ -397,7 +397,7 @@ Sign Cloudinary upload parameters for the widget.
 
 **Response `200`:** Cloudinary signature payload (timestamp, signature, folder, etc.)
 
-Files are uploaded to folder `pascos/{courseId}/`.
+Files are uploaded to folder `unipascohub/pascos/{courseId}/`.
 
 ---
 

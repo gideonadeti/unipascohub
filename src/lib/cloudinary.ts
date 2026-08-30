@@ -21,6 +21,12 @@ const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
   Object.values(CloudinaryResourceType),
 );
 
+export const PASCO_ASSET_ROOT = "unipascohub/pascos";
+
+export function getPascoAssetFolder(courseId: string): string {
+  return `${PASCO_ASSET_ROOT}/${courseId}`;
+}
+
 export type SignUploadInput = {
   courseId: string;
   resourceType: CloudinaryResourceTypeType;
@@ -206,7 +212,7 @@ function validateWidgetSignParams(
   uploadPreset: string,
   widgetParams: WidgetSignParams,
 ): boolean {
-  const expectedAssetFolder = `pascos/${courseId}`;
+  const expectedAssetFolder = getPascoAssetFolder(courseId);
 
   return (
     widgetParams.asset_folder === expectedAssetFolder &&
@@ -342,7 +348,7 @@ export function signUploadParams(
     return { success: false, error: "missing_config" };
   }
 
-  const assetFolder = `pascos/${input.courseId}`;
+  const assetFolder = getPascoAssetFolder(input.courseId);
   const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
 
   if (

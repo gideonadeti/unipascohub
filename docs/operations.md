@@ -4,7 +4,7 @@ Maintenance tasks for storage, rate limiting, and cleanup failures.
 
 ## Cloudinary orphan cleanup
 
-Orphan assets are files in Cloudinary under `pascos/` that have no matching `PascoFile.publicId` in the database. They can occur when uploads succeed but pasco creation fails, or from manual Cloudinary changes.
+Orphan assets are files in Cloudinary under `unipascohub/pascos/` that have no matching `PascoFile.publicId` in the database. They can occur when uploads succeed but pasco creation fails, or from manual Cloudinary changes.
 
 ### CLI (recommended for scheduled jobs)
 
