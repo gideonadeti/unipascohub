@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.0] - 2026-08-30
+
+### Changed
+
+- Production domain and repository moved to `weamp-org` / `unipascohub.weamp.org` — site URLs (metadata, sitemap, robots, JSON-LD) are now driven by a single `siteUrl` constant ([#6](https://github.com/weamp-org/unipascohub/pull/6))
+- Rate limiting uses Upstash's HTTP/REST client instead of a TCP socket — **env migration: `REDIS_URL` → `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`** (the app falls back to in-memory limiting without them) ([#10](https://github.com/weamp-org/unipascohub/pull/10))
+- Seeds are insert-missing-only: established databases skip re-seeding entirely on deploys, while new seed data still propagates ([#8](https://github.com/weamp-org/unipascohub/pull/8))
+
+### Security
+
+- CSP allowlist extended for the Clerk custom FAPI domain, Cloudflare Turnstile, and Clerk protection hosts, verified against Clerk's CSP guide ([#9](https://github.com/weamp-org/unipascohub/pull/9))
+- Seed transactions are no longer capped at the default 5s interactive transaction timeout — fixes cold-start deploy failures (P2028) ([#7](https://github.com/weamp-org/unipascohub/pull/7))
+
 ## [1.0.1] - 2026-08-30
 
 ### Fixed
@@ -126,5 +139,8 @@ Initial documented baseline of implemented functionality.
 - Cloudinary widget signing with source and widget timestamp
 - Font variable consistency in globals.css
 
-[Unreleased]: https://github.com/weamp-org/unipascohub/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/weamp-org/unipascohub/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/weamp-org/unipascohub/releases/tag/v1.1.0
+[1.0.1]: https://github.com/weamp-org/unipascohub/releases/tag/v1.0.1
+[1.0.0]: https://github.com/weamp-org/unipascohub/releases/tag/v1.0.0
 [0.1.0]: https://github.com/weamp-org/unipascohub/releases/tag/v0.1.0
