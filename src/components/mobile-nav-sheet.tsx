@@ -15,7 +15,11 @@ import {
 } from "@/components/ui/sheet";
 import { roleNavLinks } from "@/config/nav";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
-import { isContributorRole, isModeratorRole } from "@/lib/pasco-permissions";
+import {
+  isAdminRole,
+  isContributorRole,
+  isModeratorRole,
+} from "@/lib/pasco-permissions";
 import { cn } from "@/lib/utils";
 
 const navLinkClassName =
@@ -25,10 +29,15 @@ export function MobileNavSheet() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const currentUser = useCurrentUser();
+  const isAdmin = isAdminRole(currentUser.data?.user?.role);
   const isContributor = isContributorRole(currentUser.data?.user?.role);
   const isModerator = isModeratorRole(currentUser.data?.user?.role);
 
   const visibleRoleLinks = roleNavLinks.filter((link) => {
+    if (link.requiresAdmin) {
+      return isAdmin;
+    }
+
     if (link.requiresModerator) {
       return isModerator;
     }

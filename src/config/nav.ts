@@ -36,6 +36,7 @@ export const primaryBottomNav: BottomNavItem[] = [
 export type RoleNavLink = {
   label: string;
   href: string;
+  requiresAdmin?: boolean;
   requiresContributor?: boolean;
   requiresModerator?: boolean;
 };
@@ -60,6 +61,11 @@ export const roleNavLinks: RoleNavLink[] = [
     label: "Feedback",
     href: "/moderation/feedback",
     requiresModerator: true,
+  },
+  {
+    label: "Admin",
+    href: "/admin",
+    requiresAdmin: true,
   },
 ];
 
