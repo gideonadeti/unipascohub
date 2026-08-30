@@ -120,7 +120,7 @@ Clerk handles sign-in, sessions, and identity. A `User` row in PostgreSQL stores
 
 ### Cloudinary for file storage
 
-Files are uploaded directly to Cloudinary via a signed widget flow. Assets are stored under `pascos/{courseId}/` folders. The database stores metadata (`publicId`, `fileUrl`, `contentHash`) but not file bytes.
+Files are uploaded directly to Cloudinary via a signed widget flow. Assets are stored under `unipascohub/pascos/{courseId}/` folders. The database stores metadata (`publicId`, `fileUrl`, `contentHash`) but not file bytes.
 
 ### Content-hash duplicate detection
 

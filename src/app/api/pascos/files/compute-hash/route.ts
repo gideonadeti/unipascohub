@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
 import {
+  getPascoAssetFolder,
   hashCloudinaryFile,
   parseComputeCloudinaryFileHashInput,
 } from "@/lib/cloudinary";
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
     fileUrl: parsed.data.fileUrl,
     fileSize: parsed.data.fileSize,
     resourceType: parsed.data.resourceType,
-    expectedAssetFolder: `pascos/${parsed.data.courseId}`,
+    expectedAssetFolder: getPascoAssetFolder(parsed.data.courseId),
     fileName: parsed.data.fileName,
   });
 

@@ -59,7 +59,7 @@ Oversized files show a user-friendly message suggesting [iLovePDF](https://www.i
 Files are stored under:
 
 ```text
-pascos/{courseId}/{auto-generated-id}
+unipascohub/pascos/{courseId}/{auto-generated-id}
 ```
 
 The sign endpoint sets the upload folder based on `courseId`. On pasco create/update, the server verifies each asset exists in the expected folder.
@@ -118,7 +118,7 @@ Failed Cloudinary deletions are returned in `storageCleanupFailures` and persist
 
 Required env vars: see [`.env.example`](../.env.example) (Cloudinary section).
 
-`CLOUDINARY_UPLOAD_PRESET` must be a **signed** upload preset. Uploads are signed server-side: before each file transfer, the widget requests a signature from `POST /api/cloudinary/sign`, which validates the widget's params (asset folder `pascos/{courseId}`, preset name, `source: uw`) before signing with the API secret. Never set the preset to unsigned mode — that would allow signature-less uploads that bypass the folder and preset validation.
+`CLOUDINARY_UPLOAD_PRESET` must be a **signed** upload preset. Uploads are signed server-side: before each file transfer, the widget requests a signature from `POST /api/cloudinary/sign`, which validates the widget's params (asset folder `unipascohub/pascos/{courseId}`, preset name, `source: uw`) before signing with the API secret. Never set the preset to unsigned mode — that would allow signature-less uploads that bypass the folder and preset validation.
 
 ## Related docs
 

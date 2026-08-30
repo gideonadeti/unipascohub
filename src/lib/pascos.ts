@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { academicYearValidationMessage } from "@/lib/academic-year";
 import {
   deleteCloudinaryAssets,
+  getPascoAssetFolder,
   type VerifyFileError,
   validatePdfResourceType,
   verifyCloudinaryFile,
@@ -1263,7 +1264,7 @@ async function syncPascoFiles(
     resourceType: file.resourceType,
   }));
 
-  const expectedAssetFolder = `pascos/${courseId}`;
+  const expectedAssetFolder = getPascoAssetFolder(courseId);
   const verificationResults = await Promise.all(
     toAdd.map((file) =>
       verifyCloudinaryFile({
@@ -1557,7 +1558,7 @@ export async function createPasco(
     };
   }
 
-  const expectedAssetFolder = `pascos/${input.courseId}`;
+  const expectedAssetFolder = getPascoAssetFolder(input.courseId);
   const verificationResults = await Promise.all(
     input.files.map((file) =>
       verifyCloudinaryFile({

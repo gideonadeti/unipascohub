@@ -8,7 +8,7 @@ Types: [`src/types/api/storage-cleanup.ts`](../../src/types/api/storage-cleanup.
 
 ### `POST /api/admin/cloudinary/cleanup-orphans`
 
-Scan Cloudinary for assets under `pascos/` that have no matching `PascoFile` record, and optionally delete them.
+Scan Cloudinary for assets under `unipascohub/pascos/` that have no matching `PascoFile` record, and optionally delete them.
 
 **Auth:** Admin
 
@@ -24,7 +24,7 @@ Scan Cloudinary for assets under `pascos/` that have no matching `PascoFile` rec
 | Field      | Type    | Default | Description                               |
 | ---------- | ------- | ------- | ----------------------------------------- |
 | `dryRun`   | boolean | `true`  | When `true`, scan only — no deletions     |
-| `courseId` | string  | —       | Limit scan to `pascos/{courseId}/` folder |
+| `courseId` | string  | —       | Limit scan to `unipascohub/pascos/{courseId}/` folder |
 
 **Response `200`:**
 
