@@ -42,7 +42,12 @@ export function initPostHog(): void {
     // text. Pageviews are captured manually with a scrubbed URL instead —
     // see PostHogPageView.
     capture_pageview: false,
-    capture_pageleave: false,
+    // $pageleave drives PostHog Web Analytics bounce rate + session duration.
+    // Safe to keep on: $current_url/$referrer are still scrubbed by before_send.
+    capture_pageleave: true,
+    // Web vitals (LCP/CLS/FCP/INP as $web_vitals) — per-project, no Vercel Speed
+    // Insights needed (single-project limit). Also scrubbed by before_send.
+    capture_performance: true,
     disable_session_recording: true,
     disable_surveys: true,
     person_profiles: "identified_only",
