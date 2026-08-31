@@ -56,8 +56,12 @@ export function useDeleteCourse() {
 
   return useMutation({
     mutationFn: (id: string) => deleteCourse(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.courses.detail(id),
+      });
+      queryClient.removeQueries({ queryKey: queryKeys.courses.detail(id) });
       toast.success("Course deleted");
     },
     onError: (error: unknown) => {

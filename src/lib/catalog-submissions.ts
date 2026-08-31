@@ -421,7 +421,16 @@ export async function createCatalogSubmission(
           });
         });
         const summary = getCatalogSubmissionSummary(submission);
-        await createCatalogCourseAutoApprovedNotification(summary);
+        try {
+          await createCatalogCourseAutoApprovedNotification(summary);
+        } catch (notificationError) {
+          // Notification failure should not revert the already-committed link.
+          // Log and continue — retrying the whole request would hit duplicate_live_course.
+          console.error(
+            "Failed to send auto-approved course link notification",
+            notificationError,
+          );
+        }
         return { success: true, submission };
       } catch (error) {
         if (isDuplicateCodeError(error)) {

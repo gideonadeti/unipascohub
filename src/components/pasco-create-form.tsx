@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { CatalogCourseRequestDialog } from "@/components/catalog-course-request-dialog";
 import { CatalogProgramRequestDialog } from "@/components/catalog-program-request-dialog";
 import { CatalogSubmissionPendingAlert } from "@/components/catalog-submission-pending-alert";
@@ -233,11 +234,22 @@ export function PascoCreateForm() {
               courseTitle: selectedCourse.title,
               programIds: [values.programId],
             });
-          } catch {
-            // ignore fallback failure, proceed with pasco upload
+          } catch (fallbackError) {
+            const msg =
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : "Could not link course to program";
+            toast.error(msg);
+            return;
           }
+        } else {
+          const msg =
+            error instanceof Error
+              ? error.message
+              : "Could not link course to program";
+          toast.error(msg);
+          return;
         }
-        // For other errors (e.g. duplicate), ignore and proceed — pasco create will still succeed
       }
     }
 
