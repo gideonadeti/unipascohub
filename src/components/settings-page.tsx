@@ -193,7 +193,7 @@ export function SettingsPage() {
               ) : (
                 <InstitutionCombobox
                   id="settings-institution"
-                  institutions={institutions}
+                  institutions={institutions ?? []}
                   value={institutionId}
                   onValueChange={handleInstitutionChange}
                   allowClear
