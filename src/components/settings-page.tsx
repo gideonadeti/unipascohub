@@ -30,8 +30,8 @@ import {
 } from "@/hooks/api/use-current-user";
 import { useInstitutions } from "@/hooks/api/use-institutions";
 import { formatEnumLabel } from "@/lib/catalog-labels";
+import { MAX_SCHOOL_LENGTH } from "@/lib/constants";
 import { isContributorRole } from "@/lib/pasco-permissions";
-import { MAX_SCHOOL_LENGTH } from "@/lib/user-profile";
 import type { UserRole } from "@/types/api/users";
 
 const roleBadgeVariant: Record<
