@@ -35,6 +35,11 @@ export function SiteHeader() {
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <div className="hidden items-center gap-2 lg:flex lg:gap-3">
+          <Show when="signed-in">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/settings">Settings</Link>
+            </Button>
+          </Show>
           {showContributionsLink ? (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/contributions">My contributions</Link>

@@ -43,6 +43,10 @@ export type RoleNavLink = {
 
 export const roleNavLinks: RoleNavLink[] = [
   {
+    label: "Settings",
+    href: "/settings",
+  },
+  {
     label: "My contributions",
     href: "/contributions",
     requiresContributor: true,
