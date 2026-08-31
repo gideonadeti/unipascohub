@@ -70,7 +70,7 @@ import {
   removeEditFile,
 } from "@/lib/schemas/pasco-update";
 import { typography } from "@/lib/typography";
-import type { Course, CourseDetail, Program } from "@/types/api/catalog";
+import type { CourseDetail, Program } from "@/types/api/catalog";
 import type { Pasco } from "@/types/api/pascos";
 
 type PascoEditFormProps = {
@@ -193,7 +193,7 @@ type PascoEditFormFieldsProps = {
   course: CourseDetail;
   institutions: { id: string; name: string }[];
   programs: Program[];
-  courses: Course[];
+  courses: CourseDetail[];
 };
 
 function PascoEditFormFields({
@@ -252,6 +252,7 @@ function PascoEditFormFields({
         institutionId: course.institutionId,
         code: course.code,
         title: course.title,
+        programIds: course.programIds,
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
       },

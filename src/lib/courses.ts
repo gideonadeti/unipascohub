@@ -264,7 +264,9 @@ export async function validateProgramIds(
 export async function listCourses(params?: {
   institutionId?: string;
   programId?: string;
-}): Promise<{ success: true; courses: Course[] } | { success: false }> {
+}): Promise<
+  { success: true; courses: CourseWithPrograms[] } | { success: false }
+> {
   const institutionId = params?.institutionId;
   const programId = params?.programId;
 
@@ -272,6 +274,12 @@ export async function listCourses(params?: {
     where: {
       ...(institutionId ? { institutionId } : {}),
       ...(programId ? { programs: { some: { id: programId } } } : {}),
+    },
+    include: {
+      programs: {
+        select: { id: true },
+        orderBy: [{ name: "asc" }, { type: "asc" }],
+      },
     },
     orderBy: { code: "asc" },
   });
