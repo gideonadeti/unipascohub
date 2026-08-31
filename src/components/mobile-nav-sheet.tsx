@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,12 +29,17 @@ const navLinkClassName =
 export function MobileNavSheet() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { isSignedIn } = useAuth();
   const currentUser = useCurrentUser();
   const isAdmin = isAdminRole(currentUser.data?.user?.role);
   const isContributor = isContributorRole(currentUser.data?.user?.role);
   const isModerator = isModeratorRole(currentUser.data?.user?.role);
 
   const visibleRoleLinks = roleNavLinks.filter((link) => {
+    if (link.requiresSignedIn) {
+      return isSignedIn === true;
+    }
+
     if (link.requiresAdmin) {
       return isAdmin;
     }

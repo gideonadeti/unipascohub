@@ -36,12 +36,18 @@ export const primaryBottomNav: BottomNavItem[] = [
 export type RoleNavLink = {
   label: string;
   href: string;
+  requiresSignedIn?: boolean;
   requiresAdmin?: boolean;
   requiresContributor?: boolean;
   requiresModerator?: boolean;
 };
 
 export const roleNavLinks: RoleNavLink[] = [
+  {
+    label: "Settings",
+    href: "/settings",
+    requiresSignedIn: true,
+  },
   {
     label: "My contributions",
     href: "/contributions",

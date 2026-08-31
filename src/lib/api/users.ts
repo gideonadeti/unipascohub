@@ -28,3 +28,13 @@ export function upgradeToContributor() {
     .post<UpgradeToContributorResponse>("/api/users/upgrade-to-contributor")
     .then((response) => response.data);
 }
+
+export type UpdateProfileRequest = {
+  school: string | null;
+};
+
+export function updateCurrentUserProfile(data: UpdateProfileRequest) {
+  return apiClient
+    .patch<CurrentUserResponse>("/api/users/me", data)
+    .then((response) => response.data);
+}

@@ -2,7 +2,6 @@
 
 import { SignInButton, useAuth } from "@clerk/nextjs";
 
-import { ContributorUpgradeCard } from "@/components/contributor-upgrade-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,13 +13,18 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useCurrentUser } from "@/hooks/api/use-current-user";
-import { isContributorRole } from "@/lib/pasco-permissions";
 
-type ContributorGateProps = {
+type SignedInGateProps = {
   children: React.ReactNode;
+  title?: string;
+  description?: string;
 };
 
-export function ContributorGate({ children }: ContributorGateProps) {
+export function SignedInGate({
+  children,
+  title = "Sign in required",
+  description = "You must be signed in to view this page.",
+}: SignedInGateProps) {
   const { isLoaded, isSignedIn } = useAuth();
   const currentUser = useCurrentUser();
 
@@ -37,10 +41,8 @@ export function ContributorGate({ children }: ContributorGateProps) {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Sign in required</CardTitle>
-          <CardDescription>
-            You must be signed in to view your contributions.
-          </CardDescription>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
           <SignInButton mode="modal">
@@ -66,14 +68,6 @@ export function ContributorGate({ children }: ContributorGateProps) {
         <AlertTitle>Could not load account</AlertTitle>
         <AlertDescription>{currentUser.error.message}</AlertDescription>
       </Alert>
-    );
-  }
-
-  const role = currentUser.data?.user.role;
-
-  if (!isContributorRole(role)) {
-    return (
-      <ContributorUpgradeCard description="Only contributors can view and manage uploads and catalog requests. Upgrade your account to continue." />
     );
   }
 
