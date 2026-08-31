@@ -32,15 +32,21 @@ PostHog-derived counts in the UI and never send server-side events.
 | `contributor_upgrade_completed`| Contributor upgrade succeeds                 | — |
 | `push_enabled`                 | Push subscription is saved successfully      | — |
 | `$pageview` (system)           | Any route change                             | `$current_url` = origin + pathname (query string deliberately scrubbed) |
+| `$pageleave` (system)          | Page hidden/unloaded (bounce/session duration) | `$current_url` = origin + pathname (scrubbed by `before_send`) |
+| `$web_vitals` (system)         | Web vitals sampled (LCP/CLS/FCP/INP)         | `$current_url` = origin + pathname (scrubbed); `$web_vitals_*` values |
 
 Do not add events without updating this doc. Explicitly **not** implemented:
-autocapture, automatic pageviews (`capture_pageview: false` — `$pageview` is
+autocapture (remains `autocapture: false`), automatic pageviews (`capture_pageview: false` — `$pageview` is
 captured manually with a scrubbed URL instead, because the browse page keeps
 search text in the query string; Vercel Analytics still covers lightweight
 traffic dashboards), PostHog
 session replay (Sentry already has replay; replaying copyrighted PDF content is
 a legal risk), feature flags, experiments, surveys, server-side tracking, and a
 cookie-consent banner (tracked as a separate open item).
+
+Enabled system events beyond the manual pageview:
+- `$pageleave` (`capture_pageleave: true`) — required for accurate bounce rate and session duration; safe because `before_send` scrubs `$current_url`/`$referrer`.
+- `$web_vitals` (`capture_performance: true` — see `src/lib/analytics/posthog.ts:45`) — Core Web Vitals (LCP/CLS/FCP/INP) per project without Vercel Speed Insights (single-project limit on Vercel). Also scrubbed; ~30% overhead over `$pageview` volume and counted toward the 1M/month free tier. Sample later via `before_send` if needed (e.g. `sampleByEvent(['$web_vitals'], 0.5)`). Enable the matching toggle in PostHog Project Settings → Web vitals autocapture if the project was created before the SDK flag.
 
 ## Privacy rules
 
