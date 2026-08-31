@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { ApiError } from "@/lib/api/client";
 import {
   type CourseUpdatePayload,
   courseDetailOptions,
@@ -60,6 +61,12 @@ export function useDeleteCourse() {
       toast.success("Course deleted");
     },
     onError: (error: unknown) => {
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error(
+          "Cannot delete course with linked pascos — remove pascos first",
+        );
+        return;
+      }
       const message =
         error instanceof Error ? error.message : "Could not delete course";
       toast.error(message);

@@ -36,6 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { useDeleteCourse, useUpdateCourse } from "@/hooks/api/use-courses";
+import { coursesListOptions } from "@/lib/api/courses";
 import { institutionsListOptions } from "@/lib/api/institutions";
 import { programsListOptions } from "@/lib/api/programs";
 import type { Course, Program } from "@/types/api/catalog";
@@ -210,21 +211,15 @@ export function AdminCatalogClient() {
     ...programsListOptions({ institutionId }),
     enabled: institutionId.length > 0,
   });
-  // Direct fetch for courses to avoid circular import and to get programIds included
   const {
     data: coursesData,
     isPending: coursesPending,
     isError: coursesError,
   } = useQuery({
-    queryKey: ["courses", "list", { institutionId, programId }],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (institutionId) params.set("institutionId", institutionId);
-      if (programId) params.set("programId", programId);
-      const res = await fetch(`/api/courses?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to load courses");
-      return (await res.json()) as { courses: EditingCourse[] };
-    },
+    ...coursesListOptions({
+      institutionId: institutionId || undefined,
+      programId: programId || undefined,
+    }),
     enabled: institutionId.length > 0,
   });
 
