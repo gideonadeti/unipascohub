@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import type { User } from "../../generated/prisma/client";
 
-const MAX_SCHOOL_LENGTH = 200;
+export const MAX_SCHOOL_LENGTH = 200;
 
 export type ProfileUpdateInput = {
   school?: string | null;

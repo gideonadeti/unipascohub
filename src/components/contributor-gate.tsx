@@ -21,8 +21,17 @@ type ContributorGateProps = {
 };
 
 export function ContributorGate({ children }: ContributorGateProps) {
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const currentUser = useCurrentUser();
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Spinner aria-hidden />
+        Loading…
+      </div>
+    );
+  }
 
   if (isSignedIn !== true) {
     return (

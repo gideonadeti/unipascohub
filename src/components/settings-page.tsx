@@ -31,11 +31,11 @@ import {
 import { useInstitutions } from "@/hooks/api/use-institutions";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import { isContributorRole } from "@/lib/pasco-permissions";
-
-const MAX_SCHOOL_LENGTH = 200;
+import { MAX_SCHOOL_LENGTH } from "@/lib/user-profile";
+import type { UserRole } from "@/types/api/users";
 
 const roleBadgeVariant: Record<
-  string,
+  UserRole,
   "default" | "secondary" | "outline" | "destructive"
 > = {
   ADMIN: "destructive",
@@ -52,11 +52,10 @@ function findInstitutionIdBySchool(
     return "";
   }
 
+  const normalizedSchool = school.toLowerCase().trim();
+
   const match = institutions.find(
-    (institution) =>
-      institution.name.localeCompare(school, undefined, {
-        sensitivity: "accent",
-      }) === 0,
+    (institution) => institution.name.toLowerCase().trim() === normalizedSchool,
   );
 
   return match?.id ?? "";
@@ -103,7 +102,7 @@ export function SettingsPage() {
     );
 
     if (institution) {
-      setSchool(institution.name);
+      setSchool(institution.name.trim());
     }
   }
 
@@ -152,9 +151,7 @@ export function SettingsPage() {
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium">Role</p>
-            <Badge variant={roleBadgeVariant[user.role] ?? "default"}>
-              {roleLabel}
-            </Badge>
+            <Badge variant={roleBadgeVariant[user.role]}>{roleLabel}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">
             To change your name or email, use the account menu in the header.
