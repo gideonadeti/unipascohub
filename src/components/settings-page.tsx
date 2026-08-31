@@ -67,22 +67,24 @@ export function SettingsPage() {
   const updateProfile = useUpdateCurrentUserProfile();
 
   const user = currentUser.data?.user;
-  const institutions = institutionsQuery.data?.institutions ?? [];
+  const savedSchool = user?.school ?? "";
+  const institutions = institutionsQuery.data?.institutions;
 
   const [school, setSchool] = useState("");
   const [institutionId, setInstitutionId] = useState("");
 
   useEffect(() => {
-    if (!user) {
+    setSchool(savedSchool);
+  }, [savedSchool]);
+
+  useEffect(() => {
+    if (!institutions) {
       return;
     }
 
-    const nextSchool = user.school ?? "";
-    setSchool(nextSchool);
-    setInstitutionId(findInstitutionIdBySchool(institutions, user.school));
-  }, [institutions, user]);
+    setInstitutionId(findInstitutionIdBySchool(institutions, school));
+  }, [institutions, school]);
 
-  const savedSchool = user?.school ?? "";
   const trimmedSchool = school.trim();
   const isDirty = trimmedSchool !== savedSchool;
   const isSchoolTooLong = trimmedSchool.length > MAX_SCHOOL_LENGTH;
@@ -97,7 +99,7 @@ export function SettingsPage() {
   function handleInstitutionChange(nextInstitutionId: string) {
     setInstitutionId(nextInstitutionId);
 
-    const institution = institutions.find(
+    const institution = institutions?.find(
       (item) => item.id === nextInstitutionId,
     );
 
@@ -127,7 +129,7 @@ export function SettingsPage() {
   function handleReset() {
     setSchool(savedSchool);
     setInstitutionId(
-      findInstitutionIdBySchool(institutions, user?.school ?? null),
+      findInstitutionIdBySchool(institutions ?? [], user?.school ?? null),
     );
   }
 
@@ -209,7 +211,7 @@ export function SettingsPage() {
                   setSchool(event.target.value);
                   setInstitutionId(
                     findInstitutionIdBySchool(
-                      institutions,
+                      institutions ?? [],
                       event.target.value.trim(),
                     ),
                   );
