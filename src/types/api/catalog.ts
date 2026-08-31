@@ -61,7 +61,7 @@ export type CourseListFilters = {
 };
 
 export type CourseListResponse = {
-  courses: Course[];
+  courses: (Course & { programIds?: string[] })[];
 };
 
 export type CourseDetailResponse = {
