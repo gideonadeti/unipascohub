@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
 import {
+  getPascoAssetFolder,
   hashCloudinaryFile,
   parseComputeCloudinaryFileHashInput,
 } from "@/lib/cloudinary";
@@ -69,6 +70,11 @@ export async function POST(req: Request) {
           { error: "PDF files must use IMAGE resource type" },
           { status: 400 },
         );
+      case "unsupported_file_type":
+        return Response.json(
+          { error: "Only PDF, image, and document files are allowed" },
+          { status: 400 },
+        );
       case "file_size_exceeded":
         return Response.json(
           { error: "File size exceeds limit" },
@@ -91,7 +97,7 @@ export async function POST(req: Request) {
     fileUrl: parsed.data.fileUrl,
     fileSize: parsed.data.fileSize,
     resourceType: parsed.data.resourceType,
-    expectedAssetFolder: `pascos/${parsed.data.courseId}`,
+    expectedAssetFolder: getPascoAssetFolder(parsed.data.courseId),
     fileName: parsed.data.fileName,
   });
 
@@ -129,6 +135,11 @@ export async function POST(req: Request) {
       case "invalid_pdf_resource_type":
         return Response.json(
           { error: "PDF files must use IMAGE resource type" },
+          { status: 400 },
+        );
+      case "unsupported_file_type":
+        return Response.json(
+          { error: "Only PDF, image, and document files are allowed" },
           { status: 400 },
         );
     }

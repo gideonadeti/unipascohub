@@ -38,6 +38,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { usePascoFileViewUrl } from "@/hooks/api/use-pasco-engagement";
 import { usePasco, useSubmitPascoEdit } from "@/hooks/api/use-pascos";
 import { ACADEMIC_YEAR_OPTIONS } from "@/lib/academic-year";
 import { courseDetailOptions, coursesListOptions } from "@/lib/api/courses";
@@ -61,6 +62,7 @@ import {
   getNewUploadFiles,
   keepExistingFilesOnly,
   mergeNewUploads,
+  type PascoEditExistingFile,
   type PascoEditFile,
   type PascoEditFormValues,
   pascoEditFormSchema,
@@ -68,7 +70,7 @@ import {
   removeEditFile,
 } from "@/lib/schemas/pasco-update";
 import { typography } from "@/lib/typography";
-import type { Course, CourseDetail, Program } from "@/types/api/catalog";
+import type { CourseDetail, Program } from "@/types/api/catalog";
 import type { Pasco } from "@/types/api/pascos";
 
 type PascoEditFormProps = {
@@ -85,6 +87,33 @@ function formatFileSize(bytes: number): string {
   }
 
   return `${(bytes / 1_048_576).toFixed(1)} MB`;
+}
+
+function PascoEditFileLink({
+  pascoId,
+  file,
+}: {
+  pascoId: string;
+  file: PascoEditExistingFile;
+}) {
+  const viewUrlMutation = usePascoFileViewUrl(pascoId);
+
+  async function handleOpen() {
+    const result = await viewUrlMutation.mutateAsync(file.id);
+    window.open(result.fileUrl, "_blank", "noopener,noreferrer");
+  }
+
+  return (
+    <button
+      type="button"
+      className="block w-full truncate text-left text-primary underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+      disabled={viewUrlMutation.isPending}
+      aria-label={`Open ${file.fileName}`}
+      onClick={() => void handleOpen()}
+    >
+      {file.order}. {file.fileName}
+    </button>
+  );
 }
 
 export function PascoEditForm({ pascoId }: PascoEditFormProps) {
@@ -164,7 +193,7 @@ type PascoEditFormFieldsProps = {
   course: CourseDetail;
   institutions: { id: string; name: string }[];
   programs: Program[];
-  courses: Course[];
+  courses: CourseDetail[];
 };
 
 function PascoEditFormFields({
@@ -223,6 +252,7 @@ function PascoEditFormFields({
         institutionId: course.institutionId,
         code: course.code,
         title: course.title,
+        programIds: course.programIds,
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
       },
@@ -741,14 +771,7 @@ function PascoEditFormFields({
                           className="flex items-center justify-between gap-2 text-sm"
                         >
                           <span className="min-w-0">
-                            <a
-                              href={file.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block truncate text-primary underline-offset-4 hover:underline"
-                            >
-                              {file.order}. {file.fileName}
-                            </a>
+                            <PascoEditFileLink pascoId={pascoId} file={file} />
                             <span className="text-xs text-muted-foreground">
                               {formatFileSize(file.fileSize)}
                             </span>

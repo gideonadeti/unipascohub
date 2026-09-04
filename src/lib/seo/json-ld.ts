@@ -1,9 +1,26 @@
+import { siteUrl } from "@/config/site";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 
 type JsonLdItem = {
   name: string;
   href: string;
 };
+
+/**
+ * Serializes a JSON-LD object for safe embedding inside a
+ * `<script type="application/ld+json">` tag. JSON.stringify does not escape
+ * `<`, so a user-controlled string containing `</script>` could otherwise
+ * break out of the script context. Also escapes `>`, `&`, and the U+2028 /
+ * U+2029 line separators (invalid inside JS string literals).
+ */
+export function serializeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/&/g, "\\u0026")
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
 
 type PascoForJsonLd = {
   id: string;
@@ -29,7 +46,7 @@ export function breadcrumbJsonLd(items: JsonLdItem[]) {
     "@type": "ListItem",
     position: index + 1,
     name: item.name,
-    item: `https://unipascohub.com${item.href}`,
+    item: `${siteUrl}${item.href}`,
   }));
 
   return {

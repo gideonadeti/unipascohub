@@ -27,7 +27,7 @@ export async function GET(req: Request) {
       {
         programs: result.programs.map(serializeProgram),
       },
-      { headers: { "Cache-Control": "public, max-age=3600" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {
     logError("Program list failed", err);

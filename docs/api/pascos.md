@@ -18,6 +18,9 @@ List pascos with filters, pagination, and sorting.
 
 | Param            | Type    | Default     | Description                                                                                         |
 | ---------------- | ------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| `q`              | string  | —           | Search by course code/title and parse supported pasco filters                                       |
+| `institutionId`  | string  | —           | Filter by the institution linked to each pasco's course                                             |
+| `programId`      | string  | —           | Filter by a program linked to each pasco's course                                                   |
 | `courseId`       | string  | —           | Filter by course                                                                                    |
 | `educationLevel` | enum    | —           | `LEVEL_100` … `LEVEL_400`                                                                           |
 | `academicYear`   | string  | —           | Format `YYYY/YYYY`                                                                                  |
@@ -397,7 +400,7 @@ Sign Cloudinary upload parameters for the widget.
 
 **Response `200`:** Cloudinary signature payload (timestamp, signature, folder, etc.)
 
-Files are uploaded to folder `pascos/{courseId}/`.
+Files are uploaded to folder `unipascohub/pascos/{courseId}/`.
 
 ---
 

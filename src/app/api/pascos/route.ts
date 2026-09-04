@@ -113,6 +113,8 @@ export async function GET(req: Request) {
 
     const listQuery: PascoListQuery = {
       ...parsed.data,
+      institutionId: resolvedFilters.institutionId,
+      programId: resolvedFilters.programId,
       courseId: resolvedFilters.courseId,
       courseIds: resolvedFilters.courseIds,
       educationLevel: resolvedFilters.educationLevel,
@@ -327,6 +329,11 @@ export async function POST(req: Request) {
           { error: "PDFs must use resourceType IMAGE" },
           { status: 400 },
         );
+      case "unsupported_file_type":
+        return Response.json(
+          { error: "Only PDF, image, and document files are allowed" },
+          { status: 400 },
+        );
       case "invalid_academic_year":
         return Response.json(
           { error: "Invalid academicYear (expected format YYYY/YYYY)" },
@@ -424,6 +431,11 @@ export async function POST(req: Request) {
         case "invalid_pdf_resource_type":
           return Response.json(
             { error: "PDFs must use resourceType IMAGE" },
+            { status: 400 },
+          );
+        case "unsupported_file_type":
+          return Response.json(
+            { error: "Only PDF, image, and document files are allowed" },
             { status: 400 },
           );
       }

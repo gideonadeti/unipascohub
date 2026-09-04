@@ -24,6 +24,9 @@ const envSchema = z
     CLOUDINARY_UPLOAD_PRESET: z
       .string()
       .min(1, "CLOUDINARY_UPLOAD_PRESET is required"),
+    NEXT_PUBLIC_APP_URL: z.string().optional(),
+    NODE_ENV: z.string().optional(),
+    VERCEL_ENV: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     const cloudinaryVars = [
@@ -52,6 +55,33 @@ const envSchema = z
         path: ["CLOUDINARY_URL"],
         message:
           "CLOUDINARY_URL must be in the format cloudinary://API_KEY:API_SECRET@CLOUD_NAME",
+      });
+    }
+  })
+  .superRefine((env, ctx) => {
+    const appUrl = env.NEXT_PUBLIC_APP_URL;
+
+    if (appUrl && !/^https?:\/\/\S+$/.test(appUrl)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["NEXT_PUBLIC_APP_URL"],
+        message:
+          "NEXT_PUBLIC_APP_URL must be a full origin URL (e.g. https://unipascohub.weamp.org)",
+      });
+    }
+
+    // Required in production (but not on Vercel preview deployments, where
+    // VERCEL_URL already matches the deployment origin) so the feedback
+    // endpoint's CSRF origin allowlist accepts the production domain.
+    const isProductionRuntime =
+      env.NODE_ENV === "production" && env.VERCEL_ENV !== "preview";
+
+    if (isProductionRuntime && !appUrl) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["NEXT_PUBLIC_APP_URL"],
+        message:
+          "NEXT_PUBLIC_APP_URL is required in production (e.g. https://unipascohub.weamp.org)",
       });
     }
   });

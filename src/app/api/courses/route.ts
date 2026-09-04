@@ -5,6 +5,7 @@ import {
   listCourses,
   parseCourseCreate,
   serializeCourse,
+  serializeCourseDetail,
 } from "@/lib/courses";
 import { logError } from "@/lib/logger";
 import { requireAdmin } from "@/lib/require-admin";
@@ -28,9 +29,9 @@ export async function GET(req: Request) {
 
     return Response.json(
       {
-        courses: result.courses.map(serializeCourse),
+        courses: result.courses.map(serializeCourseDetail),
       },
-      { headers: { "Cache-Control": "public, max-age=3600" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {
     logError("Course list failed", err);

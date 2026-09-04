@@ -1,4 +1,4 @@
-import { createClient, type RedisClientType } from "redis";
+import { Redis } from "@upstash/redis";
 import { logError } from "@/lib/logger";
 
 type RateLimitOptions = {
@@ -16,8 +16,7 @@ type MemoryEntry = {
   resetAt: number;
 };
 
-let redisClient: RedisClientType | null = null;
-let redisConnectPromise: Promise<RedisClientType | null> | null = null;
+let redisClient: Redis | null = null;
 let warnedMemoryFallback = false;
 
 const MEMORY_STORE_MAX = 10_000;
@@ -37,50 +36,31 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return parsed;
 }
 
-async function getRedisClient(): Promise<RedisClientType | null> {
-  const redisUrl = process.env.REDIS_URL?.trim();
-
-  if (!redisUrl) {
-    return null;
-  }
-
-  if (redisClient?.isOpen) {
+function getRedisClient(): Redis | null {
+  if (redisClient) {
     return redisClient;
   }
 
-  if (redisConnectPromise) {
-    return redisConnectPromise;
-  }
+  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
 
-  redisConnectPromise = (async () => {
-    const client = createClient({ url: redisUrl });
-
-    client.on("error", (error) => {
-      logError("Redis rate limit error", error);
-    });
-
-    await client.connect();
-    redisClient = client as RedisClientType;
-
-    return redisClient;
-  })();
-
-  try {
-    return await redisConnectPromise;
-  } catch (error) {
-    logError("Failed to connect to Redis for rate limiting", error);
-    redisConnectPromise = null;
-    redisClient = null;
-
+  if (!url || !token) {
     return null;
   }
+
+  // Upstash's REST client is stateless (one HTTPS request per command), which
+  // is what makes it correct for serverless: unlike a TCP connection there is
+  // no socket to freeze or drop between invocations.
+  redisClient = new Redis({ url, token });
+
+  return redisClient;
 }
 
 async function checkRedisRateLimit(
   key: string,
   options: RateLimitOptions,
 ): Promise<RateLimitResult> {
-  const client = await getRedisClient();
+  const client = getRedisClient();
 
   if (!client) {
     return checkMemoryRateLimit(key, options);
@@ -88,20 +68,37 @@ async function checkRedisRateLimit(
 
   const windowSeconds = Math.max(1, Math.ceil(options.windowMs / 1000));
 
-  const created = await client.set(key, 1, { NX: true, EX: windowSeconds });
+  try {
+    // INCR + TTL in a single round-trip. A brand-new key gets count 1 and its
+    // TTL set right after; a TTL-less key (e.g. INCR raced with expiry) is
+    // repaired so the window can actually reset instead of persisting forever.
+    // pipeline exec() throws on any command failure, which the catch below
+    // turns into the in-memory fallback.
+    const [count, ttl] = await client.pipeline().incr(key).ttl(key).exec();
 
-  if (created === null) {
-    const count = await client.incr(key);
+    if (ttl < 0) {
+      await client.expire(key, windowSeconds);
+    }
 
     if (count > options.limit) {
-      const ttl = await client.ttl(key);
-      const retryAfterSeconds = ttl > 0 ? ttl : windowSeconds;
-
-      return { rateLimited: true, retryAfterSeconds };
+      return {
+        rateLimited: true,
+        retryAfterSeconds: ttl > 0 ? ttl : windowSeconds,
+      };
     }
-  }
 
-  return { rateLimited: false };
+    return { rateLimited: false };
+  } catch (error) {
+    // Transient Redis failures must not turn public endpoints into 500s.
+    // Degrade to the in-memory limiter; the REST client is stateless, so the
+    // next request simply tries Redis again.
+    logError(
+      "Redis rate limit command failed; falling back to in-memory limiter",
+      error,
+    );
+
+    return checkMemoryRateLimit(key, options);
+  }
 }
 
 function evictMemoryStore(): void {
@@ -128,7 +125,7 @@ function checkMemoryRateLimit(
 ): RateLimitResult {
   if (!warnedMemoryFallback) {
     console.warn(
-      "REDIS_URL is not set; using in-memory rate limiting (single-instance only)",
+      "In-memory rate limiting in use (single-instance only); Redis is unavailable",
     );
     warnedMemoryFallback = true;
   }
@@ -161,9 +158,10 @@ export async function checkRateLimit(
   key: string,
   options: RateLimitOptions,
 ): Promise<RateLimitResult> {
-  const redisUrl = process.env.REDIS_URL?.trim();
-
-  if (redisUrl) {
+  if (
+    process.env.UPSTASH_REDIS_REST_URL?.trim() &&
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+  ) {
     return checkRedisRateLimit(key, options);
   }
 

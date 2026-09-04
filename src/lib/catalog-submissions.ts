@@ -378,6 +378,67 @@ export async function createCatalogSubmission(
   ]);
 
   if (liveDuplicate) {
+    // If the course already exists institution-wide, treat a request for the
+    // same code under a different program as a link request, not a duplicate.
+    // Only error if it's already linked to all requested programs (or no new program).
+    if (input.programIds.length > 0) {
+      const existing = await prisma.course.findUnique({
+        where: { id: liveDuplicate.id },
+        select: { programs: { select: { id: true } } },
+      });
+      const existingIds = new Set(existing?.programs.map((p) => p.id) ?? []);
+      const newIds = input.programIds.filter((id) => !existingIds.has(id));
+      if (newIds.length === 0) {
+        return { success: false, error: "duplicate_live_course" };
+      }
+      const programValidation = await validateProgramIds(
+        input.institutionId,
+        newIds,
+      );
+      if (!programValidation.success) {
+        return { success: false, error: programValidation.error };
+      }
+      try {
+        const reviewedAt = new Date();
+        const submission = await prisma.$transaction(async (tx) => {
+          await tx.course.update({
+            where: { id: liveDuplicate.id },
+            data: { programs: { connect: newIds.map((id) => ({ id })) } },
+          });
+          return tx.catalogSubmission.create({
+            data: {
+              type: CatalogSubmissionType.COURSE,
+              status: CatalogSubmissionStatus.APPROVED,
+              institutionId: input.institutionId,
+              submitterId,
+              courseCode: input.courseCode,
+              courseTitle: input.courseTitle,
+              programIds: input.programIds,
+              approvedCourseId: liveDuplicate.id,
+              reviewedAt,
+            },
+            include: submissionInclude,
+          });
+        });
+        const summary = getCatalogSubmissionSummary(submission);
+        try {
+          await createCatalogCourseAutoApprovedNotification(summary);
+        } catch (notificationError) {
+          // Notification failure should not revert the already-committed link.
+          // Log and continue — retrying the whole request would hit duplicate_live_course.
+          console.error(
+            "Failed to send auto-approved course link notification",
+            notificationError,
+          );
+        }
+        return { success: true, submission };
+      } catch (error) {
+        if (isDuplicateCodeError(error)) {
+          return { success: false, error: "duplicate_code" };
+        }
+        throw error;
+      }
+    }
     return { success: false, error: "duplicate_live_course" };
   }
 

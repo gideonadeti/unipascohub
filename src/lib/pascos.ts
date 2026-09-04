@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { academicYearValidationMessage } from "@/lib/academic-year";
 import {
   deleteCloudinaryAssets,
+  getPascoAssetFolder,
   type VerifyFileError,
   validatePdfResourceType,
   verifyCloudinaryFile,
@@ -10,6 +11,7 @@ import { isValidContentHash, normalizeContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
 import { parseNonEmptyString } from "@/lib/parse";
 import { findDuplicatePascoFiles } from "@/lib/pasco-file-hash";
+import { isAllowedPascoFileName } from "@/lib/pasco-file-types";
 import type { PascoListQuery } from "@/lib/pasco-list-query";
 import {
   canViewPasco,
@@ -164,6 +166,7 @@ type PascoCreateParseError =
   | "invalid_file_url"
   | "invalid_resource_type"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "invalid_academic_year"
   | "invalid_description"
   | "invalid_education_level"
@@ -200,6 +203,7 @@ type PascoUpdateParseError =
   | "invalid_file_url"
   | "invalid_resource_type"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "duplicate_order_in_files"
   | "duplicate_content_hash_in_files"
   | "invalid_content_hash"
@@ -247,11 +251,11 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
 }
 
 export function getPascoMaxFilesPerPasco(): number {
-  return parsePositiveInt(process.env.PASCO_MAX_FILES_PER_PASCO, 20);
+  return parsePositiveInt(process.env.PASCO_MAX_FILES_PER_PASCO, 10);
 }
 
 export function getPascoMaxFileSizeBytes(): number {
-  return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 10_485_760);
+  return parsePositiveInt(process.env.PASCO_MAX_FILE_SIZE_BYTES, 5_242_880);
 }
 
 export function parsePascoFileDuplicateCheck(body: unknown):
@@ -386,6 +390,7 @@ function parsePascoFileCreate(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "file_size_exceeded"
         | "invalid_content_hash";
     } {
@@ -425,6 +430,10 @@ function parsePascoFileCreate(value: unknown):
 
   if (fileName === null) {
     return { success: false, error: "invalid_file_name" };
+  }
+
+  if (!isAllowedPascoFileName(fileName)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   if (fileSize === null) {
@@ -484,6 +493,7 @@ function parsePascoFiles(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "duplicate_order_in_files"
         | "duplicate_content_hash_in_files"
         | "invalid_content_hash"
@@ -553,6 +563,7 @@ function parsePascoFileSync(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "invalid_content_hash"
         | "file_size_exceeded";
     } {
@@ -608,6 +619,7 @@ function parsePascoFilesSync(value: unknown):
         | "invalid_file_url"
         | "invalid_resource_type"
         | "invalid_pdf_resource_type"
+        | "unsupported_file_type"
         | "duplicate_order_in_files"
         | "duplicate_content_hash_in_files"
         | "invalid_content_hash"
@@ -1062,7 +1074,6 @@ function serializePascoFile(file: PascoFile) {
     order: file.order,
     fileName: file.fileName,
     fileSize: file.fileSize,
-    fileUrl: file.fileUrl,
     resourceType: file.resourceType,
     createdAt: file.createdAt.toISOString(),
     updatedAt: file.updatedAt.toISOString(),
@@ -1253,7 +1264,7 @@ async function syncPascoFiles(
     resourceType: file.resourceType,
   }));
 
-  const expectedAssetFolder = `pascos/${courseId}`;
+  const expectedAssetFolder = getPascoAssetFolder(courseId);
   const verificationResults = await Promise.all(
     toAdd.map((file) =>
       verifyCloudinaryFile({
@@ -1367,6 +1378,18 @@ export async function listPascos(params: PascoListQuery): Promise<
 
   const where = {
     moderationStatus: PascoModerationStatus.PUBLISHED,
+    ...(params.institutionId || params.programId
+      ? {
+          course: {
+            ...(params.institutionId
+              ? { institutionId: params.institutionId }
+              : {}),
+            ...(params.programId
+              ? { programs: { some: { id: params.programId } } }
+              : {}),
+          },
+        }
+      : {}),
     ...(params.courseId ? { courseId: params.courseId } : {}),
     ...(params.courseIds && params.courseIds.length > 0
       ? { courseId: { in: params.courseIds } }
@@ -1547,7 +1570,7 @@ export async function createPasco(
     };
   }
 
-  const expectedAssetFolder = `pascos/${input.courseId}`;
+  const expectedAssetFolder = getPascoAssetFolder(input.courseId);
   const verificationResults = await Promise.all(
     input.files.map((file) =>
       verifyCloudinaryFile({

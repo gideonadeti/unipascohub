@@ -1,9 +1,10 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { currentUserOptions } from "@/lib/api/users";
+import { queryKeys } from "@/lib/api/query-keys";
+import { currentUserOptions, updateCurrentUserProfile } from "@/lib/api/users";
 
 export function useCurrentUser() {
   const { isSignedIn } = useAuth();
@@ -11,5 +12,16 @@ export function useCurrentUser() {
   return useQuery({
     ...currentUserOptions(),
     enabled: isSignedIn === true,
+  });
+}
+
+export function useUpdateCurrentUserProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateCurrentUserProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.me });
+    },
   });
 }

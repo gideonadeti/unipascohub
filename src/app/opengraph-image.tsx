@@ -18,8 +18,8 @@ export default function OpenGraphImage() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#0c0a09",
-        color: "#fafaf9",
+        backgroundColor: "#007a55",
+        color: "#ecfdf5",
         fontFamily: "Geist, sans-serif",
       }}
     >
@@ -44,7 +44,7 @@ export default function OpenGraphImage() {
         <div
           style={{
             fontSize: 24,
-            color: "#a8a29e",
+            color: "rgba(255, 255, 255, 0.72)",
             textAlign: "center",
             maxWidth: 600,
             lineHeight: 1.4,

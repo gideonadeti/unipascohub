@@ -2,15 +2,19 @@ import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageContainer } from "@/components/layout/page-container";
 import { PascoDetailPage } from "@/components/pasco-detail-page";
-import { formatEnumLabel } from "@/lib/catalog-labels";
-import { getCourseById } from "@/lib/courses";
+import { formatEnumLabel, formatProgramLabel } from "@/lib/catalog-labels";
+import { getCourseBreadcrumbById, getCourseById } from "@/lib/courses";
 import { getPascoDisplayTitle } from "@/lib/pasco-display";
 import { getViewerReactionsForPascos } from "@/lib/pasco-engagement";
 import { getPascoById, serializePasco } from "@/lib/pascos";
-import { breadcrumbJsonLd, pascoJsonLd } from "@/lib/seo/json-ld";
+import {
+  breadcrumbJsonLd,
+  pascoJsonLd,
+  serializeJsonLd,
+} from "@/lib/seo/json-ld";
 
 import type { PascoDetailResponse } from "@/types/api/pascos";
 
@@ -56,7 +60,7 @@ async function getPascoData(pascoId: string) {
     return null;
   }
 
-  const courseResult = await getCourseById(result.pasco.courseId);
+  const courseResult = await getCourseBreadcrumbById(result.pasco.courseId);
   const course = courseResult.success ? courseResult.course : null;
 
   return { pasco: result.pasco, course };
@@ -78,14 +82,36 @@ export default async function PascoDetailRoute({
       null)
     : undefined;
 
-  const breadcrumb = breadcrumbJsonLd([
+  const selectedProgram = data.course?.programs[0];
+  const breadcrumbItems = [
     { name: "Home", href: "/" },
     { name: "Browse pascos", href: "/pascos" },
-    {
-      name: getPascoDisplayTitle(data.pasco, data.course),
-      href: `/pascos/${pascoId}`,
-    },
-  ]);
+    ...(data.course
+      ? [
+          {
+            name: data.course.institution.name,
+            href: `/institutions/${data.course.institution.id}`,
+          },
+          ...(selectedProgram
+            ? [
+                {
+                  name: formatProgramLabel(selectedProgram),
+                  href: `/programs/${selectedProgram.id}`,
+                },
+              ]
+            : []),
+          {
+            name: `${data.course.code} — ${data.course.title}`,
+            href: `/courses/${data.course.id}`,
+          },
+        ]
+      : []),
+    // {
+    //   name: getPascoDisplayTitle(data.pasco, data.course),
+    //   href: `/pascos/${pascoId}`,
+    // },
+  ];
+  const breadcrumb = breadcrumbJsonLd(breadcrumbItems);
 
   const pascoSchema = pascoJsonLd(data.pasco, data.course);
 
@@ -102,15 +128,16 @@ export default async function PascoDetailRoute({
 
   return (
     <PageContainer width="narrow" className="space-y-8">
+      <Breadcrumbs items={breadcrumbItems} />
       <script
         type="application/ld+json"
-        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD serialized via serializeJsonLd (escapes <, >, &, line separators) */
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumb) }}
       />
       <script
         type="application/ld+json"
-        /* biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated JSON-LD, no user input */
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pascoSchema) }}
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD serialized via serializeJsonLd (escapes <, >, &, line separators) */
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(pascoSchema) }}
       />
       <PascoDetailPage initialData={initialData} />
     </PageContainer>

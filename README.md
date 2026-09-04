@@ -1,6 +1,6 @@
 # Uni Pasco Hub
 
-A platform for university students to share past exam papers (pascos) and prepare for exams. Contributors upload papers organized by institution, program, and course; anyone can browse, view, react, and download.
+Find and share past exam papers. Prepare with confidence. Contributors upload papers organized by institution, program, and course; anyone can browse, view, react, and download.
 
 ## Features
 
@@ -31,14 +31,23 @@ pnpm install
 cp .env.example .env
 # Edit .env — see docs/development.md for Clerk, Cloudinary, and Postgres setup
 
-# 3. Start PostgreSQL (requires secrets/postgres_password.txt — see docs/development.md)
-docker compose up -d
+# 3. Start PostgreSQL + Redis (requires the password secret file)
+mkdir -p secrets
+echo "your-local-password" > secrets/postgres_password.txt
+docker compose -f compose.yaml -f compose.local.yaml up -d
+# Distributed rate limiting uses Upstash (see .env.example); locally the
+# in-memory fallback is fine
 
 # 4. Run migrations and generate Prisma client
 pnpm prisma migrate dev
 pnpm prisma generate
 
-# 5. Start the dev server
+# 5. Seed catalog data
+pnpm seed-institutions
+pnpm seed-atu-programs
+pnpm seed-atu-eee-courses
+
+# 6. Start the dev server
 pnpm dev
 ```
 
@@ -46,15 +55,20 @@ Open [http://localhost:3000](http://localhost:3000). The home page runs a basic 
 
 ## Scripts
 
-| Command                           | Description                                               |
-| --------------------------------- | --------------------------------------------------------- |
-| `pnpm dev`                        | Start Next.js development server                          |
-| `pnpm build`                      | Production build                                          |
-| `pnpm start`                      | Start production server                                   |
-| `pnpm lint`                       | Run Biome checks                                          |
-| `pnpm format`                     | Format code with Biome                                    |
-| `pnpm typecheck`                  | TypeScript type check                                     |
-| `pnpm cleanup:cloudinary-orphans` | Scan/delete orphan Cloudinary assets (dry-run by default) |
+| Command                           | Description                                                        |
+| --------------------------------- | ------------------------------------------------------------------ |
+| `pnpm dev`                        | Start Next.js development server                                   |
+| `pnpm build`                      | Production build                                                   |
+| `pnpm start`                      | Start production server                                            |
+| `pnpm lint`                       | Run Biome checks                                                   |
+| `pnpm format`                     | Format code with Biome                                             |
+| `pnpm typecheck`                  | TypeScript type check                                              |
+| `pnpm seed-institutions`          | Upsert Ghanaian institutions (from Wikipedia)                      |
+| `pnpm seed-atu-programs`          | Upsert ATU programs                                                |
+| `pnpm seed-atu-eee-courses`       | Upsert ATU EEE Level 100 Semester 1 courses                        |
+| `pnpm db:deploy`                  | Production: `prisma migrate deploy` then all three seeds           |
+| `pnpm vercel-build`               | Vercel build: `prisma generate` → `db:deploy` → `next build`       |
+| `pnpm cleanup:cloudinary-orphans` | Scan/delete orphan Cloudinary assets (dry-run by default)          |
 
 ## Documentation
 

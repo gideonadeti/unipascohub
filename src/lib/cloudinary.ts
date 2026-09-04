@@ -4,6 +4,10 @@ import { v2 as cloudinary } from "cloudinary";
 import { logError } from "@/lib/logger";
 import { parseNonEmptyString } from "@/lib/parse";
 import {
+  isAllowedPascoFileFormat,
+  isAllowedPascoFileName,
+} from "@/lib/pasco-file-types";
+import {
   recordStorageCleanupFailures,
   resolveStorageCleanupFailures,
 } from "@/lib/storage-cleanup-log";
@@ -16,6 +20,12 @@ import {
 const CLOUDINARY_RESOURCE_TYPES = new Set<string>(
   Object.values(CloudinaryResourceType),
 );
+
+export const PASCO_ASSET_ROOT = "unipascohub/pascos";
+
+export function getPascoAssetFolder(courseId: string): string {
+  return `${PASCO_ASSET_ROOT}/${courseId}`;
+}
 
 export type SignUploadInput = {
   courseId: string;
@@ -37,6 +47,7 @@ type SignUploadParseError =
   | "invalid_resource_type"
   | "invalid_file_name"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "invalid_widget_params";
 
 type SignUploadError = "missing_config" | "invalid_widget_params";
@@ -58,7 +69,8 @@ export type VerifyFileError =
   | "asset_size_mismatch"
   | "asset_url_mismatch"
   | "asset_resource_type_mismatch"
-  | "invalid_pdf_resource_type";
+  | "invalid_pdf_resource_type"
+  | "unsupported_file_type";
 
 export type VerifyCloudinaryFileInput = {
   publicId: string;
@@ -200,7 +212,7 @@ function validateWidgetSignParams(
   uploadPreset: string,
   widgetParams: WidgetSignParams,
 ): boolean {
-  const expectedAssetFolder = `pascos/${courseId}`;
+  const expectedAssetFolder = getPascoAssetFolder(courseId);
 
   return (
     widgetParams.asset_folder === expectedAssetFolder &&
@@ -237,6 +249,10 @@ export function parseSignUploadInput(
 
   if (fileName === null) {
     return { success: false, error: "invalid_file_name" };
+  }
+
+  if (!isAllowedPascoFileName(fileName)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   if (
@@ -332,7 +348,7 @@ export function signUploadParams(
     return { success: false, error: "missing_config" };
   }
 
-  const assetFolder = `pascos/${input.courseId}`;
+  const assetFolder = getPascoAssetFolder(input.courseId);
   const apiResourceType = toCloudinaryApiResourceType(input.resourceType);
 
   if (
@@ -392,6 +408,7 @@ type ComputeCloudinaryFileHashParseError =
   | "invalid_file_url"
   | "invalid_resource_type"
   | "invalid_pdf_resource_type"
+  | "unsupported_file_type"
   | "file_size_exceeded";
 
 const MAX_PUBLIC_ID_LENGTH = 255;
@@ -407,9 +424,9 @@ function parsePositiveInt(value: unknown): number | null {
 
 function getMaxPascoFileSizeBytes(): number {
   const raw = process.env.PASCO_MAX_FILE_SIZE_BYTES;
-  const parsed = raw ? Number.parseInt(raw, 10) : 10_485_760;
+  const parsed = raw ? Number.parseInt(raw, 10) : 5_242_880;
 
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10_485_760;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 5_242_880;
 }
 
 export function parseComputeCloudinaryFileHashInput(
@@ -459,6 +476,10 @@ export function parseComputeCloudinaryFileHashInput(
 
   if (fileSize > getMaxPascoFileSizeBytes()) {
     return { success: false, error: "file_size_exceeded" };
+  }
+
+  if (!isAllowedPascoFileName(fileName)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   if (fileUrl === null) {
@@ -535,6 +556,10 @@ export async function verifyCloudinaryFile(
     input.resourceType === CloudinaryResourceType.RAW
   ) {
     return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
+  if (asset.format !== undefined && !isAllowedPascoFileFormat(asset.format)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   return { success: true };
@@ -684,6 +709,10 @@ export async function hashCloudinaryFile(
     input.resourceType === CloudinaryResourceType.RAW
   ) {
     return { success: false, error: "invalid_pdf_resource_type" };
+  }
+
+  if (asset.format !== undefined && !isAllowedPascoFileFormat(asset.format)) {
+    return { success: false, error: "unsupported_file_type" };
   }
 
   const apiSecret = cloudinary.config().api_secret;

@@ -32,3 +32,21 @@ export function courseDetailOptions(id: string) {
     queryFn: () => getCourse(id),
   });
 }
+
+export type CourseUpdatePayload = {
+  title?: string;
+  code?: string;
+  programIds?: string[];
+};
+
+export function updateCourse(id: string, payload: CourseUpdatePayload) {
+  return apiClient
+    .patch<CourseDetailResponse>(`/api/courses/${id}`, payload)
+    .then((response) => response.data);
+}
+
+export function deleteCourse(id: string) {
+  return apiClient
+    .delete<{ success: true }>(`/api/courses/${id}`)
+    .then((response) => response.data);
+}

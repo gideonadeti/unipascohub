@@ -13,7 +13,6 @@ import { PascoEngagementBar } from "@/components/pasco-engagement-bar";
 import { PascoFileActions } from "@/components/pasco-file-actions";
 import { PascoFileView } from "@/components/pasco-file-view";
 import { PascoModerationActions } from "@/components/pasco-moderation-actions";
-import { PascoPageNav } from "@/components/pasco-page-nav";
 import { ReportPascoLink } from "@/components/report-pasco-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,6 @@ import { formatEnumLabel } from "@/lib/catalog-labels";
 import { formatDateTime } from "@/lib/dates";
 import { buildPascoCreateHref } from "@/lib/pasco-create-href";
 import {
-  getPascoBrowseHref,
   getPascoDisplayDescription,
   getPascoDisplayTitle,
   pascoOverviewBadges,
@@ -38,7 +36,10 @@ import {
   canUserModifyPasco,
   isModeratorRole,
 } from "@/lib/pasco-permissions";
-import type { PascoDetailResponse, PascoFile } from "@/types/api/pascos";
+import type {
+  PascoDetailResponse,
+  PascoFileWithSignedUrl,
+} from "@/types/api/pascos";
 
 export function PascoDetailPage({
   initialData,
@@ -48,7 +49,7 @@ export function PascoDetailPage({
   const params = useParams<{ pascoId: string }>();
   const pascoId = params.pascoId ?? "";
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [viewFile, setViewFile] = useState<PascoFile | null>(null);
+  const [viewFile, setViewFile] = useState<PascoFileWithSignedUrl | null>(null);
   const pascoQuery = usePasco(pascoId, initialData);
   const courseId = pascoQuery.data?.pasco.courseId ?? "";
   const courseQuery = useCourse(courseId);
@@ -111,7 +112,7 @@ export function PascoDetailPage({
 
   return (
     <div className="space-y-8">
-      <PascoPageNav href={getPascoBrowseHref(pasco)} />
+      {/* <PascoPageNav href={getPascoBrowseHref(pasco)} /> */}
 
       {isUploaderPending ? (
         <Alert>

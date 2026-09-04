@@ -4,7 +4,7 @@ Maintenance tasks for storage, rate limiting, and cleanup failures.
 
 ## Cloudinary orphan cleanup
 
-Orphan assets are files in Cloudinary under `pascos/` that have no matching `PascoFile.publicId` in the database. They can occur when uploads succeed but pasco creation fails, or from manual Cloudinary changes.
+Orphan assets are files in Cloudinary under `unipascohub/pascos/` that have no matching `PascoFile.publicId` in the database. They can occur when uploads succeed but pasco creation fails, or from manual Cloudinary changes.
 
 ### CLI (recommended for scheduled jobs)
 
@@ -94,12 +94,41 @@ Download and view URLs expire after `PASCO_DOWNLOAD_URL_TTL_SECONDS` (default 30
 
 ## Production checklist
 
-- [ ] Set `REDIS_URL` for distributed rate limiting
+- [ ] Set `NEXT_PUBLIC_APP_URL` to the canonical domain (e.g. `https://unipascohub.weamp.org`) — feedback submissions may 403 without it (CSRF origin validation)
+- [ ] Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting
 - [ ] Configure Clerk production keys and webhook
 - [ ] Set Cloudinary production credentials and upload preset
+- [ ] Set PostHog keys (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`) — optional; analytics is inert without them
+- [ ] Set Sentry DSN — optional; errors are still logged without it
+- [ ] Set VAPID keys (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`) — optional; push notifications are disabled without them
+- [ ] Promote the first admin (see runbook below)
 - [ ] Schedule periodic orphan cleanup (dry-run first, then execute)
 - [ ] Monitor `StorageCleanupFailure` for unresolved entries
 - [ ] Run `pnpm prisma migrate deploy` on deploy
+
+## User administration runbooks
+
+No API exists for ADMIN promotion or account deletion. Both are manual operations.
+
+### Promote the first admin
+
+1. Sign in once with the target Clerk account so a local `User` row exists (created by the Clerk webhook or the `EnsureUserSynced` SSR fallback)
+2. Promote the role — `User.id` equals the Clerk user ID (visible in the Clerk dashboard):
+
+```sql
+UPDATE "User" SET role = 'ADMIN' WHERE id = '<clerk-user-id>';
+```
+
+Prisma Studio (`pnpm prisma studio`) works too. Lower roles: NORMAL_USER → CONTRIBUTOR is self-service (`POST /api/users/upgrade-to-contributor`); → MODERATOR goes through the admin users API. See [authentication.md](authentication.md).
+
+### Delete a user account (data deletion requests)
+
+The privacy policy promises data deletion on request. Manual process:
+
+1. Delete the user in the Clerk dashboard. The `user.deleted` webhook then removes the local `User` row (`src/lib/user-sync.ts`) — this requires the Clerk webhook to be configured
+2. Related rows cascade (`PascoReaction`, `PascoDownload`, `Notification`, `PushSubscription`, submitted `CatalogSubmission`); `Pasco.uploaderId`, `SearchQuery.userId`, `Feedback.userId`, and `StorageCleanup*` user references become `NULL` via `SetNull`
+3. The user's pascos remain published with no uploader. If the requester wants those removed too, delete them via the contributions UI or moderation tooling — pasco deletion also removes their Cloudinary assets
+4. If any assets were stranded, run the orphan cleanup above
 
 ## Related docs
 

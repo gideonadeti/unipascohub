@@ -86,12 +86,16 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy-Report-Only",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://clerk.com https://upload-widget.cloudinary.com https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live https://*.posthog.com",
+              // Clerk custom FAPI domain + Turnstile + protection hosts per
+              // https://clerk.com/docs/guides/secure/best-practices/csp-headers
+              // (the trailing ":*" on protect hosts is required — they are
+              // served on non-443 ports).
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://clerk.com https://clerk.unipascohub.weamp.org https://challenges.cloudflare.com https://*.protect.clerk.com https://upload-widget.cloudinary.com https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live https://*.posthog.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://avatars.githubusercontent.com https://github.com https://*.posthog.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.cloudinary.com https://*.clerk.com https://clerk.com https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live https://*.posthog.com",
-              "frame-src 'self' https://*.clerk.com https://clerk.com",
+              "connect-src 'self' https://api.cloudinary.com https://*.clerk.com https://clerk.com https://clerk.unipascohub.weamp.org https://*.protect.clerk.com:* https://*.ingest.sentry.io https://va.vercel-scripts.com https://vercel.live https://*.posthog.com",
+              "frame-src 'self' https://*.clerk.com https://clerk.com https://clerk.unipascohub.weamp.org https://challenges.cloudflare.com https://*.protect.clerk.com",
               "worker-src 'self' blob:",
               "base-uri 'self'",
               "form-action 'self'",

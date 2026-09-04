@@ -16,7 +16,7 @@ import {
   getPascoFileViewKind,
   type PascoFileViewKind,
 } from "@/lib/pasco-file-types";
-import type { PascoFile } from "@/types/api/pascos";
+import type { PascoFile, PascoFileWithSignedUrl } from "@/types/api/pascos";
 
 const COMPACT_BUTTON_CLASS =
   "min-h-11 w-full gap-1.5 sm:min-h-8 sm:w-auto sm:min-w-8 sm:px-3 sm:gap-1";
@@ -31,7 +31,7 @@ type PascoFileActionsProps = {
   pascoId: string;
   file: PascoFile;
   courseCode?: string;
-  onView: (file: PascoFile) => void;
+  onView: (file: PascoFileWithSignedUrl) => void;
 };
 
 export function PascoFileActions({

@@ -31,12 +31,22 @@ PostHog-derived counts in the UI and never send server-side events.
 | `pasco_uploaded`               | Pasco creation succeeds                      | `file_count`, `course_code?` |
 | `contributor_upgrade_completed`| Contributor upgrade succeeds                 | — |
 | `push_enabled`                 | Push subscription is saved successfully      | — |
+| `$pageview` (system)           | Any route change                             | `$current_url` = origin + pathname (query string deliberately scrubbed) |
+| `$pageleave` (system)          | Page hidden/unloaded (bounce/session duration) | `$current_url` = origin + pathname (scrubbed by `before_send`) |
+| `$web_vitals` (system)         | Web vitals sampled (LCP/CLS/FCP/INP)         | `$current_url` = origin + pathname (scrubbed); `$web_vitals_*` values |
 
 Do not add events without updating this doc. Explicitly **not** implemented:
-autocapture, automatic pageviews (Vercel Analytics covers page traffic), PostHog
+autocapture (remains `autocapture: false`), automatic pageviews (`capture_pageview: false` — `$pageview` is
+captured manually with a scrubbed URL instead, because the browse page keeps
+search text in the query string; Vercel Analytics still covers lightweight
+traffic dashboards), PostHog
 session replay (Sentry already has replay; replaying copyrighted PDF content is
 a legal risk), feature flags, experiments, surveys, server-side tracking, and a
 cookie-consent banner (tracked as a separate open item).
+
+Enabled system events beyond the manual pageview:
+- `$pageleave` (`capture_pageleave: true`) — required for accurate bounce rate and session duration; safe because `before_send` scrubs `$current_url`/`$referrer`.
+- `$web_vitals` (`capture_performance: true` — see `src/lib/analytics/posthog.ts:45`) — Core Web Vitals (LCP/CLS/FCP/INP) per project without Vercel Speed Insights (single-project limit on Vercel). Also scrubbed; ~30% overhead over `$pageview` volume and counted toward the 1M/month free tier. Sample later via `before_send` if needed (e.g. `sampleByEvent(['$web_vitals'], 0.5)`). Enable the matching toggle in PostHog Project Settings → Web vitals autocapture if the project was created before the SDK flag.
 
 ## Privacy rules
 
@@ -45,6 +55,10 @@ file names/contents, Cloudinary URLs, auth tokens, push subscription
 endpoints/keys. Identification uses the opaque Clerk user id plus the user's
 `role` as the only person property. Anonymous visitors stay anonymous
 (`person_profiles: "identified_only"` — no person profile is created for them).
+
+Every outgoing event also passes a `before_send` scrub: `$current_url` and
+`$referrer` are reduced to origin + pathname (query strings and hashes dropped)
+before ingestion, so search text carried in `/pascos?q=…` never reaches PostHog.
 Disclosed in `src/content/legal/privacy.ts` (Cookies and analytics +
 Third-party processors sections).
 

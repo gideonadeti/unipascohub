@@ -3,6 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 import {
   deleteCloudinaryAsset,
   fromCloudinaryApiResourceType,
+  getPascoAssetFolder,
   isCloudinaryNotFoundError,
 } from "@/lib/cloudinary";
 import { prisma } from "@/lib/db";
@@ -95,7 +96,7 @@ export async function cleanupOrphanCloudinaryAssets(options: {
   const orphanAssets: OrphanAsset[] = [];
 
   for (const courseId of courseIds) {
-    const assets = await listAssetsInFolder(`pascos/${courseId}`);
+    const assets = await listAssetsInFolder(getPascoAssetFolder(courseId));
     scanned += assets.length;
 
     for (const asset of assets) {

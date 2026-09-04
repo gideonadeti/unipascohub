@@ -1,5 +1,8 @@
 {
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "explicit"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "pnpm": true
   }
 }

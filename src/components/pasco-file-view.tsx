@@ -16,7 +16,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { getPascoFileViewKind } from "@/lib/pasco-file-types";
 import { cn } from "@/lib/utils";
-import type { PascoFile } from "@/types/api/pascos";
+import type { PascoFileWithSignedUrl } from "@/types/api/pascos";
 
 const PascoEmbedPdfViewer = dynamic(
   () =>
@@ -35,7 +35,7 @@ const PascoEmbedPdfViewer = dynamic(
 );
 
 type PascoFileViewProps = {
-  file: PascoFile | null;
+  file: PascoFileWithSignedUrl | null;
   onClose: () => void;
 };
 

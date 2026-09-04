@@ -21,20 +21,26 @@ See [frontend-standards.md](frontend-standards.md) for full conventions.
 
 ## Pages
 
-| Route                    | File                                                                                  | Renders                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `/`                      | [`src/app/page.tsx`](../src/app/page.tsx)                                             | Hero, v1 search, recent + popular pasco sections                |
-| `/pascos`                | [`src/app/pascos/page.tsx`](../src/app/pascos/page.tsx)                               | URL-filtered browse grid with pagination                        |
-| `/pascos/new`            | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                       | `PageHeader`, create form behind contributor gate               |
-| `/pascos/[pascoId]`      | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)           | `PascoDetailPage` with enriched title, back nav                 |
-| `/pascos/[pascoId]/edit` | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx) | `PageHeader`, cancel/back nav, edit form + gate                 |
-| `/contributions`         | [`src/app/contributions/page.tsx`](../src/app/contributions/page.tsx)                 | Contributor hub: uploads + catalog requests (`ContributorGate`) |
-| `/contributors`          | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                   | Team grid from `siteContributors` + open-source contribution CTAs |
-| `/sponsors`              | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                           | Sponsor cards from `siteSponsors` + optional BMC CTA            |
-| `/privacy`               | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                             | Draft privacy policy placeholder                                |
-| `/terms`                 | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                 | Draft terms placeholder                                         |
-| `/feedback`              | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                           | Feedback hub + external form CTA                                |
-| `/moderation/pascos`     | [`src/app/moderation/pascos/page.tsx`](../src/app/moderation/pascos/page.tsx)         | Pending pasco review queue (moderator/admin gate)               |
+| Route                           | File                                                                                                | Renders                                                           |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `/`                             | [`src/app/page.tsx`](../src/app/page.tsx)                                                           | Hero, v1 search, recent + popular pasco sections                  |
+| `/pascos`                       | [`src/app/pascos/page.tsx`](../src/app/pascos/page.tsx)                                             | URL-filtered browse grid with pagination                          |
+| `/pascos/new`                   | [`src/app/pascos/new/page.tsx`](../src/app/pascos/new/page.tsx)                                     | `PageHeader`, create form behind contributor gate                 |
+| `/pascos/[pascoId]`             | [`src/app/pascos/[pascoId]/page.tsx`](../src/app/pascos/[pascoId]/page.tsx)                         | `PascoDetailPage` with enriched title, back nav, breadcrumbs      |
+| `/institutions/[institutionId]` | [`src/app/institutions/[institutionId]/page.tsx`](../src/app/institutions/[institutionId]/page.tsx) | Redirects to institution-filtered pascos                          |
+| `/programs/[programId]`         | [`src/app/programs/[programId]/page.tsx`](../src/app/programs/[programId]/page.tsx)                 | Redirects to program-filtered pascos                              |
+| `/courses/[courseId]`           | [`src/app/courses/[courseId]/page.tsx`](../src/app/courses/[courseId]/page.tsx)                     | Redirects to course-filtered pascos                               |
+| `/pascos/[pascoId]/edit`        | [`src/app/pascos/[pascoId]/edit/page.tsx`](../src/app/pascos/[pascoId]/edit/page.tsx)               | `PageHeader`, cancel/back nav, edit form + gate                   |
+| `/contributions`                | [`src/app/contributions/page.tsx`](../src/app/contributions/page.tsx)                               | Contributor hub: uploads + catalog requests (`ContributorGate`)   |
+| `/contributors`                 | [`src/app/contributors/page.tsx`](../src/app/contributors/page.tsx)                                 | Team grid from `siteContributors` + open-source contribution CTAs |
+| `/sponsors`                     | [`src/app/sponsors/page.tsx`](../src/app/sponsors/page.tsx)                                         | Sponsor cards from `siteSponsors` + optional BMC CTA              |
+| `/privacy`                      | [`src/app/privacy/page.tsx`](../src/app/privacy/page.tsx)                                           | Draft privacy policy placeholder                                  |
+| `/terms`                        | [`src/app/terms/page.tsx`](../src/app/terms/page.tsx)                                               | Draft terms placeholder                                           |
+| `/feedback`                     | [`src/app/feedback/page.tsx`](../src/app/feedback/page.tsx)                                         | Feedback hub + external form CTA                                  |
+| `/guides`                       | [`src/app/guides/page.tsx`](../src/app/guides/page.tsx)                                             | Guide index linking the two usage guides                          |
+| `/guides/browsing`              | [`src/app/guides/browsing/page.tsx`](../src/app/guides/browsing/page.tsx)                           | Browsing guide rendered from `src/content/guides/browsing.ts`     |
+| `/guides/uploading`             | [`src/app/guides/uploading/page.tsx`](../src/app/guides/uploading/page.tsx)                         | Uploading guide rendered from `src/content/guides/uploading.ts`   |
+| `/moderation/pascos`            | [`src/app/moderation/pascos/page.tsx`](../src/app/moderation/pascos/page.tsx)                       | Pending pasco review queue (moderator/admin gate)                 |
 
 Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `SiteFooter`, `ScrollToTop`, theme provider, Clerk auth, toast container.
 
@@ -55,12 +61,14 @@ Root layout: [`src/app/layout.tsx`](../src/app/layout.tsx) — `SiteHeader`, `Si
 | --------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `PageContainer`       | [`layout/page-container.tsx`](../src/components/layout/page-container.tsx) | Width-tiered `<main>` wrapper (`narrow` / `default` / `wide`) |
 | `PageHeader`          | [`layout/page-header.tsx`](../src/components/layout/page-header.tsx)       | Page title, description, optional actions                     |
+| `Breadcrumbs`         | [`layout/breadcrumbs.tsx`](../src/components/layout/breadcrumbs.tsx)       | Accessible catalog context trail on pasco details             |
 | `Section`             | [`layout/section.tsx`](../src/components/layout/section.tsx)               | Titled content section                                        |
 | `PascoCard`           | [`pasco-card.tsx`](../src/components/pasco-card.tsx)                       | Linked card with institution eyebrow, course title, badges    |
 | `PascoListSection`    | [`pasco-list-section.tsx`](../src/components/pasco-list-section.tsx)       | Async list section with skeleton/error/empty states           |
 | `PascoListSkeleton`   | [`pasco-list-skeleton.tsx`](../src/components/pasco-list-skeleton.tsx)     | Grid of card skeletons                                        |
 | `EmptyState`          | [`empty-state.tsx`](../src/components/empty-state.tsx)                     | shadcn Empty wrapper with optional CTA                        |
 | `ProseContent`        | [`layout/prose-content.tsx`](../src/components/layout/prose-content.tsx)   | Lightweight wrapper for static copy pages                     |
+| `GuideContent`        | [`layout/guide-content.tsx`](../src/components/layout/guide-content.tsx)   | Renders structured guide content (paragraphs, bullets, steps) |
 | `HomeHero`            | [`home-hero.tsx`](../src/components/home-hero.tsx)                         | Homepage marketing hero with CTAs                             |
 | `HeroSearch`          | [`hero-search.tsx`](../src/components/hero-search.tsx)                     | Decorative v1 search with typing placeholder                  |
 | `RevealOnScroll`      | [`reveal-on-scroll.tsx`](../src/components/reveal-on-scroll.tsx)           | Motion wrapper for section reveal on scroll                   |
@@ -161,9 +169,8 @@ Zod schemas with react-hook-form:
 
 These items remain after the frontend roadmap (Phases 0–7):
 
-1. **Navigation** — full breadcrumbs (institution → program → course)
-2. **Admin dashboard** — UI for orphan cleanup and storage failure inspection
-3. **Automated a11y tests** — no Lighthouse CI or axe suite yet
+1. **Admin dashboard** — UI for orphan cleanup and storage failure inspection
+2. **Automated a11y tests** — no Lighthouse CI or axe suite yet
 
 See [features.md](features.md) for the full implemented vs planned breakdown.
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { CatalogCourseRequestDialog } from "@/components/catalog-course-request-dialog";
 import { CatalogProgramRequestDialog } from "@/components/catalog-program-request-dialog";
 import { CatalogSubmissionPendingAlert } from "@/components/catalog-submission-pending-alert";
@@ -43,7 +44,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSubmitPascoCreate } from "@/hooks/api/use-pascos";
 import { ACADEMIC_YEAR_OPTIONS } from "@/lib/academic-year";
 import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
-import { coursesListOptions } from "@/lib/api/courses";
+import { createCatalogSubmission } from "@/lib/api/catalog-submissions";
+import { ApiError } from "@/lib/api/client";
+import { coursesListOptions, updateCourse } from "@/lib/api/courses";
 import { institutionsListOptions } from "@/lib/api/institutions";
 import { programsListOptions } from "@/lib/api/programs";
 import { formatEnumLabel } from "@/lib/catalog-labels";
@@ -116,10 +119,29 @@ export function PascoCreateForm() {
     ...programsListOptions({ institutionId }),
     enabled: institutionId.length > 0,
   });
+  // Fetch all courses for the institution so a course already linked to another
+  // program still appears when a different program is selected. Filtering/sorting
+  // by program is done client-side (linked first) so contributors don't need to
+  // duplicate the course under a new program.
+  // For large institutions this could be 100s of rows; limit via server pagination
+  // if needed. Current seed is ~99 courses, so fetching all is acceptable.
   const courses = useQuery({
-    ...coursesListOptions({ institutionId, programId }),
-    enabled: institutionId.length > 0 && programId.length > 0,
+    ...coursesListOptions({ institutionId }),
+    enabled: institutionId.length > 0,
   });
+
+  const sortedCourses = useMemo(() => {
+    const all = courses.data?.courses ?? [];
+    if (!programId) return all;
+    const linked: typeof all = [];
+    const unlinked: typeof all = [];
+    for (const course of all) {
+      const ids = course.programIds ?? [];
+      if (ids.includes(programId)) linked.push(course);
+      else unlinked.push(course);
+    }
+    return [...linked, ...unlinked];
+  }, [courses.data, programId]);
 
   const createPasco = useSubmitPascoCreate();
   const isSubmitting = createPasco.isPending || createPasco.isSuccess;
@@ -185,6 +207,52 @@ export function PascoCreateForm() {
   }, [courses.data, deepLinkCourseId, form]);
 
   async function onSubmit(values: PascoCreateFormValues) {
+    // Auto-link course to the selected program if it wasn't linked yet.
+    // Uses typed apiClient wrappers so ApiError handling and retry/timeout apply.
+    const selectedCourse = sortedCourses.find((c) => c.id === values.courseId);
+    const isLinked =
+      !values.programId ||
+      !selectedCourse ||
+      (selectedCourse.programIds ?? []).includes(values.programId);
+    if (!isLinked && values.programId && selectedCourse) {
+      const existingIds = selectedCourse.programIds ?? [];
+      try {
+        await updateCourse(values.courseId, {
+          programIds: [...existingIds, values.programId],
+        });
+      } catch (error) {
+        if (
+          error instanceof ApiError &&
+          (error.status === 403 || error.status === 401)
+        ) {
+          // Contributors can't PATCH; fallback to catalog linking path which auto-approves
+          try {
+            await createCatalogSubmission({
+              type: "COURSE",
+              institutionId: values.institutionId,
+              courseCode: selectedCourse.code,
+              courseTitle: selectedCourse.title,
+              programIds: [values.programId],
+            });
+          } catch (fallbackError) {
+            const msg =
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : "Could not link course to program";
+            toast.error(msg);
+            return;
+          }
+        } else {
+          const msg =
+            error instanceof Error
+              ? error.message
+              : "Could not link course to program";
+          toast.error(msg);
+          return;
+        }
+      }
+    }
+
     await createPasco.submit(values);
     const courseCode = courses.data?.courses.find(
       (course) => course.id === values.courseId,
@@ -333,37 +401,54 @@ export function PascoCreateForm() {
                   <Controller
                     name="courseId"
                     control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="pasco-course">Course</FieldLabel>
-                        <CourseCombobox
-                          id="pasco-course"
-                          courses={courses.data?.courses ?? []}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={
-                            programId
-                              ? "Search courses..."
-                              : "Select program first"
-                          }
-                          disabled={!programId}
-                          aria-invalid={fieldState.invalid}
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                        <div className="pt-1">
-                          <CatalogCourseRequestDialog
-                            institutionId={institutionId}
-                            programId={programId}
-                            disabled={isSubmitting}
-                            onCourseAdded={(courseId) =>
-                              form.setValue("courseId", courseId)
+                    render={({ field, fieldState }) => {
+                      const selectedCourse = sortedCourses.find(
+                        (c) => c.id === field.value,
+                      );
+                      const needsLink =
+                        !!selectedCourse &&
+                        !!programId &&
+                        !(selectedCourse.programIds ?? []).includes(programId);
+
+                      return (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor="pasco-course">Course</FieldLabel>
+                          <CourseCombobox
+                            id="pasco-course"
+                            courses={sortedCourses}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={
+                              programId
+                                ? `Search ${sortedCourses.length} courses...`
+                                : "Select program first"
                             }
+                            disabled={!programId}
+                            aria-invalid={fieldState.invalid}
                           />
-                        </div>
-                      </Field>
-                    )}
+                          {needsLink ? (
+                            <p className="text-xs text-muted-foreground pt-1">
+                              This course is not yet linked to the selected
+                              program — it will be linked automatically when you
+                              upload.
+                            </p>
+                          ) : null}
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                          <div className="pt-1">
+                            <CatalogCourseRequestDialog
+                              institutionId={institutionId}
+                              programId={programId}
+                              disabled={isSubmitting}
+                              onCourseAdded={(courseId) =>
+                                form.setValue("courseId", courseId)
+                              }
+                            />
+                          </div>
+                        </Field>
+                      );
+                    }}
                   />
                 </FieldGroup>
               </section>

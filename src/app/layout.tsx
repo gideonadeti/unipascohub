@@ -5,6 +5,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 
 import { EnsureUserSynced } from "@/components/ensure-user-synced";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { PostHogPageView } from "@/components/providers/posthog-page-view";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -13,7 +14,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SkipToContent } from "@/components/skip-to-content";
 import { Toaster } from "@/components/ui/sonner";
-import { siteDescription, siteName } from "@/config/site";
+import { siteDescription, siteName, siteUrl } from "@/config/site";
 
 import "./globals.css";
 
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
-  metadataBase: new URL("https://unipascohub.com"),
+  metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -91,6 +92,7 @@ export default function RootLayout({
             <QueryProvider>
               <EnsureUserSynced />
               <PostHogProvider />
+              <PostHogPageView />
               <SiteHeader />
               <div className="flex flex-1 flex-col">{children}</div>
               <SiteFooter />
