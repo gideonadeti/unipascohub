@@ -114,7 +114,7 @@ export function PascoDetailPage({
 
   return (
     <div className="space-y-8">
-      <PascoPageNav href={getPascoBrowseHref(pasco)} />
+      {/* <PascoPageNav href={getPascoBrowseHref(pasco)} /> */}
 
       {isUploaderPending ? (
         <Alert>
