@@ -26,7 +26,6 @@ import {
 import { usePascosList } from "@/hooks/api/use-pascos";
 import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { trackAnalyticsEvent } from "@/lib/analytics/posthog";
-import { getInstitution } from "@/lib/api/institutions";
 import { formatEnumLabel } from "@/lib/catalog-labels";
 import {
   getPascoCardEmphasis,
